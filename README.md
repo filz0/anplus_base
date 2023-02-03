@@ -5,10 +5,32 @@
 
 Description
 -
-Something, something description.
+A small project of mine aims to add more features to the default AddNPC. While Your good old AddNPC works as intended, I find it very limited. Therefore I present you this monstrosity. 
+
+Features
+-
+* Ability to set localized % damage resistance/vulnerability
+* Ability to set output % damage increase/decrease:
+`Damage resistance based on body parts.`
+* Ability to set random or specified body groups,
+* Ability to set random or specified skins,
+* Ability to set a custom material,
+* Ability to override or edit sounds,
+* Ability to edit model scale,
+* Ability to edit bones (scale, position, angle or to enable jigglebones),
+* Ability to add custom dispositions/relations (based on names, entity classes, NPC classes, VJ classes),
+* Ability to increase/decrease the speed or even replace certain activities like reloading,
+* Ability to set weapon proficiency and range,
+* Full save and dupe support,
+* Avaible custom functions to customise engine NPCs even further,
+* Kill feed NPC' name support,
+* Build in health renegeration mechanic,
+* Support for inengine entities (ever wanted a spawnable citadel super suit charger?)
+* Support for the Hammer Editor? 
+`In theory you can change NPCs/Entity name to a certain ANP NPC/Entity and it will be appplied on the map load.`
 
 Templates
 -
-**Empty Template:** https://github.com/filz0/anplus_base/blob/main/lua/autorun/_template_empty.lua
+<a href="https://github.com/filz0/anplus_base/blob/main/lua/autorun/_template_empty.lua">Empty Template</a>
 
-**Mega Odessa Code + Dummy:** https://github.com/filz0/anplus_base/blob/main/lua/autorun/template_npc.lua
+<a href="https://github.com/filz0/anplus_base/blob/main/lua/autorun/template_npc.lua">Mega Odessa Code + Dummy</a>
