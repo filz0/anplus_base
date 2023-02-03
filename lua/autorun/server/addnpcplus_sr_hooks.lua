@@ -197,10 +197,10 @@ hook.Add( "OnPhysgunPickup", "ANPlusLoad_OnPhysgunPickup", function(ply, npc)
 	end	
 end)
 
-hook.Add( "OnPhysgunFreeze", "ANPlusLoad_OnPhysgunFreeze", function(ply, npc)
-	if IsValid(ply) && IsValid(npc) && npc:IsANPlus(true) then		
-		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCOnPhysgunFreeze'] != nil then
-			npc:ANPlusGetDataTab()['Functions']['OnNPCOnPhysgunFreeze'](ply, npc)		
+hook.Add( "OnPhysgunFreeze", "ANPlusLoad_OnPhysgunFreeze", function(wep, physObj, ent, ply)
+	if IsValid(ply) && IsValid(ent) && ent:IsANPlus(true) then		
+		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCOnPhysgunFreeze'] != nil then
+			ent:ANPlusGetDataTab()['Functions']['OnNPCOnPhysgunFreeze'](ply, ent, wep, physObj)		
 		end	
 	end	
 end)

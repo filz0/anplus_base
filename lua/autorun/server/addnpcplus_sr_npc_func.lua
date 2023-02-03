@@ -879,6 +879,43 @@ function ENT:ANPlusPlayActivity(act, speed, faceent, facespeed, callback)
 	
 end
 
+function ENT:ANPlusPlayActivityGesture(act, speed, faceent, facespeed, callback)
+	
+	self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
+	local actSeq = self:SelectWeightedSequence( act )
+	local speed = speed || 1
+	local facespeed = facespeed || 0
+	
+	--self:SetCondition( 67 )
+	--self:ClearCondition( 68 )
+	self:StopMoving()
+	self:ResetSequence( actSeq )	
+	self:ResetIdealActivity( act )
+	self:SetCycle( 0 )
+	--self:StartEngineTask( ai.GetTaskID( "TASK_PLAY_SEQUENCE" ), act )
+	local seqID, seqDur = self:LookupSequence( self:GetSequenceName( actSeq ) )	
+	seqDur = seqDur / speed
+	if isfunction( callback ) then
+		callback( seqID, seqDur )
+	end
+
+	timer.Create( "ANP_ACT_RESET" .. self:EntIndex(), seqDur, 1, function() 
+		if !IsValid(self) then return end		
+		--self:SetCondition( 68 )
+		--self:ClearCondition( 67 )
+		self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
+	end)
+
+	timer.Create( "ANP_ACT_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
+		if !IsValid(self) || self:GetActivity() != act then return end
+		self:SetPlaybackRate( speed ) 
+		if IsValid(faceent) && facespeed >= 0 then 
+			self:ANPlusFaceEntity( faceent, facespeed )
+		end
+	end)
+	
+end
+
 function ENT:ANPlusGetSquadMembers( callback )
 
 	if self:GetSquad() != nil && self:GetSquad() != "" then 
