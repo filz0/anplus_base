@@ -1,3 +1,4 @@
+![AnpLogo](https://i.imgur.com/Un3AR9h.png)
 # ANPlus[BASE]
 *Warning! Reading this Base' code may cause brain aneurysm (not really).*
 
@@ -11,23 +12,37 @@ Features
 -
 * Ability to set localized % damage resistance/vulnerability
 * Ability to set output % damage increase/decrease:
-`Damage resistance based on body parts.`
+>Damage resistance based on body parts.
 * Ability to set random or specified body groups,
 * Ability to set random or specified skins,
 * Ability to set a custom material,
 * Ability to override or edit sounds,
 * Ability to edit model scale,
-* Ability to edit bones (scale, position, angle or to enable jigglebones),
-* Ability to add custom dispositions/relations (based on names, entity classes, NPC classes, VJ classes),
+* Ability to edit bones, 
+>Scale, position, angle or to enable jigglebones.
+* Ability to add custom dispositions/relations, 
+>Based on names, entity classes, NPC classes, VJ classes.
 * Ability to increase/decrease the speed or even replace certain activities like reloading,
 * Ability to set weapon proficiency and range,
 * Full save and dupe support,
 * Avaible custom functions to customise engine NPCs even further,
 * Kill feed NPC' name support,
 * Build in health renegeration mechanic,
-* Support for inengine entities (ever wanted a spawnable citadel super suit charger?)
+* Support for inengine entities,
+>Ever wanted a spawnable citadel super suit charger?
 * Support for the Hammer Editor? 
-`In theory you can change NPCs/Entity name to a certain ANP NPC/Entity and it will be appplied on the map load.`
+>In theory you can change NPCs/Entity name to a certain ANP NPC/Entity and it will be appplied on the map load.
+
+Commands
+-
+* anplus_reload_ents
+>The BASE will look over all of the currently spawned NPCs and if it finds an NPC with a matching ANPlus NPC name (and entity class) it will turn that NPC into one.
+
+* anplus_set_ent ANPNAME
+>Allows you to turn any NPC (with a matching entity class) into an ANPlus NPC.
+
+* anplus_start_invasion
+>A command to start the invasion.
 
 Templates
 -
