@@ -376,7 +376,6 @@ function ENT:ANPlusNPCThink()
 
 end
 function ENT:ANPlusAcceptInput(ent, input, activator, caller, data)
-	print(ent, input, activator, caller, data)
 	if ( ent == self && ent:IsANPlus(true) && string.Left( input, 6 ) == "event_" ) then
 		self:ANPlusEvent( string.sub( input, 7 ) )
 		return true
