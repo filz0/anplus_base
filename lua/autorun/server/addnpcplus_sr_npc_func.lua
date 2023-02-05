@@ -739,6 +739,23 @@ function ENT:ANPlusGetFollowTarget()
 	return self.anp_fTarget
 end
 
+local function NPCGiveWay(ent)	
+	if !IsValid(ent) then return end
+	local colBmin, colBmax = ent:GetCollisionBounds()
+	local tr = util.TraceHull{
+	start = ent:GetPos(),
+	endpos = ent:GetPos(),
+	filter = {ent, ent:GetActiveWeapon()},
+	mins = colBmin * 1.05,
+	maxs = colBmax * 1.05
+	}
+	local target = tr.Entity
+	
+	if tr.Hit && IsValid(target) && target == ent:ANPlusGetFollowTarget() && ent:GetCurrentSchedule() != SCHED_MOVE_AWAY then 
+		ent:SetSchedule(SCHED_MOVE_AWAY)
+	end
+end
+
 function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatdist, followcombatrundist)
 
 	if !IsValid(target) then 
@@ -757,7 +774,7 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 	local followcombatdist = followcombatdist || 400
 	if self:GetClass() == "npc_citizen" then self:Fire( "RemoveFromPlayerSquad", "", 0.1 ) end
 	self.anp_fTarget = target
-	
+	self:SetTarget(target)
 	if self:IsANPlus() && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCFollow'] != nil then
 		self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.anp_fTarget, true)	
 	end
@@ -788,7 +805,6 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 		local curSchWalk = self:IsCurrentSchedule( schWalk )
 		local curSchRun = self:IsCurrentSchedule( schRun )
 		local curDist = math.max( posSelf:Distance( posTarget ) - ( self:OBBMaxs().x + self.anp_fTarget:OBBMaxs().x ), 0 )
-		
 		if !IsValid(self:GetEnemy()) then		
 			if curDist > followdist then self:NavSetGoalTarget( self.anp_fTarget, Vector( 0, 0, 0 ) ) end	
 			if curDist < followdist && ( curSchWalk || curSchRun ) then
@@ -796,11 +812,19 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 				self:ClearGoal()
 				self:StopMoving()		
 			elseif curDist >= followdist && curDist < followrundist && !curSchWalk then	
-				self:SetSchedule(SCHED_FORCED_GO)
-				self:SetLastPosition( posTarget )	
-			elseif curDist >= followrundist && !curSchRun then	
-				self:SetSchedule(SCHED_FORCED_GO_RUN)
 				self:SetLastPosition( posTarget )
+				self:SetSchedule( SCHED_FORCED_GO )
+				--self:RunEngineTask( ai.GetTaskID( "TASK_GET_PATH_TO_GOAL" ), 0 )
+				--self:RunEngineTask( ai.GetTaskID( "TASK_WAIT_FOR_MOVEMENT" ), 0 )
+				--self:RunEngineTask( ai.GetTaskID( "TASK_FACE_TARGET" ), 1 )
+				--self:RunEngineTask( ai.GetTaskID( "TASK_WALK_PATH" ), 0 )	
+			elseif curDist >= followrundist && !curSchRun then	
+				self:SetLastPosition( posTarget )
+				self:SetSchedule( SCHED_FORCED_GO_RUN )
+				--self:RunEngineTask( ai.GetTaskID( "TASK_GET_PATH_TO_GOAL" ), 0 )
+				--self:RunEngineTask( ai.GetTaskID( "TASK_WAIT_FOR_MOVEMENT" ), 0 )
+				--self:RunEngineTask( ai.GetTaskID( "TASK_FACE_TARGET" ), 1 )
+				---self:RunEngineTask( ai.GetTaskID( "TASK_RUN_PATH" ), 0 )
 			end			
 		elseif IsValid(self:GetEnemy()) && IsValid(self:GetActiveWeapon()) && !ANPlusNoMeleeWithThese[ self:GetActiveWeapon():GetHoldType() ] then	
 			if curDist < followcombatdist && ( curSchWalk || curSchRun ) then
@@ -808,13 +832,24 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 				self:ClearGoal()
 				self:StopMoving()
 			elseif curDist >= followcombatdist && curDist < followcombatrundist && !curSchWalk then
-				self:SetSchedule(SCHED_FORCED_GO)
 				self:SetLastPosition( posTarget )
+				self:SetSchedule(SCHED_FORCED_GO)				
 			elseif curDist >= followcombatrundist && !curSchRun then
-				self:SetSchedule(SCHED_FORCED_GO_RUN)
 				self:SetLastPosition( posTarget )
+				self:SetSchedule(SCHED_FORCED_GO_RUN)
 			end		
-		end			
+		end	
+		
+		NPCGiveWay( self )
+		
+		if ( self:HasCondition( 35 ) || !self:HasCondition( 49 ) ) && !self.anp_fTarget:Visible( self ) && !self:Visible( self.anp_fTarget ) then
+			local getNodeType = self:GetNavType() == 2 && #ANPlusAIGetAirNodes() > 0 && 3 || 2
+			local node, dist = ANPlusAIFindClosestNode( posTarget, getNodeType )
+			if node && !ANPlusAINodeOccupied( node['pos'] ) && !ANPIsAnyoneLookingAtPos( self, {self.anp_fTarget}, node['pos'] ) then
+				self:SetPos( node['pos'] + Vector( 0, 0, 10 ) )
+			end
+		end
+		
 	end)
 end
 

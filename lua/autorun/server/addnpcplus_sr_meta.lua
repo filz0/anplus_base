@@ -138,37 +138,6 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 	end
 end)
 
-local function NodeOccupied( pos )
-
-	if !util.IsInWorld( pos ) then return true end
-	
-	local tr, trace = nil
-	
-	tr = {}
-	tr.start = pos
-	tr.endpos = pos
-	trace = util.TraceLine( tr )
-	if trace.Hit then return true end
-	
-	local v1 = pos - Vector( 20, 20 ,0 )
-	local v2 = pos + Vector( 20, 20, 80 )
-
-		tr = {}
-		tr.start = v1
-		tr.endpos = v2
-		trace = util.TraceLine( tr )
-		if trace.Hit then return true end
-
-		tr = {}
-		tr.start = v1 + Vector( 40, 0, 0 )
-		tr.endpos = v2 - Vector( 40, 0, 0 )
-		trace = util.TraceLine( tr )
-		if trace.Hit then return true end
-
-	return false
-	
-end
-
 function metaENT:ANPlusIsLookingAtPos( pos )
 	
 	local dirv = pos - ( self:GetPos() + Vector( 0, 0, 50 ) )	
@@ -200,26 +169,18 @@ function ANPIsAnyoneLookingAtPos( ent, entTab, pos )
 	
 end
 
-function metaENT:ANPlusRandomTeleport( entTab, nodetype, poscorrection, callback )
+function metaENT:ANPlusRandomTeleport( entTab, iType, poscorrection, callback )
 	
-	if !ANPMapNodes then return end
+	local v = ANPlusAIGetNodes( iType )[ math.random( 1, #ANPlusAIGetNodes( iType ) ) ]
 	
-	local v = ANPMapNodes[ math.random( 1, #ANPMapNodes ) ]
-
-	if v && v['type'] == nodetype && !NodeOccupied( v['pos'] ) && ( ( !entTab && v['pos'] != self:GetPos() ) || ( entTab && v.pos != self:GetPos() && !ANPIsAnyoneLookingAtPos( self, entTab, v['pos'] ) ) ) then
-
+	if v && v['type'] == iType && !ANPlusAINodeOccupied( v['pos'] ) && ( ( !entTab && v['pos'] != self:GetPos() ) || ( entTab && v['pos'] != self:GetPos() && !ANPIsAnyoneLookingAtPos( self, entTab, v['pos'] ) ) ) then
+		
 		self:SetPos( v['pos'] + ( poscorrection || Vector( 0, 0, 0 ) ) )
-				
-		if isfunction( callback ) then
-			--[[
-			self.anprngtpsucces = callback
-			self:anprngtpsucces( self, v['pos'] )
-			]]--	
+			
+		if isfunction( callback ) then	
 			callback( self, v['pos'] )
-		end
-				
+		end				
 	end
-
 end
 
 function metaENT:ANPlusAddHealth(val, max)

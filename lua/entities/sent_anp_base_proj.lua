@@ -6,39 +6,42 @@ if (CLIENT) then
 	language.Add( "sent_anp_base_proj", "ANPlus Base Proj" )
 end
 
-ENT.Type 				= "anim"
-ENT.Base 				= "base_gmodentity"
-ENT.PrintName			= "sent_anp_base_proj"
-ENT.Author				= "filz0"
+ENT.Type 					= "anim"
+ENT.Base 					= "base_gmodentity"
+ENT.PrintName				= "sent_anp_base_proj"
+ENT.Author					= "filz0"
 
-ENT.Spawnable			= false
-ENT.AdminSpawnable		= false
-ENT.CurTurnSpeed		= 0
-ENT.CurSpeed			= 0
+ENT.Spawnable				= false
+ENT.AdminSpawnable			= false
+ENT.CurTurnSpeed			= 0
+ENT.CurSpeed				= 0
 
 --SETTINGS
-ENT.Model 				= "models/hunter/plates/plate.mdl"
-ENT.PhysicsInitType 	= SOLID_VPHYSICS
-ENT.MoveType 			= MOVETYPE_VPHYSICS
-ENT.MoveCollideType 	= MOVECOLLIDE_FLY_BOUNCE
-ENT.CollisionGroupType 	= COLLISION_GROUP_PROJECTILE
-ENT.SolidType 			= SOLID_VPHYSICS
+ENT.Model 					= "models/hunter/plates/plate.mdl"
+ENT.PhysicsInitType 		= SOLID_VPHYSICS
+ENT.MoveType 				= MOVETYPE_VPHYSICS
+ENT.MoveCollideType 		= MOVECOLLIDE_FLY_BOUNCE
+ENT.CollisionGroupType 		= COLLISION_GROUP_PROJECTILE
+ENT.SolidType 				= SOLID_VPHYSICS
 
-ENT.RunCollideOnDeath	= false
+ENT.RunCollideOnDeath		= false
+ENT.Bounces					= 0
+ENT.SoftBounceSND			= false
+ENT.HardBounceSND			= false
 
-ENT.ProjHealth			= nil
+ENT.ProjHealth				= false
 
-ENT.Speed 				= 900
-ENT.SpeedAcceleration	= 100
-ENT.Target				= nil
-ENT.TurnSpeed 			= 50
-ENT.TurnAcceleration	= 4
+ENT.Speed 					= 900
+ENT.SpeedAcceleration		= 100
+ENT.Target					= false
+ENT.TurnSpeed 				= 50
+ENT.TurnAcceleration		= 4
 
-ENT.LifeTime 			= 20
+ENT.LifeTime 				= 20
 
-ENT.CollideDecal		= nil
-ENT.StartSND 			= nil
-ENT.LoopSND 			= nil
+ENT.CollideDecal			= false
+ENT.StartSND 				= false
+ENT.LoopSND 				= false
 --SETTINGS
 
 if (SERVER) then
@@ -141,9 +144,18 @@ if (SERVER) then
 	
 	function ENT:PhysicsCollide(data, physobj)
 		if !self.Dead then			
-			self:ANPlusOnCollide()			
+								
 			if !self.m_bDecalPainted && self.CollideDecal then util.Decal( self.CollideDecal, data.HitPos + data.HitNormal, data.HitPos - data.HitNormal ); self.m_bDecalPainted = true end
-			self.Dead = true
+			
+			local SurTab = util.GetSurfaceData(util.GetSurfaceIndex(physobj:GetMaterial())) 
+			if ( data.Speed > 40 and data.Speed <= 250 and data.DeltaTime > 0.1 ) and SurTab.impactSoftSound then
+				self:EmitSound( self.SoftBounceSND || SurTab.impactSoftSound )	
+			elseif ( data.Speed > 250 and data.DeltaTime > 0.1 ) and SurTab.impactHardSound then	
+				self:EmitSound( self.HardBounceSND || SurTab.impactHardSound )		
+			end	
+				
+			if self.Bounces > 0 then self.Bounces = self.Bounces - 1 end
+			if self.Bounces == 0 then self:ANPlusOnCollide(); self.Dead = true end
 		end	
 	end
 

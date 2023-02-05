@@ -184,7 +184,7 @@ end
 
 function metaENT:ANPlusInRange(target, dist)
 	local distSqr = dist * dist
-	local distTSqr = self:GetPos():DistToSqr( target:GetPos() ) < distSqr
+	local distTSqr = self:GetPos():DistToSqr( target:GetPos() ) <= distSqr
 	return distTSqr
 end
 
@@ -195,7 +195,7 @@ end
 
 function ANPlusInRangeVector(pos1, pos2, dist)
 	local distSqr = dist * dist
-	local distTSqr = pos1:DistToSqr( pos2 ) < distSqr
+	local distTSqr = pos1:DistToSqr( pos2 ) <= distSqr
 	return distTSqr
 end
 
@@ -260,7 +260,12 @@ local function ReadUShort(f) return toUShort( f:Read( SIZEOF_SHORT ) ) end
 -- 4 = NODE_TYPE_CLIMB
 -- 5 = NODE_TYPE_WATER
 
-ANPMapNodes = {}
+local nodesAll
+local nodesGround
+local nodesAir
+local nodesClimb
+local nodesWater
+
 local found_ain = false
 
 local function ParseFile()
@@ -281,6 +286,12 @@ local function ParseFile()
 
 	found_ain = true
 	
+	nodesAll = {}
+	nodesGround = {}
+	nodesAir = {}
+	nodesClimb = {}
+	nodesWater = {}
+	
 	local ainet_ver = ReadInt(f)
 	local map_ver = ReadInt(f)
 	
@@ -288,7 +299,7 @@ local function ParseFile()
 	
 		MsgN("Unknown graph file")
 		
-		ANPMapNodes = nil
+		nodesAll = nil
 		
 		return
 		
@@ -300,7 +311,7 @@ local function ParseFile()
 	
 		MsgN("Graph file has an unexpected amount of nodes")
 		
-		ANPMapNodes = nil
+		nodesAll = nil
 		
 		return
 		
@@ -324,11 +335,11 @@ local function ParseFile()
 		local nodeinfo = ReadUShort(f)
 		local zone = f:ReadShort()
 
-		if nodetype == 4 then
+		--if nodetype == 4 then
 		
-			continue
+		--	continue
 			
-		end
+		--end
 		
 		local node = {
 			['pos'] = v,
@@ -343,7 +354,16 @@ local function ParseFile()
 			['numlinks'] = 0
 		}
 
-		table.insert( ANPMapNodes, node )
+		table.insert( nodesAll, node )
+		if nodetype == 2 then
+			table.insert( nodesGround, node )
+		elseif nodetype == 3 then
+			table.insert( nodesAir, node )
+		elseif nodetype == 4 then
+			table.insert( nodesClimb, node )
+		elseif nodetype == 5 then
+			table.insert( nodesWater, node )
+		end
 		
 	end
 	
@@ -352,6 +372,103 @@ end
 hook.Add( "Initialize", "ANPlus_InitializeShared", function()
 	ParseFile()	
 end)
+
+ParseFile()	
+
+function ANPlusAIGetNodes(iType)
+	return !iType && nodesAll || iType == 2 && nodesGround || iType == 3 && nodesAir || iType == 4 && nodesClimb || iType == 5 && nodesWater
+end
+
+function ANPlusAIGetAllNodes() 
+	return nodesAll
+end
+
+function ANPlusAIGetGroundNodes()
+	return nodesGround
+end
+
+function ANPlusAIGetAirNodes()
+	return nodesAir
+end
+
+function ANPlusAIGetClimbNodes()
+	return nodesClimb
+end
+
+function ANPlusAIGetWaterNodes()
+	return nodesWater
+end
+
+function ANPlusAINodeOccupied(pos)
+	if !util.IsInWorld( pos ) then return true end	
+	local tr, trace = nil	
+	tr = {}
+	tr.start = pos
+	tr.endpos = pos
+	trace = util.TraceLine( tr )
+	if trace.Hit then return true end	
+	local v1 = pos - Vector( 20, 20 ,0 )
+	local v2 = pos + Vector( 20, 20, 80 )
+		tr = {}
+		tr.start = v1
+		tr.endpos = v2
+		trace = util.TraceLine( tr )
+		if trace.Hit then return true end
+
+		tr = {}
+		tr.start = v1 + Vector( 40, 0, 0 )
+		tr.endpos = v2 - Vector( 40, 0, 0 )
+		trace = util.TraceLine( tr )
+		if trace.Hit then return true end
+	return false	
+end
+
+function ANPlusAIFindNodesInSphere(pos, dist, iType)
+	local tbNodes = {}
+	for _, node in pairs( ANPlusAIGetNodes( iType ) ) do		
+		if ANPlusInRangeVector( node['pos'], pos, dist ) then table.insert( tbNodes, node ) end
+	end
+	return tbNodes
+end
+
+function ANPlusAIFindClosestNode(pos, iType)
+	local iType = iType || 2
+	local distClosest = math.huge
+	local nodeClosest
+	for _, node in pairs( ANPlusAIGetNodes( iType ) ) do		
+		
+		local dist = ( node['pos'] - pos ):LengthSqr()
+		if dist < distClosest then	
+			distClosest = dist
+			nodeClosest = node
+		end
+	end
+	return nodeClosest, distClosest
+end
+
+function ANPlusAIFindClosestVisibleNode(pos, iType) -- More expensive than FindClosestNode; Only use when neccessary
+	local iType = iType || 2
+	local nodesClose = ANPlusAIFindNodesInSphere( pos, 100, iType )	-- Only checking nodes in a close proximity
+	local nodeClosest
+	local distClosest = math.huge
+	local offset = Vector( 0, 0, 3 )
+	local pos = pos +offset
+	for _, node in ipairs( nodesClose ) do
+		local dist = pos:Distance( node['pos'] )
+		if ( dist < distClosest ) then
+			local tr = util.TraceLine({
+				start = pos,
+				endpos = node['pos'] + offset,
+				mask = MASK_SOLID_BRUSHONLY
+			})
+			if !tr.HitWorld then
+				dist = distClosest
+				nodeClosest = node
+			end
+		end
+	end
+	return nodeClosest || ANPlusAIFindClosestNode( pos, iType )
+end
 
 function metaENT:ANPlusCheckSpace(spos, epos, filterTab, ignoreworld, mask, vecmin, vecmax, callback) 
 	local cbX, cbY = self:GetCollisionBounds()
