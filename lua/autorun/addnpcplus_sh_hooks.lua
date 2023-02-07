@@ -1,5 +1,8 @@
 
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
+
+	if SERVER && ent:GetClass() == "monster_human_grunt" then ent:CapabilitiesAdd( 2097152 ) end
+
 	timer.Simple( 0, function()
 
 		if IsValid(ent) && IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
@@ -21,13 +24,11 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 end)
 
 hook.Add( "EntityKeyValue", "ANPlusLoad_EntityKeyValue", function(ent, key, val)
-
 	if IsValid(ent) && ent:IsANPlus(true) then		
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCKeyValue'] != nil then
 			ent:ANPlusGetDataTab()['Functions']['OnNPCKeyValue'](ent, key, val)		
 		end					
-	end
-	
+	end	
 end)
 
 hook.Add( "EntityFireBullets", "ANPlusLoad_EntityFireBullets", function(npc, data)

@@ -215,14 +215,14 @@ local NPCTab = {
 			['BodyGroups'] = { 					-- Table with body groups that you wish to change.
 				[1] = { 0, 1 },					-- This table represents body group 1 and its value will be randomised between 0 and 1. In this case, our model has no body groups so this does nothing xd.
 				[2] = { 0, 7 },					-- You can add as many as you wish.
-				[3] = {},	 					-- While the table must go in order from 1 up. You can "skip" body groups by leaving the table empty "{}".
+				[3] = nil,	 					-- While the table must go in order from 1 up. You can "skip" a body group by setting it to "nil".
 				[4] = { 1, 3 },
 			}, 
 			['Skin'] 		 = { 0, 0 },			-- This table represents skin of this model. In this case, it will be randomized between 0 and 2.
 			['Material']	 = "",				-- This value will set a new material for your NPC with this model applied.
 			['SubMaterials'] = { -- Table with sub materials to set on your NPC. You can put as many replacements as you wish. The table must go in order from 1 up. You can "skip" a sub material by leaving the table empty "{}".
-				[1] = {""},    
-				[2] = {""},    
+				[1] = "",    
+				[2] = "",    
 				[3] = { "squad/orangebox", "metal6", "rubber" }, -- One of these 3 will be chosen randomly.    
 			},
 			['Color']		 = Color( 255, 255, 255, 255 ),	-- This table will change the color of your NPC with this model applied. Red Green Blue Alpha. 
@@ -581,14 +581,14 @@ local NPCTab = {
 			['BodyGroups'] = { 					-- Table with body groups that you wish to change.
 				[1] = { 0, 1 },					-- This table represents body group 1 and its value will be randomised between 0 and 1. In this case, our model has no body groups so this does nothing xd.
 				[2] = { 0, 7 },					-- You can add as many as you wish.
-				[3] = {},	 					-- While the table must go in order from 1 up. You can "skip" body groups by leaving the table empty "{}".
+				[3] = nil,	 					-- While the table must go in order from 1 up. You can "skip" a body group by setting it to "nil".
 				[4] = { 1, 3 },
 			}, 
-			['Skin'] 		 = { 0, 0 },			-- This table represents skin of this model. In this case, it will be randomized between 0 and 2.
+			['Skin'] 		 = { 0, 0 },		-- This table represents skin of this model. In this case, it will be randomized between 0 and 2.
 			['Material']	 = "",				-- This value will set a new material for your NPC with this model applied.
-			['SubMaterials'] = { -- Table with sub materials to set on your NPC. You can put as many replacements as you wish. The table must go in order from 1 up. You can "skip" a sub material by leaving the table empty "{}".
-				[1] = {""},    
-				[2] = {""},    
+			['SubMaterials'] = { 				-- Table with sub materials to set on your NPC. You can put as many replacements as you wish. The table must go in order from 1 up. You can "skip" a sub material by leaving the table empty "{}".
+				[1] = "",    
+				[2] = "",    
 				[3] = { "squad/orangebox", "metal6", "rubber" }, -- One of these 3 will be chosen randomly.    
 			},
 			['Color']		 = Color( 255, 0, 0, 255 ),	-- This table will change the color of your NPC with this model applied. Red Green Blue Alpha.

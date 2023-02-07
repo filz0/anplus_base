@@ -15,6 +15,28 @@ net.Receive("anplus_gmodsave_load_from_the_menu", function(len, ply)
 	ANPlusNPCPreApply()	
 end)
 
+concommand.Add( "anplus_sleep_npcs", function(ply, cmd, args, argStr)
+	if !ply:IsAdmin() then	
+		ply:ChatPrint( "Sorry but this command is reserved for Admins only." )		
+	else		
+		for _, npc in pairs( ents.GetAll() ) do		
+			if !IsValid(npc) || !npc:IsNPC() then continue end
+			npc:SetKeyValue( "sleepstate", "3" )
+		end		
+	end	
+end)
+
+concommand.Add( "anplus_wake_npcs", function(ply, cmd, args, argStr)
+	if !ply:IsAdmin() then	
+		ply:ChatPrint( "Sorry but this command is reserved for Admins only." )		
+	else		
+		for _, npc in pairs( ents.GetAll() ) do		
+			if !IsValid(npc) || !npc:IsNPC() then continue end
+			npc:SetKeyValue( "sleepstate", "0" )
+		end		
+	end	
+end)
+
 concommand.Add( "anplus_set_ent", function(ply, cmd, args, argStr)
 	if !ply:IsAdmin() then	
 		ply:ChatPrint( "Sorry but this command is reserved for Admins only." )		

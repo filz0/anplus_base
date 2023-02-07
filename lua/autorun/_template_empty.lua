@@ -41,7 +41,7 @@ local NPCTab = {
 			['BodyGroups'] = { 					-- Table with body groups that you wish to change.
 				[1] = { 0, 1 },					-- This table represents body group 1 and its value will be randomized between 0 and 1. In this case, our model has no body groups so this does nothing xd.
 				[2] = { 0, 7 },					-- You can add as many as you wish.
-				[3] = {},	 					-- While the table must go in order from 1 up. You can "skip" body groups by leaving the table empty "{}".
+				[3] = nil,	 					-- While the table must go in order from 1 up. You can "skip" a body group by setting it to "nil".
 				[4] = { 1, 3 },
 				[5] = 3,
 			}, 

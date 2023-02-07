@@ -92,7 +92,7 @@ function ENT:ANPlusNPCApply(name)
 						for i = 1, #modelTab['SubMaterials'] do
 
 							local curSM = modelTab['SubMaterials'][ i ]
-							local curSMR = istable( curSM ) && curSM[ math.random( 1, #curSM ) ] || curSM || self:GetMaterials()[ i ]	
+							local curSMR = curSM && istable( curSM ) && curSM[ 1 ] && curSM[ math.random( 1, #curSM ) ] || curSM || self:GetMaterials()[ i ]	
 							self:SetSubMaterial( i - 1, curSMR )
 				
 						end
@@ -280,23 +280,16 @@ function ENT:ANPlusSetIK(bool)
 end
 
 function ENT:ANPlusUpdateWeaponProficency( wep )
-
 	if IsValid(self) && IsValid(wep) && self:IsANPlus() && self:ANPlusGetDataTab()['WeaponProficiencyTab'] then
-
 		local wepTab = self:ANPlusGetDataTab()['WeaponProficiencyTab'][ wep:GetClass() ] || self:ANPlusGetDataTab()['WeaponProficiencyTab'][ wep:GetHoldType() != "" && wep:GetHoldType() ] || self:ANPlusGetDataTab()['WeaponProficiencyTab'][ "Default" ]
-
 		if wepTab then
-
 			if wepTab['Proficiency'] then self:SetCurrentWeaponProficiency( wepTab['Proficiency'] ) end
 			if wep:GetInternalVariable( "m_fMaxRange1" ) && wepTab['PrimaryMaxRange'] then wep:SetSaveValue( "m_fMaxRange1", wepTab['PrimaryMaxRange'] ) end
 			if wep:GetInternalVariable( "m_fMaxRange2" ) && wepTab['SecondaryMaxRange'] then wep:SetSaveValue( "m_fMaxRange2", wepTab['SecondaryMaxRange'] ) end
 			if wep:GetInternalVariable( "m_fMinRange1" ) && wepTab['PrimaryMinRange'] then wep:SetSaveValue( "m_fMinRange1", wepTab['PrimaryMinRange'] ) end
-			if wep:GetInternalVariable( "m_fMinRange2" ) && wepTab['SecondaryMinRange'] then wep:SetSaveValue( "m_fMinRange2", wepTab['SecondaryMinRange'] ) end
-		
-		end
-	
+			if wep:GetInternalVariable( "m_fMinRange2" ) && wepTab['SecondaryMinRange'] then wep:SetSaveValue( "m_fMinRange2", wepTab['SecondaryMinRange'] ) end		
+		end	
 	end
-
 end
 
 function ENT:ANPlusHaloEffect(color, size, lenght)
