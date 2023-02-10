@@ -106,6 +106,10 @@ function ENT:ANPlusNPCRelations()
 	local posEnemies = self:ANPlusGetAll()
 	local it = 1
 	
+	for _, memEnt in pairs( self.ANPlusRelationsMem ) do -- We want to make sure that memory isn't flooded with NULL entities. Possible memory leak?
+		if !IsValid(memEnt) || ( IsValid(memEnt) && !memEnt:ANPlusAlive() ) then table.remove( self.ANPlusRelationsMem, _ ) end
+	end
+	
 	while it <= #posEnemies do
 
 	local ent = posEnemies[ it ]
@@ -123,7 +127,7 @@ function ENT:ANPlusNPCRelations()
 				local dispTab = self:ANPlusGetDataTab()['Relations'][ ent:GetInternalVariable( "m_iName" ) ] || self:ANPlusGetDataTab()['Relations'][ ent:GetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
 
 				if dispTab then
-
+					
 					if !table.HasValue( self.ANPlusRelationsMem, ent ) then
 					
 						if dispTab['MeToNPC'][ 1 ] != "Default" && self:Disposition( ent ) != RelationsTranslate[ dispTab['MeToNPC'][ 1 ] ] then
@@ -151,7 +155,7 @@ function ENT:ANPlusNPCRelations()
 						table.insert( self.ANPlusRelationsMem, ent )
 						
 					end
-			
+					
 				end
 			
 			end
@@ -227,7 +231,7 @@ end
 
 function ENT:ANPlusNPCAnimSpeed() 
 		
-	if !self.ANPlusAnimating && self.ANPlusACTOther && ( self.ANPlusACTOther[ self:ANPlusTranslateSequence( self:GetActivity() ) ] || self.ANPlusACTOther[ self:GetSequenceName( self:GetSequence() ) ] ) then
+	if self.ANPlusACTOther && ( self.ANPlusACTOther[ self:ANPlusTranslateSequence( self:GetActivity() ) ] || self.ANPlusACTOther[ self:GetSequenceName( self:GetSequence() ) ] ) then
 		
 		local aTab1 = self.ANPlusACTOther[ self:ANPlusTranslateSequence( self:GetActivity() ) ] || self.ANPlusACTOther[ self:GetSequenceName( self:GetSequence() ) ]
 		local aTab2 = istable( aTab1[ 2 ] ) && aTab1[ 2 ][ math.random( 1, #aTab1[ 2 ] ) ] || aTab1[ 2 ] 
@@ -238,7 +242,7 @@ function ENT:ANPlusNPCAnimSpeed()
 		
 	end
 
-	if !self.ANPlusAnimating && self.ANPlusACTMovement && self.ANPlusACTMovement[ self:ANPlusTranslateSequence( self:GetActivity() ) ] then
+	if self.ANPlusACTMovement && self.ANPlusACTMovement[ self:ANPlusTranslateSequence( self:GetActivity() ) ] then
 		
 		local aTab1 = self.ANPlusACTMovement[ self:ANPlusTranslateSequence( self:GetActivity() ) ] || self.ANPlusACTMovement[ self:GetSequenceName( self:GetSequence() ) ]
 		local aTab2 = aTab1[ 3 ] && istable( aTab1[ 3 ] ) && aTab1[ 3 ][ math.random( 1, #aTab1[ 3 ] ) ] || aTab1[ 3 ] 
@@ -367,6 +371,7 @@ function ENT:ANPlusNPCThink()
 		self:ANPlusNPCRelations()					
 		self:ANPlusNPCHealthRegen()					
 		self:ANPlusNPCWeaponSwitch()			
+		self:ANPlusNPCTranslateActivity()			
 		
 		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCThink'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCThink'](self)	
@@ -375,6 +380,20 @@ function ENT:ANPlusNPCThink()
 	end
 
 end
+
+function ENT:ANPlusNPCTranslateActivity()
+	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'] != nil then
+		local act = self:GetActivity()
+		self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act)
+		local newAct, speed = self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act) 
+		local oldAct = self:GetActivity()
+
+		if newAct && oldAct != newAct then self:ResetIdealActivity( newAct ) end
+		self:SetPlaybackRate( speed || 1 )
+
+	end
+end
+
 function ENT:ANPlusAcceptInput(ent, input, activator, caller, data)
 	if ( ent == self && ent:IsANPlus(true) && string.Left( input, 6 ) == "event_" ) then
 		self:ANPlusEvent( string.sub( input, 7 ) )

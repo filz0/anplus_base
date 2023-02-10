@@ -263,6 +263,10 @@ local NPCTab = {
 		['OnNPCFollow'] = function(self, ent, state)
 		end, 
 		
+		------------------------------------------------------------ OnNPCTranslateActivity - Can be used to replace activites based on your own conditions.
+		['OnNPCTranslateActivity'] = function(self, act) -- return newAct, speed	
+		end,
+		
 		------------------------------------------------------------ OnNPCHandleAnimationEvent - This function can utilize lua animation events. You can set what happens at the specified animation frame. Originally created by Silverlan. ENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame and animation event ID
 		['OnNPCHandleAnimationEvent'] = function(self, seq, ev)
 		end, 

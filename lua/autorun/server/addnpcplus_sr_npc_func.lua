@@ -872,6 +872,7 @@ end
 
 function ENT:ANPlusPlayActivity(act, speed, faceent, facespeed, callback)
 	
+	self:ClearSchedule()
 	self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
 	local actSeq = self:SelectWeightedSequence( act )
 	local speed = speed || 1
@@ -906,7 +907,7 @@ function ENT:ANPlusPlayActivity(act, speed, faceent, facespeed, callback)
 	end)
 	
 end
-
+--[[
 function ENT:ANPlusPlayActivityGesture(act, speed, faceent, facespeed, callback)
 	
 	self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
@@ -943,7 +944,7 @@ function ENT:ANPlusPlayActivityGesture(act, speed, faceent, facespeed, callback)
 	end)
 	
 end
-
+]]--
 function ENT:ANPlusGetSquadMembers( callback )
 
 	if self:GetSquad() != nil && self:GetSquad() != "" then 
@@ -976,24 +977,31 @@ function ENT:ANPlusClearTarget()
 	self:SetSaveValue( "m_hTargetEnt", NULL )
 end
 
-function ENT:ANPlusOverrideMoveSpeed(speed, rate)
-	
-	if speed != 1 && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() && self:GetMinMoveStopDist() > 10 then
-				
+function ENT:ANPlusOverrideMoveSpeed(speed, rate)	
+	if speed != 1 && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() && self:GetMinMoveStopDist() > 10 then			
 		if speed > 1 && ( self:GetVelocity():Length() <= self:GetIdealMoveSpeed() * speed ) then
-
-			self:SetVelocity( self:GetGroundSpeedVelocity() * speed ) 
-			
-		elseif speed < 1 then
-			
+			self:SetVelocity( self:GetGroundSpeedVelocity() * speed ) 		
+		elseif speed < 1 then		
 			self:SetMoveVelocity( self:GetGroundSpeedVelocity() * speed ) 
-
-		end	
-				
-	end
-	
+		end					
+	end	
 	if rate != 1 then self:SetPlaybackRate( rate ) end
+end
 
+function ENT:ANPlusReplaceActOther(act, speed, actRep)	
+	if actRep && self:GetActivity() == act then
+		
+		local newACT = ( istable(actRep) && actRep[ 1 ] && actRep[ math.random( 1, #actRep ) ] ) || actRep
+		local aTab2 = 
+			
+		self:ResetIdealActivity( newACT )
+
+		timer.Create( "ANP_ACT_OTHER_REPLACE" .. self:EntIndex(), 0, 0, function() 
+			if !IsValid(self) || self:GetActivity() != act then return end
+			self:SetPlaybackRate( speed || 1 ) 
+		end)
+		
+	end
 end
 
 function ENT:ANPlusGetEnemies()
