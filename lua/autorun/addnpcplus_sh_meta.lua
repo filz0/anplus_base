@@ -556,7 +556,23 @@ function metaENT:ANPlusCheckWay(spos, epos, filterTab, ignoreworld, mask)
 	elseif tr.Hit then	
 		return false					
 	end	
+end
 
+function metaENT:ANPlusCheckWayLine(spos, epos, filterTab, ignoreworld, mask)	
+	local tr = util.TraceLine( {
+		start = spos,
+		endpos = epos,
+		filter = filterTab,
+		ignoreworld = ignoreworld,
+		mask = mask || nil
+		} 		
+	)
+	
+	if !tr.Hit then
+		return true	
+	elseif tr.Hit then	
+		return false					
+	end	
 end
 
 function ANPlusIsEmptySpace(spos, epos, filterTab, vecmin, vecmax)	
