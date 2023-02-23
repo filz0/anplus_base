@@ -263,7 +263,11 @@ local NPCTab = {
 		['OnNPCFollow'] = function(self, ent, state)
 		end, 
 		
-		------------------------------------------------------------ OnNPCTranslateActivity - Can be used to replace activites based on your own conditions.
+		------------------------------------------------------------ OnNPCStateChange - This function runs onece, every time NPC's state changes.
+		['OnNPCStateChange'] = function(self, newState, oldState)
+		end,
+		
+		------------------------------------------------------------ OnNPCTranslateActivity - Can be used to replace activites based on your own conditions. It's not 1:1 with a normal TranslateActivity but close enough.
 		['OnNPCTranslateActivity'] = function(self, act) -- return newAct, speed	
 		end,
 		

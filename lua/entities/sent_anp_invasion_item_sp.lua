@@ -259,7 +259,7 @@ if (CLIENT) then
 			dFrame:Center()
 			dFrame:SetVisible( true )
 			dFrame:SetDraggable( true )
-			dFrame:ShowCloseButton( false )
+			dFrame:ShowCloseButton( true )
 			dFrame:NoClipping( true )
 			dFrame:SetSizable( false )
 			dFrame:SetMinWidth( dFrame:GetWide() )
@@ -315,7 +315,7 @@ if (CLIENT) then
 				self:RemoveLine( rID ) 
 				for _, v in pairs( newtab['ItemsToSpawn']) do 
 					if v['Name'] && v['Name'] == v1 || v['PrintName'] && v['PrintName'] == v1 then
-						table.remove( newtab['ItemsToSpawn'], _ )
+						table.RemoveByValue( newtab['ItemsToSpawn'], v )
 					end
 				end					
 				ANPlusUISound( "ANP.UI.Close" )
@@ -534,6 +534,8 @@ if (CLIENT) then
 		function help:OnCursorEntered()
 			ANPlusUISound( "ANP.UI.Hover" )
 		end
+		
+		dFrame:ShowCloseButton( false )
 		
 	end
 	

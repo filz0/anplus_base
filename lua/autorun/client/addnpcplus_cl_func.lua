@@ -5,6 +5,19 @@ local scrHeight = 1080
 local multX = ScrW() / scrWidth
 local multY = ScrH() / scrHeight
 
+net.Receive("anplus_anim_fix", function()
+	local seq = net.ReadFloat()
+	local ent = net.ReadEntity()
+	if IsValid(ent) then
+		ent:SetSaveValue( "m_nPrevSequence", seq )
+		ent:SetSaveValue( "m_nSequence", seq )
+		ent:SetCycle( 0 )
+--m_nSequence
+--m_nNewSequenceParity
+--m_nPrevSequence		
+	end	
+end)
+
 net.Receive("anplus_fix_bones", function()
 
 	local ent = net.ReadEntity()

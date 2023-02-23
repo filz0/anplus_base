@@ -1,4 +1,5 @@
 ANPlusLoadGlobal = { ['Base']  = { ['Name'] = "ANPlus BASE" }, ['entids'] = {} }
+ANPCustomSquads = { base_squad = {} }
 
 ANPDefaultGMODWeapons = {
 ['weapon_pistol'] 		= true,

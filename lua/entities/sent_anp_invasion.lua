@@ -454,7 +454,7 @@ if (SERVER) then
 ]]--////////////////////////////////////////////////////////////////////////////////////////////////	
 local function GetNPCInShape(self, npc, npcData)
 	
-	if !IsValid(npc:GetActiveWeapon()) && npcData['Weapons'] && !npcData['CustomWeapon'] then 
+	if npc:IsNPC() && !IsValid(npc:GetActiveWeapon()) && npcData['Weapons'] && !npcData['CustomWeapon'] then 
 		local wep = npcData['Weapons'][ math.random( 1, #npcData['Weapons'] ) ]
 		npc:Give( wep )
 	elseif !IsValid(npc:GetActiveWeapon()) && npcData['CustomWeapon'] then
@@ -689,7 +689,7 @@ if (CLIENT) then
 			dFrame:Center()
 			dFrame:SetVisible( true )
 			dFrame:SetDraggable( true )
-			dFrame:ShowCloseButton( false )
+			dFrame:ShowCloseButton( true )
 			dFrame:NoClipping( true )
 			dFrame:SetSizable( false )
 			dFrame:SetMinWidth( dFrame:GetWide() )
@@ -849,7 +849,8 @@ if (CLIENT) then
 				self:RemoveLine( rID ) 
 				for _, v in pairs( newtab['NPCBossList'] ) do 
 					if v['Name'] == v1 then
-						table.remove( newtab['NPCBossList'], _ )
+						--table.remove( newtab['NPCBossList'], _ )
+						table.RemoveByValue( newtab['NPCBossList'], v )
 					end
 				end			
 				ANPlusUISound( "ANP.UI.Text" )
@@ -1031,6 +1032,8 @@ if (CLIENT) then
 		function help:OnCursorEntered()
 			ANPlusUISound( "ANP.UI.Hover" )
 		end
+		
+		dFrame:ShowCloseButton( false )
 		
 	end
 	

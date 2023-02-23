@@ -465,6 +465,10 @@ function ANPlusNPCKillFeed( npc, att, inf ) -- Yoink https://github.com/Facepunc
 end
 ]]--
 
+function metaENT:ANPlusLastHitGroup()
+	return self.m_fHitGroupLast || -1
+end
+
 function ANPlusEmitUISound( ply, snd, vol )	
 	if !ply then return end	
 	ANPlusSoundDuration(snd)
@@ -752,7 +756,42 @@ function metaENT:ANPlusDissolve(attacker, inflictor, dtype)
 	
 end
 
-function metaENT:ANPlusIsActivity(act)
-	if self:GetActivity() == self:ANPlusTranslateSequence( act ) then return true end
-	return false
+function metaENT:ANPlusGetIdealSequence()
+	if !self:GetInternalVariable( "m_nIdealSequence" ) then return nil end
+	return self:GetInternalVariable( "m_nIdealSequence" )
+end
+
+function metaENT:ANPlusSetIdealSequence(seq)
+	if !self:GetInternalVariable( "m_nIdealSequence" ) then return nil end
+	seq = isstring( seq ) && self:LookupSequence( seq ) || seq
+	self:SetSaveValue( "m_nIdealSequence", seq )
+end
+
+function metaENT:ANPlusGetIdealWeaponActivity()
+	if !self:GetInternalVariable( "m_IdealWeaponActivity" ) then return nil end
+	return self:GetInternalVariable( "m_IdealWeaponActivity" )
+end
+
+function metaENT:ANPlusSetIdealWeaponActivity(act)
+	if !self:GetInternalVariable( "m_IdealWeaponActivity" ) then return nil end
+	self:SetSaveValue( "m_IdealWeaponActivity", act )
+end
+
+function metaENT:ANPlusSetIdealTranslatedActivity(act)
+	if !self:GetInternalVariable( "m_IdealTranslatedActivity" ) then return nil end
+	self:SetSaveValue( "m_IdealTranslatedActivity", act )
+end
+
+function metaENT:ANPlusGetTranslatedActivity()
+	if !self:GetInternalVariable( "m_translatedActivity" ) then return nil end
+	return self:GetInternalVariable( "m_translatedActivity" )
+end
+
+function metaENT:ANPlusSetTranslatedActivity(act)
+	if !self:GetInternalVariable( "m_translatedActivity" ) then return nil end
+	self:SetSaveValue( "m_translatedActivity", act )
+end
+
+function metaENT:ANPlusGetSquadName()
+	return self:GetKeyValues().squadname || false
 end

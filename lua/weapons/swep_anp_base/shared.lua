@@ -124,24 +124,19 @@ function SWEP:Initialize()
 	self:ANPlusInitialize()
 
 	if self.WorldModelCustomiseTab && self.WorldModelCustomiseTab['Scale'] then
-	
-		if istable( self.WorldModelCustomiseTab['Scale'] ) then		
-		
-			self:ANPlusEditBone( self.WorldModelCustomiseTab['Scale'] )
-			
-		elseif isnumber( self.WorldModelCustomiseTab['Scale'] ) then
-		
-			self:SetModelScale( self.WorldModelCustomiseTab['Scale'] )
-			
-		end 
-		
+		if istable( self.WorldModelCustomiseTab['Scale'] ) then			
+			self:ANPlusEditBone( self.WorldModelCustomiseTab['Scale'] )		
+		elseif isnumber( self.WorldModelCustomiseTab['Scale'] ) then	
+			self:SetModelScale( self.WorldModelCustomiseTab['Scale'] )			
+		end 		
 	end
+	
+	self:SetHoldType( self.HoldType )
 	
 	if (SERVER) then	
 		if self.FlashlightTab && self.FlashlightTab['SpotlightAttachment'] then self:ANPlusWeaponFlashlight() end
 		self:SetSaveValue( "m_fMaxRange1", self.NPCWeaponMaxRange || self:GetInternalVariable( "m_fMaxRange1" ) )
 		self:SetSaveValue( "m_fMinRange1", self.NPCWeaponMinRange || self:GetInternalVariable( "m_fMinRange1" ) )
-		self:SetWeaponHoldType( self.HoldType )
 		if self.Primary.FireLoopSound then self.FireLoopSound = CreateSound( self, self.Primary.FireLoopSound ); self.FireLoopSound:Stop() end
 		self:GenerateBurst()		
 	end

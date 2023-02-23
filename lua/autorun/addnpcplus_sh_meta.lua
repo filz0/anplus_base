@@ -21,6 +21,15 @@ function ANPdevMsg(arg, lvl)
 	end
 end
 
+function ANPlusPercentageChance(chance)
+	local lucky = math.random( 1, 100 )
+	if lucky <= chance then 
+		return true
+	else
+		return false
+	end
+end
+
 function metaENT:ANPlusGetAngleToPos(pos, _ang, bDontClamp)
 	local _pos
 	if self:IsPlayer() then
@@ -223,6 +232,17 @@ function metaENT:ANPlusAlive()
 	end
 end
 
+function ANPlusTableDeNull(tab)
+	for k, v in pairs( tab ) do
+		if !IsValid(v) then 
+			if isnumber( k ) then
+				table.remove( tab, k ) 
+			else
+				table.RemoveByValue( tab, v ) 
+			end
+		end
+	end
+end
 
 local SIZEOF_INT = 4
 local SIZEOF_SHORT = 2
@@ -431,19 +451,49 @@ function ANPlusAIFindNodesInSphere(pos, dist, iType)
 	return tbNodes
 end
 
-function ANPlusAIFindClosestNode(pos, iType)
+function ANPlusAIFindClosestNode(pos, iType, noOccupied)
 	local iType = iType || 2
 	local distClosest = math.huge
 	local nodeClosest
 	for _, node in pairs( ANPlusAIGetNodes( iType ) ) do		
 		
 		local dist = ( node['pos'] - pos ):LengthSqr()
-		if dist < distClosest then	
+		if dist < distClosest && ( !noOccupied || noOccupied && !ANPlusAINodeOccupied( node['pos'] ) ) then	
 			distClosest = dist
 			nodeClosest = node
 		end
 	end
 	return nodeClosest, distClosest
+end
+
+function ANPlusAIFindFurthestNode(pos, iType, noOccupied)
+	local iType = iType || 2
+	local distFurthest = 0
+	local nodeFurthest
+	for _, node in pairs( ANPlusAIGetNodes( iType ) ) do		
+		
+		local dist = ( node['pos'] - pos ):LengthSqr()
+		if dist > distFurthest && ( !noOccupied || noOccupied && !ANPlusAINodeOccupied( node['pos'] ) ) then	
+			distFurthest = dist
+			nodeFurthest = node
+		end
+	end
+	return nodeFurthest, distFurthest
+end
+
+function ANPlusAIFindNodeAtRange(pos, iType, range, noOccupied)
+	local iType = iType || 2
+	local distFurthest = 0
+	local nodeFurthest
+	for _, node in pairs( ANPlusAIGetNodes( iType ) ) do		
+		
+		local dist = ( node['pos'] - pos ):LengthSqr()
+		if dist > distFurthest && dist <= range && ( !noOccupied || noOccupied && !ANPlusAINodeOccupied( node['pos'] ) ) then	
+			distFurthest = dist
+			nodeFurthest = node
+		end
+	end
+	return nodeFurthest, distFurthest
 end
 
 function ANPlusAIFindClosestVisibleNode(pos, iType) -- More expensive than FindClosestNode; Only use when neccessary
@@ -501,10 +551,12 @@ function metaENT:ANPlusCheckWay(spos, epos, filterTab, ignoreworld, mask)
 		self 		
 	)
 	
-	if tr.Hit then			
+	if !tr.Hit then
+		return true	
+	elseif tr.Hit then	
 		return false					
 	end	
-	return true	
+
 end
 
 function ANPlusIsEmptySpace(spos, epos, filterTab, vecmin, vecmax)	

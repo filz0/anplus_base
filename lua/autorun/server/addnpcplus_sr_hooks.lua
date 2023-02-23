@@ -12,7 +12,7 @@ util.AddNetworkString("anplus_screenmsg_ply")
 util.AddNetworkString("anplus_anim_fix")
 
 net.Receive("anplus_gmodsave_load_from_the_menu", function(len, ply)	
-	ANPlusNPCPreApply()	
+	--ANPlusNPCPreApply()	
 end)
 
 concommand.Add( "anplus_sleep_npcs", function(ply, cmd, args, argStr)
@@ -59,10 +59,6 @@ concommand.Add( "anplus_reload_ents", function(ply)
 			npc:ANPlusNPCApply( npc:GetInternalVariable( "m_iName" ) )	
 		end		
 	end	
-end)
-
-hook.Add( "LoadGModSave", "ANPlusLoad_LoadGModSave", function(data, map, timestamp)
-	ANPlusNPCPreApply()
 end)
 
 hook.Add( "PlayerDeath", "ANPlusLoad_PlayerDeath", function(ply, inf, att)
@@ -188,7 +184,11 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 		end
 		
 		if IsValid( npc:ANPlusGetFollowTarget() ) && npc:ANPlusGetFollowTarget():IsPlayer() then ANPlusMSGPlayer( npc:ANPlusGetFollowTarget(), "Following you " .. npc:GetName() .. " has died.", Color( 255, 50, 0 ), "ANP.UI.Error" ) end
-
+		
+		if npc:ANPlusGetDataTab()['UseANPSquadSystem'] then 
+			npc:ANPlusRemoveFromCSquad( npc:ANPlusGetSquadName() )
+		end
+		
 	end
 	
 	if IsValid(npc) && IsValid(att) && att:IsANPlus(true) then
@@ -249,65 +249,71 @@ hook.Add( "GravGunOnDropped", "ANPlusLoad_GravGunOnDropped", function(ply, npc)
 	end	
 end)
 
-hook.Add( "ScalePlayerDamage", "ANPlusLoad_ScalePlayerDamage", function(ply, hg, dmg)
-	local att = dmg:GetAttacker()	
+hook.Add( "ScalePlayerDamage", "ANPlusLoad_ScalePlayerDamage", function(ply, hg, dmginfo)
+	local att = dmginfo:GetAttacker()	
 	if IsValid(att) && att:IsANPlus(true) then	
 		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnPlayer'] != nil then
-			att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnPlayer'](ply, hg, dmg)		
+			att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnPlayer'](ply, hg, dmginfo)		
 		end	
 	end
 end)
 
-hook.Add( "ScaleNPCDamage", "ANPlusLoad_EntityTakeDamage", function(npc, hg, dmg)
+hook.Add( "ScaleNPCDamage", "ANPlusLoad_EntityTakeDamage", function(npc, hg, dmginfo)
 	
-	local att = dmg:GetAttacker()
+	local att = dmginfo:GetAttacker()
 	
-	if IsValid(npc) && npc:IsANPlus() then
-	
-		if npc:ANPlusGetDataTab()['DamageTakenScale'] then
+	if IsValid(npc) then
 		
-			local dmgScaleTab = npc:ANPlusGetDataTab()['DamageTakenScale']
+		npc.m_fHitGroupLast = hg
 		
-			if dmgScaleTab['Body'] && hg == HITGROUP_GENERIC then
-
-				dmg:AddDamage( dmg:GetDamage() * ( ( dmgScaleTab['Body'] / 100 ) >= -1 && dmgScaleTab['Body'] / 100 || -1 ) )
-	
-			elseif dmgScaleTab['Head'] && hg == HITGROUP_HEAD then
+		if npc:IsANPlus() then
 		
-				dmg:AddDamage( dmg:GetDamage() * ( ( dmgScaleTab['Head'] / 100 ) >= -1 && dmgScaleTab['Head'] / 100 || -1 ) )
-
-			elseif dmgScaleTab['Chest'] && hg == HITGROUP_CHEST then
-
-				dmg:AddDamage( dmg:GetDamage() * ( ( dmgScaleTab['Chest'] / 100 ) >= -1 && dmgScaleTab['Chest'] / 100 || -1 ) )
-
-			elseif dmgScaleTab['Stomach'] && hg == HITGROUP_STOMACH then
-		
-				dmg:AddDamage( dmg:GetDamage() * ( ( dmgScaleTab['Stomach'] / 100 ) >= -1 && dmgScaleTab['Stomach'] / 100 || -1 ) )
-
-			elseif dmgScaleTab['LeftArm'] && hg == HITGROUP_LEFTARM then
+			if npc:ANPlusGetDataTab()['DamageTakenScale'] then
 			
-				dmg:AddDamage( dmg:GetDamage() * ( ( dmgScaleTab['LeftArm'] / 100 ) >= -1 && dmgScaleTab['LeftArm'] / 100 || -1 ) )
+				local dmgScaleTab = npc:ANPlusGetDataTab()['DamageTakenScale']
+			
+				if dmgScaleTab['Body'] && hg == HITGROUP_GENERIC then
 
-			elseif dmgScaleTab['Rightarm'] && hg == HITGROUP_RIGHTARM then
+					dmginfo:AddDamage( dmginfo:GetDamage() * ( ( dmgScaleTab['Body'] / 100 ) >= -1 && dmgScaleTab['Body'] / 100 || -1 ) )
 		
-				dmg:AddDamage( dmg:GetDamage() * ( ( dmgScaleTab['RightArm'] / 100 ) >= -1 && dmgScaleTab['RightArm'] / 100 || -1 ) )
+				elseif dmgScaleTab['Head'] && hg == HITGROUP_HEAD then
+			
+					dmginfo:AddDamage( dmginfo:GetDamage() * ( ( dmgScaleTab['Head'] / 100 ) >= -1 && dmgScaleTab['Head'] / 100 || -1 ) )
 
-			elseif dmgScaleTab['LeftLeg'] && hg == HITGROUP_LEFTLEG then
-		
-				dmg:AddDamage( dmg:GetDamage() * ( ( dmgScaleTab['LeftLeg'] / 100 ) >= -1 && dmgScaleTab['LeftLeg'] / 100 || -1 ) )
+				elseif dmgScaleTab['Chest'] && hg == HITGROUP_CHEST then
 
-			elseif dmgScaleTab['RightLeg'] && hg == HITGROUP_RIGHTLEG then
-		
-				dmg:AddDamage( dmg:GetDamage() * ( ( dmgScaleTab['RightLeg'] / 100 ) >= -1 && dmgScaleTab['RightLeg'] / 100 || -1 ) )
+					dmginfo:AddDamage( dmginfo:GetDamage() * ( ( dmgScaleTab['Chest'] / 100 ) >= -1 && dmgScaleTab['Chest'] / 100 || -1 ) )
 
+				elseif dmgScaleTab['Stomach'] && hg == HITGROUP_STOMACH then
+			
+					dmginfo:AddDamage( dmginfo:GetDamage() * ( ( dmgScaleTab['Stomach'] / 100 ) >= -1 && dmgScaleTab['Stomach'] / 100 || -1 ) )
+
+				elseif dmgScaleTab['LeftArm'] && hg == HITGROUP_LEFTARM then
+				
+					dmginfo:AddDamage( dmginfo:GetDamage() * ( ( dmgScaleTab['LeftArm'] / 100 ) >= -1 && dmgScaleTab['LeftArm'] / 100 || -1 ) )
+
+				elseif dmgScaleTab['RightArm'] && hg == HITGROUP_RIGHTARM then
+			
+					dmginfo:AddDamage( dmginfo:GetDamage() * ( ( dmgScaleTab['RightArm'] / 100 ) >= -1 && dmgScaleTab['RightArm'] / 100 || -1 ) )
+
+				elseif dmgScaleTab['LeftLeg'] && hg == HITGROUP_LEFTLEG then
+			
+					dmginfo:AddDamage( dmginfo:GetDamage() * ( ( dmgScaleTab['LeftLeg'] / 100 ) >= -1 && dmgScaleTab['LeftLeg'] / 100 || -1 ) )
+
+				elseif dmgScaleTab['RightLeg'] && hg == HITGROUP_RIGHTLEG then
+			
+					dmginfo:AddDamage( dmginfo:GetDamage() * ( ( dmgScaleTab['RightLeg'] / 100 ) >= -1 && dmgScaleTab['RightLeg'] / 100 || -1 ) )
+
+				end
+			
 			end
 			
-		end
-		
-		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCScaleDamage'] != nil then
+			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCScaleDamage'] != nil then
 
-			npc:ANPlusGetDataTab()['Functions']['OnNPCScaleDamage'](npc, hg, dmg)
+				npc:ANPlusGetDataTab()['Functions']['OnNPCScaleDamage'](npc, hg, dmginfo)
 	
+			end
+			
 		end
 	
 	end
@@ -315,13 +321,12 @@ hook.Add( "ScaleNPCDamage", "ANPlusLoad_EntityTakeDamage", function(npc, hg, dmg
 	if IsValid(att) && att:IsANPlus(true) then
 	
 		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnNPC'] != nil then
-			att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnNPC'](npc, hg, dmg)	
+			att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnNPC'](npc, hg, dmginfo)	
 		end
 	
 	end
 	
 end)
-
 
 hook.Add( "GravGunPunt", "ANPlusLoad_GravGunPunt", function(ply, npc)
 	if npc:IsANPlus(true) && npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCGravGunPunt'] != nil then	
@@ -335,65 +340,69 @@ hook.Add( "OnEntityWaterLevelChanged", "ANPlusLoad_OnEntityWaterLevelChanged", f
 	end
 end)	
 
-hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmg) 
+hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmginfo) 
 
-	local att = dmg:GetAttacker()
-	local inf = dmg:GetInflictor()
-	local dmgt = dmg:GetDamageType()	
+	local att = dmginfo:GetAttacker()
+	local inf = dmginfo:GetInflictor()
+	local dmginfot = dmginfo:GetDamageType()	
+	
+	if ent.m_bNPCNoDamage then dmginfo:SetDamage( 0 ) end
 	
 	if !GetConVar( "anplus_ff_disabled" ):GetBool() && ent:IsANPlus() && IsValid(att) && ( att:IsNPC() || att:IsPlayer() ) && ent != att && ent:Disposition( att ) == D_LI then
 	
-		dmg:SetDamage( 0 )
+		dmginfo:SetDamage( 0 )
 		
 	elseif ent:IsANPlus() && ent.m_fANPlusDmgSelf && IsValid(att) && ent == att then
 	
-		dmg:AddDamage( dmg:GetDamage() * ( ( ent.m_fANPlusDmgSelf / 100 ) >= -1 && ent.m_fANPlusDmgSelf / 100 || -1 ) )
+		dmginfo:AddDamage( dmginfo:GetDamage() * ( ( ent.m_fANPlusDmgSelf / 100 ) >= -1 && ent.m_fANPlusDmgSelf / 100 || -1 ) )
 		
 	elseif !GetConVar( "anplus_ff_disabled" ):GetBool() && IsValid(att) && att:IsPlayer() && ent:IsANPlus() && ent:Disposition( att ) == D_LI then	
 	
-		dmg:SetDamage( 0 )
+		dmginfo:SetDamage( 0 )
 		
 	end
 	
 	if IsValid(inf) && inf != ent && inf.ANPlusQuickDamageDealtOverride then
 		
-		inf.ANPlusQuickDamageDealtOverride( inf, ent, dmg )
+		inf.ANPlusQuickDamageDealtOverride( inf, ent, dmginfo )
 
 	end
 	if IsValid(att) && att != ent && att.ANPlusQuickDamageDealtOverride then
 		
-		att.ANPlusQuickDamageDealtOverride( att, ent, dmg )
+		att.ANPlusQuickDamageDealtOverride( att, ent, dmginfo )
 
 	end
 	if ent.ANPlusQuickDamageTakenOverride then
 		
-		ent.ANPlusQuickDamageTakenOverride( ent, dmg )
+		ent.ANPlusQuickDamageTakenOverride( ent, dmginfo )
 
 	end
 	
 	if IsValid(att) && att:IsANPlus(true) then
-		dmg:AddDamage( dmg:GetDamage() * ( ( att.m_fANPlusDmgDealt / 100 ) >= -1 && att.m_fANPlusDmgDealt / 100 || -1 ) )
+		dmginfo:AddDamage( dmginfo:GetDamage() * ( ( att.m_fANPlusDmgDealt / 100 ) >= -1 && att.m_fANPlusDmgDealt / 100 || -1 ) )
 		
 		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCDamageOnEntity'] != nil then
-			att:ANPlusGetDataTab()['Functions']['OnNPCDamageOnEntity'](att, ent, dmg)	
+			att:ANPlusGetDataTab()['Functions']['OnNPCDamageOnEntity'](att, ent, dmginfo)	
 		end
 	
 	end
 	
 	if IsValid(ent) && ent:IsANPlus(true) then
 		
+		local dmg = dmginfo:GetDamage()
+	
 		if ent:ANPlusGetDataTab()['DamageTakenScale'] then
 		
 			local dmgTab = ent:ANPlusGetDataTab()['DamageTakenScale']
-			local dmgT = dmg:GetDamageType()
+			local dmgT = dmginfo:GetDamageType()
 			
 			if dmgTab[ dmgT ] then	
-				dmg:AddDamage( dmg:GetDamage() * ( ( dmgTab[ dmgT ] / 100 ) >= -1 && dmgTab[ dmgT ] / 100 || -1 ) )			
+				dmginfo:AddDamage( dmginfo:GetDamage() * ( ( dmgTab[ dmgT ] / 100 ) >= -1 && dmgTab[ dmgT ] / 100 || -1 ) )			
 			end			
 		end
 
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCTakeDamage'] != nil then
-			ent:ANPlusGetDataTab()['Functions']['OnNPCTakeDamage'](ent, dmg)			
+			ent:ANPlusGetDataTab()['Functions']['OnNPCTakeDamage'](ent, dmginfo)			
 		end
 	
 	end
@@ -415,7 +424,12 @@ hook.Add( "PlayerCanPickupWeapon", "ANPlusLoad_PlayerCanPickupWeapon", function(
 end)
 
 hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(npc)	
-	if IsValid(npc) && npc:IsANPlus(true) && npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
-		npc:ANPlusGetDataTab()['Functions']['OnNPCRemove'](npc)		
+	if IsValid(npc) && npc:IsANPlus(true) then
+		if npc:IsNPC() && npc:ANPlusGetDataTab()['UseANPSquadSystem'] then 
+			npc:ANPlusRemoveFromCSquad( npc:ANPlusGetSquadName() )
+		end
+		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
+			npc:ANPlusGetDataTab()['Functions']['OnNPCRemove'](npc)	
+		end
 	end	
 end)
