@@ -15,6 +15,10 @@ net.Receive("anplus_gmodsave_load_from_the_menu", function(len, ply)
 	--ANPlusNPCPreApply()	
 end)
 
+--[[////////////////////////
+||||| This command can be used to freeze NPCs in place. Why for? IDK. It looks cool.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 concommand.Add( "anplus_sleep_npcs", function(ply, cmd, args, argStr)
 	if !ply:IsAdmin() then	
 		ply:ChatPrint( "Sorry but this command is reserved for Admins only." )		
@@ -25,6 +29,10 @@ concommand.Add( "anplus_sleep_npcs", function(ply, cmd, args, argStr)
 		end		
 	end	
 end)
+
+--[[////////////////////////
+||||| Unfreeze NPCs
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 concommand.Add( "anplus_wake_npcs", function(ply, cmd, args, argStr)
 	if !ply:IsAdmin() then	
@@ -37,6 +45,10 @@ concommand.Add( "anplus_wake_npcs", function(ply, cmd, args, argStr)
 	end	
 end)
 
+--[[////////////////////////
+||||| This command can be used to add ANPlus ID to an already spawned NPCs/Entities. It will be transformed on map load or by using the command from below.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 concommand.Add( "anplus_set_ent", function(ply, cmd, args, argStr)
 	if !ply:IsAdmin() then	
 		ply:ChatPrint( "Sorry but this command is reserved for Admins only." )		
@@ -48,6 +60,10 @@ concommand.Add( "anplus_set_ent", function(ply, cmd, args, argStr)
 		end		
 	end	
 end)
+
+--[[////////////////////////
+||||| Loads ANPlus Data tables on valid ANPlus NPCs/Entities.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 concommand.Add( "anplus_reload_ents", function(ply)
 	if !ply:IsAdmin() then
@@ -91,7 +107,7 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 		
 		if npc:ANPlusGetDataTab()['CurData'] then
 		
-			for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBones'] do		
+			for i = 1, npc:ANPlusGetDataTab()['CurData']['CurBones'] && #npc:ANPlusGetDataTab()['CurData']['CurBones'] || 0 do		
 				local bone = rag:GetPhysicsObjectNum( i )					
 				if IsValid( bone ) then
 					bone:SetPos( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 1 ] )
@@ -411,7 +427,8 @@ end)
 
 hook.Add( "PlayerUse", "ANPlusLoad_PlayerUse", function(activator, caller, useType, value)
 	if IsValid(caller) && caller:IsANPlus(true) then
-		caller:Input( "Use", activator, caller, SIMPLE_USE )
+		caller:ANPlusOnUse(activator, caller, SIMPLE_USE)
+		if activator:IsPlayer() then activator:ConCommand( "-use" ) end
 	end
 end)
 

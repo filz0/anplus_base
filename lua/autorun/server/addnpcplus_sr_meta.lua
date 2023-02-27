@@ -206,17 +206,15 @@ function metaENT:MyVJClass()
 end
 
 function metaENT:ANPlusCapabilitiesHas(cap) 
-
-	if bit.band( self:CapabilitiesGet(), cap ) == cap then
-	
-		return true
-		
-	else
-	
-		return false
-		
+	if bit.band( self:CapabilitiesGet(), cap ) == cap then	
+		return true		
+	else	
+		return false		
 	end
+end
 
+function metaENT:ANPlusBlockSchedule(sched)
+	if self:IsCurrentSchedule( sched ) then self:TaskComplete(); self:ResetIdealActivity( 1 ); self:SetActivity( 1 ); self:ClearSchedule() end
 end
 
 function metaENT:ANPlusHasEntLOS(ent) -- Big credit to the Captain Applesauce for this piece of work https://steamcommunity.com/profiles/76561198070248149
@@ -714,6 +712,83 @@ end
 function metaENT:ANPlusRemoveSpotlight()
 	if !IsValid(self) then return end
 	self:Fire("KillHierarchy") -- Never use anything else to remove "beam_spotlight"!
+end
+
+function ANPlusCreateLaser(texture, spawnEnd, color, width, sfs, kvs)
+	ent = ents.Create( "env_laser" )
+	ent:SetKeyValue( "texture", texture )
+	ent:SetKeyValue( "width", width || 1 )
+	ent:SetColor( color || Color( 255, 255, 255 ) )
+	ent:SetKeyValue( "renderamt", color.a || 255 )
+	ent:SetKeyValue( "spawnflags", sfs )
+	local name = "anp_Laser" .. ent:EntIndex()
+	ent:SetName( name )
+	if istable( kvs ) then
+		for _, v in pairs( kvs ) do	
+			ent:SetKeyValue( tostring( _ ), v )				
+		end	
+	end
+	if spawnEnd then
+		ent.m_pLaserTarget = ents.Create( "info_target" )
+		ent.m_pLaserTarget:SetPos( ent:GetPos() )
+		ent.m_pLaserTarget:SetAngles( ent:GetAngles() )
+		ent.m_pLaserTarget:SetOwner( ent )
+		ent.m_pLaserTarget:SetParent( ent )
+		local nameT = "anp_LaserTarget" .. ent:EntIndex()
+		ent.m_pLaserTarget:SetName( nameT )
+		if IsValid(ent.m_pLaserTarget) then ent:SetKeyValue( "LaserTarget", nameT ) end
+		ent:DeleteOnRemove( ent.m_pLaserTarget )
+	end
+	
+	ent:Spawn()
+	ent:Activate()
+	
+	return ent, ent.m_pLaserTarget
+end
+--[[
+function ANPlusCreateLaser(texture, spawnEnd, color, width, sfs, kvs)
+	local ent = ents.Create( "sent_anp_envlaser" )
+	ent.m_flLaserTexture = texture
+	ent.m_flLaserTargetEnable = spawnEnd
+	ent.m_flLaserSpawnFlags = sfs
+	ent.m_flLaserWidth = width
+	ent.m_flLaserKeyValuesTab = kvs
+	ent.m_flLaserColor = color
+	ent:Spawn()
+	ent:Activate()
+	return ent, ent.m_pLaser, ent.m_pLaserTarget
+end
+]]--
+function ANPlusCreateBeam(texture, spawnStart, spawnEnd, color, width, sfs, kvs)
+	ent = ents.Create( "env_beam" )
+	ent:SetKeyValue( "texture", texture )
+	ent:SetKeyValue( "BoltWidth", width || 1 )
+	ent:SetColor( color || Color( 255, 255, 255 ) )
+	ent:SetKeyValue( "renderamt", color.a || 255 )
+	ent:SetKeyValue( "spawnflags", sfs )
+	local name = "anp_Beam" .. ent:EntIndex()
+	ent:SetName( name )
+	if spawnStart then ent:SetKeyValue( "LightningStart", name ) end
+	if istable( kvs ) then
+		for _, v in pairs( kvs ) do	
+			ent:SetKeyValue( tostring( _ ), v )				
+		end	
+	end	 
+	if spawnEnd then
+		ent.m_pBeamTarget = ents.Create( "info_target" )
+		ent.m_pBeamTarget:SetPos( ent:GetPos() )
+		ent.m_pBeamTarget:SetAngles( ent:GetAngles() )
+		ent.m_pBeamTarget:SetOwner( ent )
+		ent.m_pBeamTarget:SetParent( ent )
+		local nameT = "anp_BeamTarget" .. ent:EntIndex()
+		ent.m_pBeamTarget:SetName( nameT )
+		if IsValid(ent.m_pBeamTarget) then ent:SetKeyValue( "LightningEnd", nameT ) end
+		ent:DeleteOnRemove( ent.m_pBeamTarget )
+	end	
+	ent:Spawn()
+	ent:Activate()
+	
+	return ent, ent.m_pBeamTarget
 end
 
 function metaENT:ANPlusDissolve(attacker, inflictor, dtype)

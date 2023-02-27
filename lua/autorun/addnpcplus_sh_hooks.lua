@@ -1,4 +1,6 @@
-
+--[[////////////////////////
+||||| Here We are checking spawned entities if they are a part of this base. If so, apply valid data table.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 
 	if SERVER && ent:GetClass() == "monster_human_grunt" then ent:CapabilitiesAdd( 2097152 ) end
@@ -23,6 +25,10 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 	
 end)
 
+--[[////////////////////////
+||||| If any KeyValues are getting applied to our Entity, We want access to them. It won't run on KeyValues applied by the spawn menu on spawn.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 hook.Add( "EntityKeyValue", "ANPlusLoad_EntityKeyValue", function(ent, key, val)
 	if IsValid(ent) && ent:IsANPlus(true) then		
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCKeyValue'] != nil then
@@ -31,8 +37,10 @@ hook.Add( "EntityKeyValue", "ANPlusLoad_EntityKeyValue", function(ent, key, val)
 	end	
 end)
 
-hook.Add( "EntityFireBullets", "ANPlusLoad_EntityFireBullets", function(npc, data)
-	
+--[[////////////////////////
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
+hook.Add( "EntityFireBullets", "ANPlusLoad_EntityFireBullets", function(npc, data)	
 	if IsValid(npc) && npc:IsANPlus(true) && npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'] != nil then
 		
 		npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc, npc:IsNPC() && npc:GetActiveWeapon() || nil, data)	
@@ -40,18 +48,19 @@ hook.Add( "EntityFireBullets", "ANPlusLoad_EntityFireBullets", function(npc, dat
 
 		return allow
 		
-	end	
-	
+	end		
 	if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus(true) && npc:GetOwner():ANPlusGetDataTab()['Functions'] && npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'] != nil then
 		
 		npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc:GetOwner(), npc, data)	
 		local allow = npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc:GetOwner(), npc, data) 
 
-		return allow
-		
-	end	
-	
+		return allow		
+	end		
 end)
+
+--[[////////////////////////
+||||| Thanks to this hook, We can replace NPC' sounds. We can also simlate NPC hearing stuff. This hook doesn't work with scripted sentences (facepunch pls fix).
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)	
 	local ent = data.Entity	

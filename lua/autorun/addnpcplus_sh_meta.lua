@@ -2,6 +2,10 @@ local metaANG = FindMetaTable("Angle")
 local metaENT = FindMetaTable("Entity")
 local metaPLAYER = FindMetaTable("Player")
 
+--[[////////////////////////
+||||| Clamps the given angle...
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 function metaANG:ANPlusClamp()
 	while self.p < 0 do self.p = self.p +360 end
 	while self.y < 0 do self.y = self.y +360 end
@@ -12,6 +16,10 @@ function metaANG:ANPlusClamp()
 	while self.r > 360 do self.r = self.r -360 end
 end
 
+--[[////////////////////////
+||||| Can be used to display dev messages in the console (tables too) at set developer command levels.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 function ANPdevMsg(arg, lvl)
 	if GetConVar("developer"):GetFloat() != lvl then return end
 	if istable(arg) then
@@ -21,6 +29,10 @@ function ANPdevMsg(arg, lvl)
 	end
 end
 
+--[[////////////////////////
+||||| QOL function that runs only when rolled value is equal or lower than the given value.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 function ANPlusPercentageChance(chance)
 	local lucky = math.random( 1, 100 )
 	if lucky <= chance then 
@@ -29,6 +41,10 @@ function ANPlusPercentageChance(chance)
 		return false
 	end
 end
+
+--[[////////////////////////
+||||| Taken from SilverlanBase. Probably obsolite. Sill works.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function metaENT:ANPlusGetAngleToPos(pos, _ang, bDontClamp)
 	local _pos
@@ -46,13 +62,6 @@ function metaENT:ANPlusGetAngleToPos(pos, _ang, bDontClamp)
 	return ang	
 end
 --[[
-/*
-local angTab = {
-	['Pitch'] 	= 70,
-	['Yaw'] 	= 45,
-	['Roll'] 	= 360,
-}
-*/
 
 function metaENT:ANPlusValidAngles(pos, angTab)
 	local selfPos = self:GetPos()
@@ -76,6 +85,19 @@ function metaENT:ANPlusValidAngles(pos, angTab)
 	return validAng
 end
 ]]--
+
+--[[////////////////////////
+||||| So... This function can be used to ensure... Uh... Okay. Let's say that We have a piece of code that We want to run only when something is on the right side of our NPC... Something like that. This is the thing You wanna use.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
+/*
+local angTab = {
+	['Pitch'] 	= 70,
+	['Yaw'] 	= 45,
+	['Roll'] 	= 360,
+}
+*/
+
 function metaENT:ANPlusValidAngles(pos, full360)
 	local sPos, sAng = self:GetPos(), self:GetAngles()	
 	local aimDir = ( pos - sPos ):Angle()
@@ -87,6 +109,9 @@ function metaENT:ANPlusValidAngles(pos, full360)
 	return validAng
 end
 
+--[[////////////////////////
+||||| Used to get Activities from Sequences.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function metaENT:ANPlusTranslateSequence(anim)
 
@@ -106,65 +131,60 @@ function metaENT:ANPlusTranslateSequence(anim)
 	
 end
 
-function metaENT:ANPlusResetBone()
-	
-	local bonecount = self:GetBoneCount()
-	
-	for i = 0, bonecount do
-	
+--[[////////////////////////
+||||| Used to reset Entity's bones.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
+function metaENT:ANPlusResetBone()	
+	local bonecount = self:GetBoneCount()	
+	for i = 0, bonecount do	
 		self:ManipulateBonePosition( i, Vector( 0, 0, 0 ) )
 		self:ManipulateBoneAngles( i, Angle( 0, 0, 0 ) )
 		self:ManipulateBoneScale( i, Vector( 1, 1, 1 ) )
-		self:ManipulateBoneJiggle( i, self:GetManipulateBoneJiggle( i ) )
-		
+		self:ManipulateBoneJiggle( i, self:GetManipulateBoneJiggle( i ) )	
 		if (SERVER) then
 			net.Start("anplus_fix_bones")
 			net.WriteEntity( self )
 			net.Broadcast()	
 		else	
 			self:SetupBones()
-		end
-		
+		end		
 	end
-
 end
 
-function metaENT:ANPlusEditBone(tab)
-	
-	if !tab then return end
-	
-	self:ANPlusResetBone()
-	
+--[[////////////////////////
+||||| Used to edit Entity's bones.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
+function metaENT:ANPlusEditBone(tab)	
+	if !tab then return end	
+	self:ANPlusResetBone()	
 	timer.Simple(0, function()
-	
 		if !IsValid(self) then return end
-	
 		for bone, params in pairs(tab) do
-	
-			local boneid = isnumber( bone ) && bone || self:LookupBone( bone )
 		
-			if boneid then
-		
+			local boneid = isnumber( bone ) && bone || self:LookupBone( bone )	
+			
+			if boneid then	
 				self:ManipulateBonePosition( boneid, params.pos || Vector( 0, 0, 0 ) )
 				self:ManipulateBoneAngles( boneid, params.ang || Angle( 0, 0, 0 ) )
 				self:ManipulateBoneScale( boneid, params.scl || Vector( 1, 1, 1 ) )
-				self:ManipulateBoneJiggle( boneid, params.jiggle || 0 )	
-				
-			end
-		
-		end
-		
+				self:ManipulateBoneJiggle( boneid, params.jiggle || 0 )					
+			end		
+		end		
 		if (SERVER) then
 			net.Start("anplus_fix_bones")
 			net.WriteEntity( self )
 			net.Broadcast()	
 		else	
 			self:SetupBones()
-		end
-		
-	end)
-	
+		end		
+	end)	
 end
+
+--[[////////////////////////
+||||| Used to get the pos, ang and bone of the given hitgroup.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function metaENT:ANPlusGetHitGroupBone( hg )	
 	local numHitBoxSets = self:GetHitboxSetCount()
@@ -182,6 +202,10 @@ function metaENT:ANPlusGetHitGroupBone( hg )
 	return nil, -1	
 end
 
+--[[////////////////////////
+||||| Used to get duration of sound files. (doesn't work well with .mp3)
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 function ANPlusSoundDuration(strfile) -- We want to round the sound duration.
 	local sounddur = SoundDuration( strfile )
 	if sounddur then
@@ -190,6 +214,10 @@ function ANPlusSoundDuration(strfile) -- We want to round the sound duration.
 	ANPdevMsg( "[" .. strfile .. "]" .. " duration: " .. sounddur, 1 )	
 	return sounddur	
 end
+
+--[[////////////////////////
+||||| QOL function to check if Entity is in given distance to our Entity
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function metaENT:ANPlusInRange(target, dist)
 	local distSqr = dist * dist
@@ -201,6 +229,10 @@ function metaENT:ANPlusGetRange(target)
 	local distTSqr = self:GetPos():DistToSqr( target:GetPos() )
 	return distTSqr
 end
+
+--[[////////////////////////
+||||| Similar to ANPlusInRange but for Vectors (positions).
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function ANPlusInRangeVector(pos1, pos2, dist)
 	local distSqr = dist * dist
@@ -214,6 +246,10 @@ function ANPlusGetRangeVector(pos1, pos2)
 	return distTSqr, dist
 end
 
+--[[////////////////////////
+||||| Check if given Entity is from this base.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 function metaENT:IsANPlus(alsoENT)		
 	if self:IsNPC() && self:ANPlusGetDataTab() then 	
 		return true		
@@ -224,6 +260,15 @@ function metaENT:IsANPlus(alsoENT)
 	end
 end
 
+function metaENT:ANPlusIsSpawned()
+	if self:GetKeyValues() && self:GetKeyValues()['anpinitialspawn'] then return true end
+	return false
+end
+
+--[[////////////////////////
+||||| Used to check if Entity is alive.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 function metaENT:ANPlusAlive()
 	if IsValid(self) && ( ( self:IsNPC() && ( ( (SERVER) && self:GetNPCState() != 7 ) || ( (CLIENT) && self:Health() > 0 ) ) ) || ( !self:IsNPC() && self:Health() > 0 ) || ( self:IsPlayer() && self:Alive() ) ) then
 		return true		
@@ -231,6 +276,10 @@ function metaENT:ANPlusAlive()
 		return false		
 	end
 end
+
+--[[////////////////////////
+||||| Remove NULL Entities for a given table.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function ANPlusTableDeNull(tab)
 	for k, v in pairs( tab ) do

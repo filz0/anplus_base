@@ -51,6 +51,10 @@ hook.Add("InitPostEntity", "ANPlusLoad_GModSaveLoadFromTheMenu", function()
 	
 end)
 
+--[[////////////////////////
+||||| Used for the test dummy ANPC.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 local hitboxTranslate = {
 	[0] = "Generic",
 	[1] = "Head",

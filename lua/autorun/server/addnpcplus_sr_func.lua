@@ -382,6 +382,7 @@ function ENT:ANPlusNPCTranslateActivity()
 		if speed != nil && newAct != nil && act != newAct then
 			self.m_tTACTData = {newAct, speed}
 		end
+
 		if newAct then
 			local actSeq = self:SelectWeightedSequence( newAct )
 			local seqID, seqDur = self:LookupSequence( self:GetSequenceName( actSeq ) )	
@@ -418,21 +419,21 @@ function ENT:ANPlusAcceptInput(ent, input, activator, caller, data)
 		self:ANPlusEvent( string.sub( input, 7 ) )
 		return true
 	end	
-	if ( ent == self && ent:IsANPlus(true) && input == "Use" ) then
-		self:ANPlusOnUse( activator, caller, data )
-		return true
-	end
+	--if ( ent == self && ent:IsANPlus(true) && input == "Use" ) then
+		--self:ANPlusOnUse( activator, caller, data )
+		--return true
+	--end
 end
 
 function ENT:ANPlusOnUse(activator, caller, type)
-	if CurTime() - ( self.m_fANPUseLast || 0 ) < 0.05 then return end
-	
-	if self:ANPlusGetDataTab()['CanFollowPlayers'] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] then self:ANPlusFollowPlayer( activator, self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] ) end
-	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCUse'] != nil then
-		self:ANPlusGetDataTab()['Functions']['OnNPCUse'](self, activator, caller, type)					
-	end		
-	if activator:IsPlayer() && type == 3 then activator:ConCommand( "-use" ) end
-	self.m_fANPUseLast = CurTime()
+	if IsValid(activator) && CurTime() - ( self.m_fANPUseLast || 0 ) >= 0.05 then 
+		if self:ANPlusGetDataTab()['CanFollowPlayers'] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] then self:ANPlusFollowPlayer( activator, self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] ) end
+		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCUse'] != nil then
+			self:ANPlusGetDataTab()['Functions']['OnNPCUse'](self, activator, caller, type)					
+		end		
+		--if activator:IsPlayer() && type == 3 then activator:ConCommand( "-use" ) end
+		self.m_fANPUseLast = CurTime()
+	end
 end
 
 local argsDef = {}
@@ -471,4 +472,20 @@ function ANPlusSameType(ent1, ent2)
 		return true		
 	end	
 	return false		
+end
+
+local function ANPlusOnLoad(ply, ent, data)
+	timer.Simple( 0, function()
+		if !IsValid(ent) || !istable( data ) then return end
+		if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'] != nil then		
+			ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'](ply, ent, data)		
+		end	
+	end)
+end
+
+duplicator.RegisterEntityModifier( "anp_duplicator_data", ANPlusOnLoad )
+
+function ENT:ANPlusStoreEntityModifier(dataTab)
+	if !dataTab then return end
+    duplicator.StoreEntityModifier( self, "anp_duplicator_data", dataTab )
 end

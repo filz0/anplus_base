@@ -17,7 +17,9 @@ ANPDefaultGMODWeapons = {
 }
 
 ANPlus = {
-	
+	--[[////////////////////////
+	||||| Used to add ANPlus NPCs to the spawn menu and global table.
+	]]--\\\\\\\\\\\\\\\\\\\\\\\\
 	AddNPC = function( tab, listType )
 
 		if ANPlusLoadGlobal then
@@ -86,7 +88,9 @@ ANPlus = {
 			end
 		end		
 	end,
-
+	--[[////////////////////////
+	||||| Used to add NPC weapons to the spawn menu while also checking if added weapon has its base installed. If not, it won't be added.
+	]]--\\\\\\\\\\\\\\\\\\\\\\\\
 	AddNPCWeapon = function( base, name, entclass, killcon, killconcolor )
 		
 		local checkIfBaseExists = base && file.Exists( "lua/weapons/" .. base, "GAME" ) || !base && true
@@ -164,17 +168,11 @@ local ANPlusInvalidChars = {
 }
 
 function IDCreate( name )
-
 	for i = 1, #ANPlusInvalidChars do
-
-		name = string.Replace( name, ANPlusInvalidChars[ i ], ANPlusInvalidChars[ i ] == " " && "_" || "" )
-	
-	end
-	
-	local id = string.lower( name )
-	
-	return id
-	
+		name = string.Replace( name, ANPlusInvalidChars[ i ], ANPlusInvalidChars[ i ] == " " && "_" || "" )	
+	end	
+	local id = string.lower( name )	
+	return id	
 end
 
 

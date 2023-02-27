@@ -145,6 +145,7 @@ function ENT:ANPlusNPCApply(name)
 					self.m_tTACTData = {}
 					if data['UseANPSquadSystem'] then self:ANPlusAddToCSquad( self:ANPlusGetSquadName() ) end
 				end
+				self:SetUseType(SIMPLE_USE)
 				self.m_tbAnimationFrames = {}
 				for _, v in pairs( self:GetSequenceList() ) do
 					local seqID = self:LookupSequence( v )
@@ -188,9 +189,12 @@ function ENT:ANPlusNPCApply(name)
 				self:ANPlusApplyDataTab( data )					
 				self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
 				
-				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
-					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self)		
-				end	
+				timer.Simple( 0, function()
+					if !IsValid(self) then return end
+					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
+						self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self)		
+					end	
+				end)
 				
 				hook.Add( "Think", self, self.ANPlusNPCThink )
 				hook.Add( "AcceptInput", self, self.ANPlusAcceptInput )
@@ -893,14 +897,14 @@ function ENT:ANPlusFaceEntity( ent, speed )
 end
 
 function ENT:ANPlusPlayActivity(act, speed, faceent, facespeed, callback, postcallback)
-
-	--self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
+	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 ) then return end
 	local actSeq = self:SelectWeightedSequence( act )
 	local speed = speed || 1
 	local facespeed = facespeed || 0
 	self:StopMoving()
 	self:SetCondition( 67 )
 	self:ClearCondition( 68 )
+	self:SetKeyValue( "sleepstate", 2 )
 	self:ResetSequenceInfo()
 	self:ResetSequence( actSeq )	
 	self:ResetIdealActivity( act )
@@ -918,6 +922,7 @@ self.m_fLastCycle = 0
 		self.m_bANPlusPlayingActivity = false
 		self:SetCondition( 68 )
 		self:ClearCondition( 67 )
+		self:SetKeyValue( "sleepstate", 0 )
 		self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
 		if isfunction( postcallback ) then
 			postcallback( seqID, seqDur )
@@ -1005,17 +1010,19 @@ function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, atHPLevel, dmgMin, dmgMax, c
 		self:ClearGoal()
 		dmginfo:SetDamage( 0 )
 		self:SetHealth( 1 )
-		self:SetNPCState( 6 )
+		--self:SetNPCState( 6 )
 		self:ANPlusPlayActivity( act, speed, nil, nil, nil, function()
 			self.m_bNPCNoDamage = false
 			if isfunction( postcallback ) then
 				postcallback( self, lastDMGinfo )
 			end
+			--self:SetSchedule( SCHED_IDLE_STAND )
 			local newDMGinfo = DamageInfo()
 			newDMGinfo:SetAttacker( IsValid(lastDMGinfo.att) && lastDMGinfo.att || self )
 			newDMGinfo:SetInflictor( IsValid(lastDMGinfo.inf) && lastDMGinfo.inf || self )
 			newDMGinfo:SetDamage( 1 )
 			self:TakeDamageInfo( newDMGinfo )
+			self:SetHealth( 0 )
 		end)
 	end
 end
