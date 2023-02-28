@@ -295,7 +295,7 @@ function ENT:ANPlusNPCWeaponSwitch()
 end
 
 function ENT:ANPlusApplyDataTab( tab )	
-	self['ANPlusData'] = self['ANPlusData'] || tab
+	self['ANPlusData'] = tab
 	timer.Simple(0.1, function() -- God I hate networking....
 		if !IsValid(self) then return end
 		net.Start("anplus_data_tab")
@@ -426,12 +426,12 @@ function ENT:ANPlusAcceptInput(ent, input, activator, caller, data)
 end
 
 function ENT:ANPlusOnUse(activator, caller, type)
-	if IsValid(activator) && CurTime() - ( self.m_fANPUseLast || 0 ) >= 0.05 then 
+	if IsValid(activator) && ( type == 3 && CurTime() - ( self.m_fANPUseLast || 0 ) >= 0.05 || type != 3 ) then 
 		if self:ANPlusGetDataTab()['CanFollowPlayers'] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] then self:ANPlusFollowPlayer( activator, self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] ) end
 		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCUse'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCUse'](self, activator, caller, type)					
 		end		
-		--if activator:IsPlayer() && type == 3 then activator:ConCommand( "-use" ) end
+		if activator:IsPlayer() && type == 3 then activator:ConCommand( "-use" ) end
 		self.m_fANPUseLast = CurTime()
 	end
 end

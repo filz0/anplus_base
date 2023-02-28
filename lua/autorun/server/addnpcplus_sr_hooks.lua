@@ -427,8 +427,8 @@ end)
 
 hook.Add( "PlayerUse", "ANPlusLoad_PlayerUse", function(activator, caller, useType, value)
 	if IsValid(caller) && caller:IsANPlus(true) then
-		caller:ANPlusOnUse(activator, caller, SIMPLE_USE)
-		if activator:IsPlayer() then activator:ConCommand( "-use" ) end
+		useType = useType || caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['SetUseType'] || 3
+		caller:ANPlusOnUse(activator, caller, useType)
 	end
 end)
 

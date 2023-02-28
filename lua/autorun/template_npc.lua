@@ -12,6 +12,200 @@ if !ANPlusLoaded then return end
 --util.PrecacheSound( string soundName )
 ------------------------------------------------------------
 
+local ENTTab = {
+----------------------------------------------------------------- Category at which you'll be able to find your NPC.
+	['Category'] 				= "Half-Life 2",
+----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
+	['Name'] 					= "Suit Charger (Citadel)",   
+----------------------------------------------------------------- Entity class of your NPC aka base NPC       
+	['Class'] 					= "item_suitcharger",
+----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
+--[[
+	['Models'] = {
+		--- 
+		{ "models/mymodel.mdl", 
+			['BodyGroups'] = { 					-- Table with body groups that you wish to change.
+				[1] = { 0, 1 },					-- This table represents body group 1 and its value will be randomized between 0 and 1. In this case, our model has no body groups so this does nothing xd.
+				[2] = { 0, 7 },					-- You can add as many as you wish.
+				[3] = nil,	 					-- While the table must go in order from 1 up. You can "skip" a body group by setting it to "nil".
+				[4] = { 1, 3 },
+				[5] = 3,
+			}, 
+			['Skin'] 		 = { 0, 0 },			-- This table represents skin of this model. In this case, it will be randomized between 0 and 2.
+			['Material']	 = "",				-- This value will set a new material for your NPC with this model applied.
+			['SubMaterials'] = { -- Table with sub materials to set on your NPC. You can put as many replacements as you wish. The table must go in order from 1 up. You can "skip" a sub material by leaving the table empty "{""}".
+				[1] = "",    
+				[2] = "",    
+				[3] = { "squad/orangebox", "metal6", "rubber" }, -- One of these 3 will be chosen randomly.    
+			},
+			['Color']		 = Color( 255, 255, 255, 255 ),	-- This table will change the color of your NPC with this model applied. Red Green Blue Alpha.
+			['BloodColor']	 = 3,	-- Set blood color. https://wiki.facepunch.com/gmod/Enums/BLOOD_COLOR
+			['BoneEdit']	 = { -- Here you can edit the bones of your NPC. You can change position, angles, and scale.
+				['ValveBiped.Bip01_Spine'] = { ang = Angle( 70, 0, 0 ), pos = Vector( 0, 0, 0 ), scl = Vector( 1, 1, 1 ), jiggle = 0 },
+			},
+		},
+			---   
+	},
+--]]
+	['Models'] = nil,
+----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
+	['AdminOnly'] 				= false, 
+----------------------------------------------------------------- Displays author of this Entity.
+	['Author']					= "Your name or something",
+----------------------------------------------------------------- Sets if NPC should only be spawnable on the ceiling.
+	['OnCeiling'] 				= false,
+----------------------------------------------------------------- Sets if NPC should only be spawnable on the floor.
+	['OnFloor'] 				= false,
+----------------------------------------------------------------- Position offset from the crosshair.
+	['Offset'] 					= nil,
+----------------------------------------------------------------- Rotates NPC after the spawn. (eg. ['Rotate'] = Angle( 0, 180, 0 ))
+	['Rotate']					= nil,
+----------------------------------------------------------------- Set if your NPC should drop to the floor on spawn (seems to be only working on NPCs that do not possess any physics).
+	['NoDrop'] 					= false, 
+----------------------------------------------------------------- NPC health and max health.	
+	['Health'] 					= 50,
+----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
+--[[ EXAMPLE
+	['KeyValues'] 			= { citizentype = CT_REBEL, SquadName = "resistance" },
+--]]
+	['KeyValues'] 				= {},
+----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
+	['SpawnFlags'] 				= 8192, 
+----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
+--[[ EXAMPLE
+	['InputsAndOutputs'] 	= { -- string input, string param = "nil", number delay = 0, Entity activator = nil, Entity caller = nil
+		{ "kill", "", 1 }, -- I'll kill*myself within 1 second after spawn.
+	},  
+--]]
+	['InputsAndOutputs'] 		= nil,    
+----------------------------------------------------------------- Allow or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
+	['AllowPhysgunPickup'] 		= true, 
+----------------------------------------------------------------- Allow or disallow GravGun pickup on your NPC. Might not work on all NPCs. If set to false, it will disable all GravGun-related functions!	
+	['AllowGravGunPickUp'] 		= false,
+----------------------------------------------------------------- Increase or decrease NPC's damage output. The lowest is -100 (%) and it can go as high as you wish (be reasonable).
+	['DamageDealtScale'] 		= 0, --%, 0 is default.
+----------------------------------------------------------------- This table lets you override/edit sounds made by your NPC.	
+--[[ EXAMPLE
+	['SoundModification'] = {
+	
+		['OverPitch'] 			= { 90, 110 }, -- Pitch override for realistic random voices.
+		['SoundList'] = {
+			[1] = {"*vo/npc/male01/abouttime", -- Sound that we want to edit/replace. If you use only a part of sound path like here (normally it would look something like this vo/npc/male01/abouttime01.wav), all sounds with similar names/paths will be edited like this. It saves some time.
+			['SoundLevel'] = 100, -- Or sound range, can be randomized ['SoundLevel'] = { min, max } or specified ['SoundLevel'] = { val }
+			['Pitch'] = { 70, 100 }, -- Also can be randomised,
+			['Channel'] = CHAN_VOICE, 
+			['Volume'] = 0.3, -- Same.
+			['Flags'] = 1024, 
+			['DSP'] = 38, 
+			['Replacement'] = { "vo/coast/odessa/nlo_cub_freeman.wav", "vo/coast/odessa/nlo_cub_service.wav", "vo/coast/odessa/nlo_cub_volunteer.wav" } }, 
+
+		},
+		
+	}, 
+--]]
+	['SoundModification'] 		= nil,
+----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
+	['Functions'] = {
+	
+		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
+		['OnNPCSpawn'] = function(self)	
+			self:SetSaveValue( "m_iMaxJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
+			self:SetSaveValue( "m_iJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
+		end,
+		
+		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
+		---['SetUseType'] = CONTINUOUS_USE,
+		['OnNPCUse'] = function(self, activator, caller, type)		
+		end,
+		
+		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
+		['OnNPCThink'] = function(self)     	
+		end, 
+		
+		------------------------------------------------------------ OnNPCLoad - This function is called when NPC gets loaded via GMod Save system or the Duplicator tool and has some save data using ENT:ANPlusStoreEntityModifier(dataTab).
+		['OnNPCLoad'] = function(ply, self, dataTab)	
+		end,
+		
+		------------------------------------------------------------ OnNPCHandleAnimationEvent - This function can utilize lua animation events. You can set what happens at the specified animation frame. Originally created by Silverlan. ENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame and animation event ID
+		['OnNPCHandleAnimationEvent'] = function(self, seq, ev)
+		end, 
+		
+		------------------------------------------------------------ OnNPCEventHandle - This hook allows you to do a lot of things, from changing footstep sounds to... A lot of things...
+		['OnNPCEventHandle'] = function(self, ...)	
+		end,
+		
+		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like the Combine Soldier throwing a grenade).
+		['OnNPCCreateEntity'] = function(self, ent)	-- SHARED ( CLIENT & SERVER )					
+		end,
+		
+		------------------------------------------------------------ OnNPCPhysicsCollide - Called when the entity collides with anything. The move type and solid type must be VPHYSICS for the hook to be called.
+		['OnNPCPhysicsCollide'] = function(self, data, physobj)					
+		end,
+		
+		------------------------------------------------------------ OnNPCFireBullets - This function runs when NPC fires a bullet (best used with turrets). https://wiki.facepunch.com/gmod/GM:EntityFireBullets
+		['OnNPCFireBullets'] = function(self, weapon, data) -- SHARED ( CLIENT & SERVER )		
+			return true
+		end,
+		
+		------------------------------------------------------------ OnNPCKeyValue - This function runs whenever keyvalues/inputs/outpust run, are called or whatever.
+		['OnNPCKeyValue'] = function(self, key, value) -- SHARED ( CLIENT & SERVER )	
+		end,
+		
+		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.
+		['OnNPCWaterLevelChanged'] = function(self, old, new)
+		end,
+		
+		------------------------------------------------------------ OnPhysgunPickup - This function runs when NPC gets picked up by the Player PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.
+		['OnNPCOnPhysgunPickup'] = function(ply, self)
+		end,
+		
+		------------------------------------------------------------ OnNPCOnPhysgunFreeze - This function runs when Player is trying to freeze this NPC with the PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.
+		['OnNPCOnPhysgunFreeze'] = function(ply, self)
+		end,
+		
+		------------------------------------------------------------ OnNPCGravGunOnPickedUp - This function runs when NPC gets picked up by the Player GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
+		['OnNPCGravGunOnPickedUp'] = function(ply, self)		
+		end,
+		
+		------------------------------------------------------------ OnNPCGravGunOnDropped - This function runs when NPC gets dropped by the Player GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
+		['OnNPCGravGunOnDropped'] = function(ply, self)		
+		end,
+		
+		------------------------------------------------------------ OnGravGunPunt - This function runs when NPC gets punted (GravGun primary attack) by a Player.
+		['OnNPCGravGunPunt'] = function(ply, self)		
+		end,
+			
+		------------------------------------------------------------ OnNPCTakeDamage - This function runs whenever NPC gets damaged.
+		['OnNPCTakeDamage'] = function(self, dmginfo)
+		end,
+		
+		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
+		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)		
+		end,
+		
+		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
+		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)		
+		end,
+		
+		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
+		['OnNPCDamageOnEntity'] = function(self, ent, dmginfo)	
+		end,
+		
+		------------------------------------------------------------ OnNPCEmitSound - This function runs whenever NPC emits any sounds (no scripted sequences).
+		['OnNPCEmitSound'] = function(self, data) -- SHARED ( CLIENT & SERVER )
+		end,
+		
+		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
+		['OnNPCRemove'] = function(self)	
+		end,
+		
+		},
+	
+	}  
+ 
+----------------------------------------------------------------- This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
+ANPlus.AddNPC( ENTTab, "SpawnableEntities" )
+
 local NPCTab = {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
 	['Category'] 			= "[ANP] Dev",
@@ -30,18 +224,14 @@ local NPCTab = {
 			['Color']		 = Color( 255, 255, 255, 255 ),	-- This table will change the color of your NPC with this model applied. Red Green Blue Alpha.
 			['BloodColor']	 = 3,	-- Set blood color. https://wiki.facepunch.com/gmod/Enums/BLOOD_COLOR
 			['BoneEdit']	 = nil, 
+			['Scale']					= { 100, 0 }, --% scale and delta time.
+			['CollisionBounds']	= {	
+				['Min']				= Vector( -13, -13, 0 ), -- Mins of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
+				['Max']				= Vector( 13, 13, 72 ),  -- Maxs of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
+				['HullType']		= 0,					-- Hull type. https://wiki.facepunch.com/gmod/Enums/HULL           
+			},
 		},
-			---   
-	},
------------------------------------------------------------------ Size of your NPC. It will apply to all models.	
-	['Scale']					= { 100, 0 }, --% scale and delta time.
------------------------------------------------------------------ It is sadly necessary to input these manually. Model change tends to break NPCs collisions.	
-	['CollisionBounds']	= {
-	
-		['Min']				= Vector( -13, -13, 0 ), -- Mins of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
-		['Max']				= Vector( 13, 13, 72 ),  -- Maxs of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
-		['HullType']		= 0,					-- Hull type. https://wiki.facepunch.com/gmod/Enums/HULL          
-   
+		---   
 	},
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
@@ -120,8 +310,6 @@ local NPCTab = {
 	['ActivityMovement'] 		= nil,
 ----------------------------------------------------------------- This table lets you override/edit sounds made by your NPC.	
 	['SoundModification'] 		= nil,
------------------------------------------------------------------ Here you can edit the bones of your NPC. You can change position, angles, and scale.		
-	['BoneEdit'] 				= nil,
 ----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
 	['Functions'] = {
 	
@@ -189,7 +377,7 @@ local NPCTab = {
 		['OnNPCDeath'] = function(self, attacker, inflictor)
 		end,		
 		------------------------------------------------------------ OnRagdollCreated - This function runs when the ragdoll of our NPC gets created.
-		['OnNPCClientRagdollCreated'] = function(self, ragdoll)	-- SHARED ( CLIENT & SERVER )	
+		['OnNPCRagdollCreated'] = function(self, ragdoll)	-- SHARED ( CLIENT & SERVER )	
 		end,		
 		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
 		['OnNPCRemove'] = function(self)	
@@ -226,18 +414,14 @@ local NPCTab = {
 				[3] = { "squad/orangebox", "metal6", "rubber" }, -- One of these 3 will be chosen randomly.    
 			},
 			['Color']		 = Color( 255, 255, 255, 255 ),	-- This table will change the color of your NPC with this model applied. Red Green Blue Alpha. 
+			['Scale']					= { 100, 0 }, --% scale and delta time.
+			['CollisionBounds']	= {	
+				['Min']				= Vector( -13, -13, 0 ), -- Mins of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
+				['Max']				= Vector( 13, 13, 72 ),  -- Maxs of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
+				['HullType']		= 0,					-- Hull type. https://wiki.facepunch.com/gmod/Enums/HULL           
+			},
 		},
 			---   
-	},
------------------------------------------------------------------ Size of your NPC. It will apply to all models.	
-	['Scale']				= { 100, 0 }, --% scale and delta time.
------------------------------------------------------------------ It is sadly necessary to input these manually. Model change tends to break NPCs collisions.	
-	['CollisionBounds']	= {
-	
-		['Min']				= Vector( -13, -13, 0 ), -- Mins of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
-		['Max']				= Vector( 13, 13, 72 ),  -- Maxs of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
-		['HullType']		= 0,					-- Hull type. https://wiki.facepunch.com/gmod/Enums/HULL          
-   
 	},
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 			= false, 
@@ -425,8 +609,6 @@ local NPCTab = {
         
 	}, 
 ]]--
------------------------------------------------------------------ Here you can edit the bones of your NPC. You can change position, angles, and scale.	
-	['BoneEdit'] = nil,
 ----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
 	['Functions'] = {
 		
@@ -592,18 +774,14 @@ local NPCTab = {
 				[3] = { "squad/orangebox", "metal6", "rubber" }, -- One of these 3 will be chosen randomly.    
 			},
 			['Color']		 = Color( 255, 0, 0, 255 ),	-- This table will change the color of your NPC with this model applied. Red Green Blue Alpha.
+			['Scale']					= { 100, 0 }, --% scale and delta time.
+			['CollisionBounds']	= {	
+				['Min']				= Vector( -13, -13, 0 ), -- Mins of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
+				['Max']				= Vector( 13, 13, 72 ),  -- Maxs of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
+				['HullType']		= 0,					-- Hull type. https://wiki.facepunch.com/gmod/Enums/HULL           
+			},
 		},
 			---   
-	},
------------------------------------------------------------------ Size of your NPC. It will apply to all models.	
-	['Scale']				= { 100, 0 }, --% scale and delta time.
------------------------------------------------------------------ It is sadly necessary to input these manually. Model change tends to break NPCs collisions.	
-	['CollisionBounds']	= {
-	
-		['Min']				= Vector( -13, -13, 0 ), -- Mins of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
-		['Max']				= Vector( 13, 13, 72 ),  -- Maxs of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
-		['HullType']		= 0,					-- Hull type. https://wiki.facepunch.com/gmod/Enums/HULL  
-   
 	},
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 			= false, 
@@ -773,8 +951,6 @@ local NPCTab = {
         
 	}, 
 ]]--
------------------------------------------------------------------ Here you can edit the bones of your NPC. You can change position, angles, and scale.	
-	['BoneEdit'] = nil,
 ----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
 	['Functions'] = {
 	

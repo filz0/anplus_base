@@ -8,11 +8,11 @@ function ENT:ANPlusNPCApply(name)
 		
 			local dataTab = ANPlusLoadGlobal[ i ]
 
-			if ( dataTab && dataTab['Name'] == name && dataTab['Class'] == self:GetClass() && !self:IsANPlus(true) ) then
-
+			if ( dataTab && dataTab['Name'] == name && dataTab['Class'] == self:GetClass() ) then
+				
 				local data = table.Copy( dataTab )
 				
-				local min, max = self:GetCollisionBounds()
+				local colBoundsMin, colBoundsMax = self:GetCollisionBounds()
 				--local min2, max2 = self:GetSurroundingBounds()
 				local hull = self:IsNPC() && self:GetHullType()	|| "Not NPC"			
 				ANPdevMsg( "Collision Bounds: Min[" .. tostring(min) .. "] Max[" .. tostring(max) .. "] | Hull: " .. tostring(hull), 1 )
@@ -29,6 +29,8 @@ function ENT:ANPlusNPCApply(name)
 					--local CurMaterial = ( modelTab && modelTab['Material'] ) || ""
 					local CurMaterial = ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && math.random( modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""
 					local CurBoneEdit = ( modelTab && modelTab['BoneEdit'] ) || nil
+					local CurColBoundsMin, CurColBoundsMax = ( modelTab && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( modelTab && modelTab['CollisionBounds']['Max'] || colBoundsMax )
+					local CurScale, CurScaleDelta = modelTab['Scale'] && modelTab['Scale'][ 1 ] / 100 || 1, modelTab['scale'] && modelTab['scale'][ 2 ] || 0
 					
 					for i = 1, #data['Models'] do
 						if self:GetModel() != data['Models'][ i ][ 1 ] then
@@ -36,13 +38,23 @@ function ENT:ANPlusNPCApply(name)
 							--self:SetKeyValue( "model", CurModel )
 						end
 					end
-					
+					print( self:GetSolid(), self:GetCollisionGroup(), self:GetMoveCollide(), self:GetMoveType() )
 					self:SetSkin( CurSkin )
 					self:SetColor( CurColor )
 					self:SetMaterial( CurMaterial )
 					self:SetBloodColor( modelTab['BloodColor'] || self:GetBloodColor() )
 					self:ANPlusEditBone( CurBoneEdit )
-	
+					self:SetCollisionBounds( CurColBoundsMin, CurColBoundsMax )
+					if modelTab['Scale'] then self:SetModelScale( CurScale, CurScaleDelta ) end
+					--self:SetSurroundingBounds( data['SurroundingBounds'] && data['SurroundingBounds']['Min'] || min2, data['SurroundingBounds'] && data['SurroundingBounds']['Max'] || max2 )
+					--if data['SurroundingBounds'] && data['SurroundingBounds']['BoundsType'] then self:SetSurroundingBoundsType( data['SurroundingBounds']['BoundsType'] ) end
+					
+					if modelTab['PhysicsInit'] then self:PhysicsInit( modelTab['PhysicsInit'] ) end
+					self:SetMoveType( modelTab['SetMoveType'] || self:GetMoveType() )
+					self:SetMoveCollide( modelTab['SetMoveCollide'] || self:GetMoveCollide() )
+					self:SetCollisionGroup( modelTab['SetCollisionGroup'] || self:GetCollisionGroup() )
+					self:SetSolid( modelTab['SetSolid'] || self:GetSolid() )
+					
 					local addTab = { ['CurName'] = data['Name'] }
 					table.Merge( data['CurData'], addTab )		
 					local addTab = { ['CurModel'] = CurModel }
@@ -111,18 +123,15 @@ function ENT:ANPlusNPCApply(name)
 					end
 	
 				end
-
-				if data['Scale'] then self:SetModelScale( data['Scale'] && data['Scale'][ 1 ] / 100 || 1, data['scale'] && data['scale'][ 2 ] || 0 ) end
-				self:ANPlusEditBone( data['BoneEdit'] || nil )		
+				
+				--[[
 				local physCheck = self:GetPhysicsObject()
-				self:SetCollisionBounds( data['CollisionBounds'] && data['CollisionBounds']['Min'] || min, data['CollisionBounds'] && data['CollisionBounds']['Max'] || max )
-				--self:SetSurroundingBounds( data['SurroundingBounds'] && data['SurroundingBounds']['Min'] || min2, data['SurroundingBounds'] && data['SurroundingBounds']['Max'] || max2 )
-				--if data['SurroundingBounds'] && data['SurroundingBounds']['BoundsType'] then self:SetSurroundingBoundsType( data['SurroundingBounds']['BoundsType'] ) end
 				if IsValid(physCheck) && self:GetSolid() == SOLID_VPHYSICS then
 					self:PhysicsInit( SOLID_VPHYSICS )
 				else
 					self:SetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
 				end
+				]]--
 				self:SetSolid( SOLID_BBOX )
 				if self:IsNPC() then				
 					self:SetHullType( data['CollisionBounds'] && data['CollisionBounds']['HullType'] || hull )
@@ -188,7 +197,7 @@ function ENT:ANPlusNPCApply(name)
 				self.ANPlusIDName = IDCreate( data['Name'] )
 				self:ANPlusApplyDataTab( data )					
 				self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
-				
+
 				timer.Simple( 0, function()
 					if !IsValid(self) then return end
 					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then

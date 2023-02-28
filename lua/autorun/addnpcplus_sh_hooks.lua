@@ -3,8 +3,6 @@
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 
-	if SERVER && ent:GetClass() == "monster_human_grunt" then ent:CapabilitiesAdd( 2097152 ) end
-
 	timer.Simple( 0, function()
 
 		if IsValid(ent) && IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
@@ -17,7 +15,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 		if !IsValid(ent) then return end
 		
 		if ( SERVER ) then 		
-			ent:ANPlusIgnoreTillSet()		
+			ent:ANPlusIgnoreTillSet()	
 			ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
 		end
 		
