@@ -47,7 +47,7 @@ local ENTTab = {
 			---   
 	},
 --]]
-	['Models'] = nil,
+	['Models'] = false,
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
 ----------------------------------------------------------------- Displays author of this Entity.
@@ -63,7 +63,7 @@ local ENTTab = {
 ----------------------------------------------------------------- Set if your NPC should drop to the floor on spawn (seems to be only working on NPCs that do not possess any physics).
 	['NoDrop'] 					= false, 
 ----------------------------------------------------------------- NPC health and max health.	
-	['Health'] 					= 50,
+	['Health'] 					= false,
 ----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
 --[[ EXAMPLE
 	['KeyValues'] 			= { citizentype = CT_REBEL, SquadName = "resistance" },
@@ -114,8 +114,14 @@ local ENTTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
-		---['SetUseType'] = CONTINUOUS_USE,
-		['OnNPCUse'] = function(self, activator, caller, type)		
+		['SetUseType'] = CONTINUOUS_USE,
+		['OnNPCUse'] = function(self, activator, caller, type)	
+			timer.Create( "ANP_TEMP_SUITCHARGER_DRIPEEG_STOP" .. self:EntIndex(), 0.1, 1, function()
+				if !IsValid(self) then return end
+				self.m_bFireThatEgg = false
+				self:StopSound( "anp/suitcharger_egg/suitchargeok1.wav" )
+				self:StopSound( "anp/suitcharger_egg/suitcharge1.wav" )
+			end)
 		end,
 		
 		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
@@ -193,10 +199,20 @@ local ENTTab = {
 		
 		------------------------------------------------------------ OnNPCEmitSound - This function runs whenever NPC emits any sounds (no scripted sequences).
 		['OnNPCEmitSound'] = function(self, data) -- SHARED ( CLIENT & SERVER )
+			if data['SoundName'] == "items/suitchargeok1.wav" && ANPlusPercentageChance( 3 ) then
+				self.m_bFireThatEgg = true
+			end
+			if self.m_bFireThatEgg then
+				if data['SoundName'] == "items/suitchargeok1.wav" then data['SoundName'] = "anp/suitcharger_egg/suitchargeok1.wav" end			
+				if data['SoundName'] == "items/suitcharge1.wav" then data['SoundName'] = "anp/suitcharger_egg/suitcharge1.wav" end
+				return true
+			end
 		end,
 		
 		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
 		['OnNPCRemove'] = function(self)	
+			self:StopSound( "anp/suitcharger_egg/suitchargeok1.wav" )
+			self:StopSound( "anp/suitcharger_egg/suitcharge1.wav" )
 		end,
 		
 		},

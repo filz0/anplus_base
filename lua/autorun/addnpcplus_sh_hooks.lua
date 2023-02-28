@@ -78,6 +78,8 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 	if ent:IsANPlus(true) then
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'] != nil then
 			ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
+			local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)	
+			return bool
 		end			
 		if ent:GetNWBool( "ANP_IsMuted" ) then return false end		
 		ent.m_tLastSoundEmitted = data			

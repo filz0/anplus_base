@@ -16,6 +16,7 @@ function ENT:ANPlusNPCApply(name)
 				--local min2, max2 = self:GetSurroundingBounds()
 				local hull = self:IsNPC() && self:GetHullType()	|| "Not NPC"			
 				ANPdevMsg( "Collision Bounds: Min[" .. tostring(min) .. "] Max[" .. tostring(max) .. "] | Hull: " .. tostring(hull), 1 )
+				ANPdevMsg( "SolidType: " .. self:GetSolid() .. " CollisionGroup: " .. self:GetCollisionGroup() .. " MoveCollide: " .. self:GetMoveCollide() .. " MoveType: " .. self:GetMoveType(), 1 )
 				--ANPdevMsg( "Surrounding Bounds: Min[" .. tostring(min2) .. "] Max[" .. tostring(max2), 1 )
 	
 				data['CurData'] = {}
@@ -29,7 +30,7 @@ function ENT:ANPlusNPCApply(name)
 					--local CurMaterial = ( modelTab && modelTab['Material'] ) || ""
 					local CurMaterial = ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && math.random( modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""
 					local CurBoneEdit = ( modelTab && modelTab['BoneEdit'] ) || nil
-					local CurColBoundsMin, CurColBoundsMax = ( modelTab && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( modelTab && modelTab['CollisionBounds']['Max'] || colBoundsMax )
+					local CurColBoundsMin, CurColBoundsMax = ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Max'] || colBoundsMax )
 					local CurScale, CurScaleDelta = modelTab['Scale'] && modelTab['Scale'][ 1 ] / 100 || 1, modelTab['scale'] && modelTab['scale'][ 2 ] || 0
 					
 					for i = 1, #data['Models'] do
@@ -38,7 +39,6 @@ function ENT:ANPlusNPCApply(name)
 							--self:SetKeyValue( "model", CurModel )
 						end
 					end
-					print( self:GetSolid(), self:GetCollisionGroup(), self:GetMoveCollide(), self:GetMoveType() )
 					self:SetSkin( CurSkin )
 					self:SetColor( CurColor )
 					self:SetMaterial( CurMaterial )
