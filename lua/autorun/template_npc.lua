@@ -20,34 +20,13 @@ local ENTTab = {
 ----------------------------------------------------------------- Entity class of your NPC aka base NPC       
 	['Class'] 					= "item_suitcharger",
 ----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
---[[
 	['Models'] = {
 		--- 
-		{ "models/mymodel.mdl", 
-			['BodyGroups'] = { 					-- Table with body groups that you wish to change.
-				[1] = { 0, 1 },					-- This table represents body group 1 and its value will be randomized between 0 and 1. In this case, our model has no body groups so this does nothing xd.
-				[2] = { 0, 7 },					-- You can add as many as you wish.
-				[3] = nil,	 					-- While the table must go in order from 1 up. You can "skip" a body group by setting it to "nil".
-				[4] = { 1, 3 },
-				[5] = 3,
-			}, 
-			['Skin'] 		 = { 0, 0 },			-- This table represents skin of this model. In this case, it will be randomized between 0 and 2.
-			['Material']	 = "",				-- This value will set a new material for your NPC with this model applied.
-			['SubMaterials'] = { -- Table with sub materials to set on your NPC. You can put as many replacements as you wish. The table must go in order from 1 up. You can "skip" a sub material by leaving the table empty "{""}".
-				[1] = "",    
-				[2] = "",    
-				[3] = { "squad/orangebox", "metal6", "rubber" }, -- One of these 3 will be chosen randomly.    
-			},
-			['Color']		 = Color( 255, 255, 255, 255 ),	-- This table will change the color of your NPC with this model applied. Red Green Blue Alpha.
-			['BloodColor']	 = 3,	-- Set blood color. https://wiki.facepunch.com/gmod/Enums/BLOOD_COLOR
-			['BoneEdit']	 = { -- Here you can edit the bones of your NPC. You can change position, angles, and scale.
-				['ValveBiped.Bip01_Spine'] = { ang = Angle( 70, 0, 0 ), pos = Vector( 0, 0, 0 ), scl = Vector( 1, 1, 1 ), jiggle = 0 },
-			},
+		{ "", 
+			['PhysicsInit'] = SOLID_VPHYSICS,
 		},
-			---   
+		---   
 	},
---]]
-	['Models'] = false,
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
 ----------------------------------------------------------------- Displays author of this Entity.
@@ -111,6 +90,7 @@ local ENTTab = {
 		['OnNPCSpawn'] = function(self)	
 			self:SetSaveValue( "m_iMaxJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
 			self:SetSaveValue( "m_iJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
+			self.m_sBatteryModel = "models/items/battery.mdl"
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
@@ -136,8 +116,15 @@ local ENTTab = {
 		['OnNPCHandleAnimationEvent'] = function(self, seq, ev)
 		end, 
 		
+		------------------------------------------------------------ OnNPCInput - Almost anything that happens to this NPC/Entity will go through here. Great for detecting inputs.
+		['OnNPCInput'] = function(self, input, activator, caller, data)	
+			if input == "Recharge" then
+				self:ANPlusHaloEffect( Color( 255, 155, 0 ), 3, 1 )
+			end
+		end,
+		
 		------------------------------------------------------------ OnNPCEventHandle - This hook allows you to do a lot of things, from changing footstep sounds to... A lot of things...
-		['OnNPCEventHandle'] = function(self, ...)	
+		['OnNPCEventHandle'] = function(self, ...)				
 		end,
 		
 		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like the Combine Soldier throwing a grenade).
@@ -145,7 +132,12 @@ local ENTTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCPhysicsCollide - Called when the entity collides with anything. The move type and solid type must be VPHYSICS for the hook to be called.
-		['OnNPCPhysicsCollide'] = function(self, data, physobj)					
+		['OnNPCPhysicsCollide'] = function(self, data, physobj)	
+			local ent = data.HitEntity
+			if IsValid(ent) && ent:GetModel() == self.m_sBatteryModel && IsValid(ent:GetPhysicsObject()) && self:GetInternalVariable( "m_iJuice" ) < GetConVar( "sk_suitcharger_citadel" ):GetFloat() then
+				ent:Remove()
+				self:Fire( "Recharge", "", 0 )
+			end
 		end,
 		
 		------------------------------------------------------------ OnNPCFireBullets - This function runs when NPC fires a bullet (best used with turrets). https://wiki.facepunch.com/gmod/GM:EntityFireBullets
@@ -154,7 +146,7 @@ local ENTTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCKeyValue - This function runs whenever keyvalues/inputs/outpust run, are called or whatever.
-		['OnNPCKeyValue'] = function(self, key, value) -- SHARED ( CLIENT & SERVER )	
+		['OnNPCKeyValue'] = function(self, key, value) -- SHARED ( CLIENT & SERVER )			
 		end,
 		
 		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.

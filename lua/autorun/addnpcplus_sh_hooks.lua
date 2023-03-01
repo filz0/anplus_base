@@ -41,7 +41,7 @@ end)
 hook.Add( "EntityFireBullets", "ANPlusLoad_EntityFireBullets", function(npc, data)	
 	if IsValid(npc) && npc:IsANPlus(true) && npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'] != nil then
 		
-		npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc, npc:IsNPC() && npc:GetActiveWeapon() || nil, data)	
+		--npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc, npc:IsNPC() && npc:GetActiveWeapon() || nil, data)	
 		local allow = npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc, npc:IsNPC() && npc:GetActiveWeapon() || nil, data) 
 
 		return allow
@@ -49,7 +49,7 @@ hook.Add( "EntityFireBullets", "ANPlusLoad_EntityFireBullets", function(npc, dat
 	end		
 	if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus(true) && npc:GetOwner():ANPlusGetDataTab()['Functions'] && npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'] != nil then
 		
-		npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc:GetOwner(), npc, data)	
+		--npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc:GetOwner(), npc, data)	
 		local allow = npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc:GetOwner(), npc, data) 
 
 		return allow		
@@ -77,7 +77,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 	
 	if ent:IsANPlus(true) then
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'] != nil then
-			ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
+			---ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
 			local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)	
 			return bool
 		end			

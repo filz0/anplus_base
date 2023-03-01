@@ -213,6 +213,52 @@ function metaENT:ANPlusCapabilitiesHas(cap)
 	end
 end
 
+function metaENT:ANPlusHaloEffect(color, size, lenght)	
+	net.Start( "anplus_holo_eff" ) 
+	net.WriteEntity( self )
+	net.WriteColor( color )
+	net.WriteFloat( size )
+	net.WriteFloat( lenght )
+	net.Broadcast()	
+end
+
+function metaENT:ANPlusDisableCollisions(ent)	
+	self.anpnocollidetab = self.anpnocollidetab || {}
+	if !IsValid(ent) then return end -- self.anpnocollidetab end	
+	if !table.HasValue( self.anpnocollidetab, ent ) then		
+		constraint.NoCollide( self, ent, 0, 0 )		
+		table.insert( self.anpnocollidetab, ent )		
+	end		
+end
+
+function metaENT:ANPlusClientEffect( effTab )
+	if !IsValid(self) or !effTab then return end	
+	net.Start("anplus_client_effect")
+	net.WriteEntity( self )
+	net.WriteTable( effTab )
+	net.Broadcast()	
+end
+
+/*
+local effTab = {} -- Template (remove things that you ain't gonna use)
+	effTab.Effect =
+	effTab.SetStart =
+	effTab.SetOrigin =
+	effTab.SetNormal =
+	effTab.SetMagnitude =
+	effTab.SetScale =
+	effTab.SetRadius =
+	effTab.SetAngle =
+	effTab.SetAttachment =
+	effTab.SetColor =
+	effTab.SetDamageType =
+	effTab.SetFlags =
+	effTab.SetHitBox =
+	effTab.SetMaterialIndex =
+	effTab.SetSurfaceProp =
+metaENT:ANPlusClientEffect( effTab )
+*/
+
 function metaENT:ANPlusBlockSchedule(sched)
 	if self:IsCurrentSchedule( sched ) then self:TaskComplete(); self:ResetIdealActivity( 1 ); self:SetActivity( 1 ); self:ClearSchedule() end
 end

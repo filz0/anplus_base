@@ -218,46 +218,6 @@ function ENT:ANPlusNPCApply(name)
 	end	
 end	
 
-function ENT:ANPlusDisableCollisions(ent)	
-	self.anpnocollidetab = self.anpnocollidetab || {}
-	if !IsValid(ent) then return end -- self.anpnocollidetab end	
-	if !table.HasValue( self.anpnocollidetab, ent ) then		
-		constraint.NoCollide( self, ent, 0, 0 )		
-		table.insert( self.anpnocollidetab, ent )		
-	end		
-end
-
-function ENT:ANPlusClientEffect( effTab )
-
-	if !IsValid(self) or !effTab then return end
-	
-	net.Start("anplus_client_effect")
-	net.WriteEntity( self )
-	net.WriteTable( effTab )
-	net.Broadcast()
-	
-end
-
-/*
-local effTab = {} -- Template (remove things that you ain't gonna use)
-	effTab.Effect =
-	effTab.SetStart =
-	effTab.SetOrigin =
-	effTab.SetNormal =
-	effTab.SetMagnitude =
-	effTab.SetScale =
-	effTab.SetRadius =
-	effTab.SetAngle =
-	effTab.SetAttachment =
-	effTab.SetColor =
-	effTab.SetDamageType =
-	effTab.SetFlags =
-	effTab.SetHitBox =
-	effTab.SetMaterialIndex =
-	effTab.SetSurfaceProp =
-ENT:ANPlusClientEffect( effTab )
-*/
-
 function ENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame and animation event ID
 	if(!self.m_tbAnimationFrames[seq]) then return end
 	self.m_tbAnimEvents[seq] = self.m_tbAnimEvents[seq] || {}
@@ -305,17 +265,6 @@ function ENT:ANPlusUpdateWeaponProficency( wep )
 			if wep:GetInternalVariable( "m_fMinRange2" ) && wepTab['SecondaryMinRange'] then wep:SetSaveValue( "m_fMinRange2", wepTab['SecondaryMinRange'] ) end		
 		end	
 	end
-end
-
-function ENT:ANPlusHaloEffect(color, size, lenght)
-	
-	net.Start( "anplus_holo_eff" ) 
-	net.WriteEntity( self )
-	net.WriteColor( color )
-	net.WriteFloat( size )
-	net.WriteFloat( lenght )
-	net.Broadcast()
-	
 end
 
 function ENT:ANPlusDealDamage(target, dmginfo, cooldown, callback)

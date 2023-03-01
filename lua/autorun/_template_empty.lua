@@ -272,6 +272,10 @@ local NPCTab = {
 		['OnNPCEventHandle'] = function(self, ...)	
 		end,
 		
+		------------------------------------------------------------ OnNPCInput - Almost anything that happens to this NPC/Entity will go through here. Great for detecting inputs.
+		['OnNPCInput'] = function(self, input, activator, caller, data)			
+		end,
+		
 		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like the Combine Soldier throwing a grenade).
 		['OnNPCCreateEntity'] = function(self, ent)	-- SHARED ( CLIENT & SERVER )					
 		end,
@@ -421,14 +425,6 @@ local ENTTab = {
 	},
 --]]
 	['Models'] = nil,
------------------------------------------------------------------ Size of your NPC. It will apply to all models.	
-	['Scale']					= { 100, 0 }, --% scale and delta time.
------------------------------------------------------------------ Sets the axis-aligned bounding box (AABB) for an entity's hitbox detection.	
-	['SurroundingBounds']		= {
-		['Min']				= nil, -- Vector.
-		['Max']				= nil,  -- Vector.
-		['BoundsType']		= nil,  -- https://wiki.facepunch.com/gmod/Enums/BOUNDS
-	},
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
 ----------------------------------------------------------------- Displays author of this Entity.
@@ -520,6 +516,10 @@ local ENTTab = {
 		
 		------------------------------------------------------------ OnNPCEventHandle - This hook allows you to do a lot of things, from changing footstep sounds to... A lot of things...
 		['OnNPCEventHandle'] = function(self, ...)	
+		end,
+		
+		------------------------------------------------------------ OnNPCInput - Almost anything that happens to this NPC/Entity will go through here. Great for detecting inputs.
+		['OnNPCInput'] = function(self, input, activator, caller, data)			
 		end,
 		
 		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like the Combine Soldier throwing a grenade).

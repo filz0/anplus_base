@@ -377,7 +377,6 @@ function ENT:ANPlusNPCTranslateActivity()
 	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'] != nil then
 		local act = self:GetIdealActivity()
 		local actCur = self:GetActivity()
-		self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act)
 		local newAct, reset, speed = self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act) 
 		if speed != nil && newAct != nil && act != newAct then
 			self.m_tTACTData = {newAct, speed}
@@ -391,10 +390,8 @@ function ENT:ANPlusNPCTranslateActivity()
 			local statAct = vel:IsEqualTol( Vector( 0, 0, 0 ), 0 )
 			if reset then 
 				if statAct then
-					for i = 1, 100 do
 					self:ResetIdealActivity( newAct )
-					self:SetCycle( 0 )
-					end					
+					self:SetCycle( 0 )				
 				elseif !statAct && self:GetMovementActivity() != newAct then
 					self:SetMovementActivity( newAct )
 				end
@@ -415,6 +412,9 @@ function ENT:ANPlusNPCTranslateActivity()
 end
 
 function ENT:ANPlusAcceptInput(ent, input, activator, caller, data)
+	if ( ent == self && ent:IsANPlus(true) && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCInput'] != nil ) then
+		self:ANPlusGetDataTab()['Functions']['OnNPCInput'](self, input, activator, caller, data)					
+	end
 	if ( ent == self && ent:IsANPlus(true) && string.Left( input, 6 ) == "event_" ) then
 		self:ANPlusEvent( string.sub( input, 7 ) )
 		return true

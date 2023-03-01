@@ -35,11 +35,7 @@ end
 
 function ANPlusPercentageChance(chance)
 	local lucky = math.random( 1, 100 )
-	if lucky <= chance then 
-		return true
-	else
-		return false
-	end
+	return lucky <= chance
 end
 
 --[[////////////////////////
