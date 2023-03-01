@@ -91,6 +91,7 @@ local ENTTab = {
 			self:SetSaveValue( "m_iMaxJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
 			self:SetSaveValue( "m_iJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
 			self.m_sBatteryModel = "models/items/battery.mdl"
+			--PrintTable(self:GetTable())
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.

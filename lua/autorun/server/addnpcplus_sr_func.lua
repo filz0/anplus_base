@@ -475,6 +475,9 @@ function ANPlusSameType(ent1, ent2)
 end
 
 local function ANPlusOnLoad(ply, ent, data)
+	if IsValid(ent) && istable( data ) && data['Name'] then -- Adv. Duplicator 2 Support!
+		ent:SetSaveValue( "m_iName", data['Name'] )
+	end
 	timer.Simple( 0, function()
 		if !IsValid(ent) || !istable( data ) then return end
 		if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'] != nil then		
@@ -482,10 +485,9 @@ local function ANPlusOnLoad(ply, ent, data)
 		end	
 	end)
 end
-
 duplicator.RegisterEntityModifier( "anp_duplicator_data", ANPlusOnLoad )
 
-function ENT:ANPlusStoreEntityModifier(dataTab)
-	if !dataTab then return end
-    duplicator.StoreEntityModifier( self, "anp_duplicator_data", dataTab )
+function ENT:ANPlusStoreEntityModifier(data)
+	if !data then return end
+    duplicator.StoreEntityModifier( self, "anp_duplicator_data", data )
 end

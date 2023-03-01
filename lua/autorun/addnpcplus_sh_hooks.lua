@@ -15,6 +15,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 		if !IsValid(ent) then return end
 		
 		if ( SERVER ) then 		
+			PrintTable(ent:GetTable())
 			ent:ANPlusIgnoreTillSet()	
 			ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
 		end

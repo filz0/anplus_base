@@ -194,6 +194,14 @@ function ENT:ANPlusNPCApply(name)
 				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil
 				self:SetSaveValue( "m_iName", data['Name'] )
 				
+				----
+				local dupeData = {
+					['Name'] = data['Name']
+				}
+				--duplicator.StoreEntityModifier( self, "anp_advdupe_support", dupeData )
+				self:ANPlusStoreEntityModifier(dupeData) -- Adv. Duplicator 2 Support
+				-----
+				
 				self.ANPlusIDName = IDCreate( data['Name'] )
 				self:ANPlusApplyDataTab( data )					
 				self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
@@ -208,7 +216,7 @@ function ENT:ANPlusNPCApply(name)
 				hook.Add( "Think", self, self.ANPlusNPCThink )
 				hook.Add( "AcceptInput", self, self.ANPlusAcceptInput )
 				self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide )
-
+				
 			end
 	
 		end
@@ -217,7 +225,13 @@ function ENT:ANPlusNPCApply(name)
 		return false
 	end	
 end	
-
+--[[
+local function ANPlusAdvDupeSupport(ply, ent, data)
+	if !IsValid(ent) || !istable( data ) || !data['Name'] then return end
+	ent:SetSaveValue( "m_iName", data['Name'] )
+end
+duplicator.RegisterEntityModifier( "anp_advdupe_support", ANPlusAdvDupeSupport )
+]]--
 function ENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame and animation event ID
 	if(!self.m_tbAnimationFrames[seq]) then return end
 	self.m_tbAnimEvents[seq] = self.m_tbAnimEvents[seq] || {}
