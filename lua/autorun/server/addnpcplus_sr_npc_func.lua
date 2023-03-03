@@ -55,6 +55,11 @@ function ENT:ANPlusNPCApply(name)
 					self:SetCollisionGroup( modelTab['SetCollisionGroup'] || self:GetCollisionGroup() )
 					self:SetSolid( modelTab['SetSolid'] || self:GetSolid() )
 					
+					local physCheck = self:GetPhysicsObject()
+					if !IsValid(physCheck) || self:GetSolid() != SOLID_VPHYSICS then
+						self:SetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
+					end
+					
 					local addTab = { ['CurName'] = data['Name'] }
 					table.Merge( data['CurData'], addTab )		
 					local addTab = { ['CurModel'] = CurModel }
@@ -123,16 +128,7 @@ function ENT:ANPlusNPCApply(name)
 					end
 	
 				end
-				
-				--[[
-				local physCheck = self:GetPhysicsObject()
-				if IsValid(physCheck) && self:GetSolid() == SOLID_VPHYSICS then
-					self:PhysicsInit( SOLID_VPHYSICS )
-				else
-					self:SetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
-				end
-				]]--
-				self:SetSolid( SOLID_BBOX )
+
 				if self:IsNPC() then				
 					self:SetHullType( data['CollisionBounds'] && data['CollisionBounds']['HullType'] || hull )
 					self:SetHullSizeNormal()	
@@ -143,6 +139,9 @@ function ENT:ANPlusNPCApply(name)
 					if data['LookDistance'] then self:Fire( "SetMaxLookDistance", data['LookDistance'], 0.1 ) end	
 					if data['EnableInverseKinematic'] then self:ANPlusSetIK( data['EnableInverseKinematic'] ) end	
 					if data['ForceDefaultWeapons'] && data['DefaultWeapons'] then self:ANPlusForceDefaultWeapons( data['DefaultWeapons'] ) end
+					if !IsValid(self:GetActiveWeapon()) && self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
+						self:Give( self:GetKeyValues()['additionalequipment'] ) 						
+					end
 					--if data['AllowActivityTranslation'] && !IsValid(self:GetWeapon( "ai_translate_act" )) then self:Give( "ai_translate_act" ) end									
 					self.m_tbANPlusRelationsMem = {}				
 					self.m_fANPlusCurMemoryLast = 0
