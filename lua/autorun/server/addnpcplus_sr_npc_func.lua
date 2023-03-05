@@ -986,7 +986,7 @@ function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, atHPLevel, dmgMin, dmgMax, c
 			newDMGinfo:SetInflictor( IsValid(lastDMGinfo.inf) && lastDMGinfo.inf || self )
 			newDMGinfo:SetDamage( 1 )
 			self:TakeDamageInfo( newDMGinfo )
-			self:SetHealth( 0 )
+			--self:SetHealth( 0 )
 		end)
 	end
 end
