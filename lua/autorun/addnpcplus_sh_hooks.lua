@@ -14,7 +14,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 
 		if !IsValid(ent) then return end
 		
-		if ( SERVER ) then 		
+		if ( SERVER ) && !ent:IsANPlus(true) then 		
 			ent:ANPlusIgnoreTillSet()	
 			ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
 		end
@@ -75,12 +75,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 		end
 	end
 	
-	if ent:IsANPlus(true) then
-		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'] != nil then
-			---ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
-			local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)	
-			return bool
-		end			
+	if ent:IsANPlus(true) then		
 		if ent:GetNWBool( "ANP_IsMuted" ) then return false end		
 		ent.m_tLastSoundEmitted = data			
 		if ent:ANPlusGetDataTab()['SoundModification'] && ent:ANPlusGetDataTab()['SoundModification']['SoundList'] then	
@@ -102,10 +97,15 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 					data.Channel 	= sndChannel
 					data.Volume 	= sndVolume
 					data.Flags		= sndFlags
-					data.DSP 		= sndDSP					
+					data.DSP 		= sndDSP						
 					return true			
 				end			
 			end			
 		end
+		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'] != nil then
+			---ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
+			local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)	
+			return bool
+		end	
 	end	
 end)

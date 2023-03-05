@@ -44,13 +44,6 @@ hook.Add("CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", functi
 
 end)
 
-hook.Add("InitPostEntity", "ANPlusLoad_GModSaveLoadFromTheMenu", function()
-
-	net.Start("anplus_gmodsave_load_from_the_menu")
-	net.SendToServer()
-	
-end)
-
 --[[////////////////////////
 ||||| Used for the test dummy ANPC.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\

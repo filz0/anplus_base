@@ -296,9 +296,10 @@ end
 
 function ENT:ANPlusApplyDataTab( tab )	
 	self['ANPlusData'] = tab
+	self:ANPlusStoreEntityModifier( tab['CurData'] ) -- Adv. Duplicator 2 Support
 	timer.Simple(0.1, function() -- God I hate networking....
 		if !IsValid(self) then return end
-		net.Start("anplus_data_tab")
+		net.Start( "anplus_data_tab" )
 		net.WriteEntity( self )
 		net.WriteTable( self['ANPlusData']['CurData'] )
 		net.Broadcast()
@@ -320,6 +321,22 @@ end
 
 function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for this glorius thing.
 	local seq = self:GetSequenceName( self:GetSequence() )
+	if(self.m_tbAnimEvents[ seq ] ) then
+		if ( self.m_seqLast != seq ) then self.m_seqLast = seq; self.m_frameLast = -1 end
+		local frameNew = math.floor( self:GetCycle() * self.m_tbAnimationFrames[ seq ] )	-- Despite what the wiki says, GetCycle doesn't return the frame, but a float between 0 and 1
+		for frame = self.m_frameLast + 1, frameNew do	-- a loop, just in case the think function is too slow to catch all frame changes
+			if ( self.m_tbAnimEvents[ seq ][ frame ] ) then
+				for _, ev in ipairs(self.m_tbAnimEvents[ seq ][ frame ]) do
+					self:ANPlusHandleAnimationEvent( seq, ev )
+				end
+			end
+		end
+		self.m_frameLast = frameNew
+	end
+end
+--[[
+function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for this glorius thing.
+	local seq = self:GetSequenceName( self:GetSequence() )
 	if(self.m_tbAnimEvents[seq]) then
 		if(self.m_seqLast != seq) then self.m_seqLast = seq; self.m_frameLast = -1 end
 		local frameNew = math.floor(self:GetCycle() *self.m_tbAnimationFrames[seq])	-- Despite what the wiki says, GetCycle doesn't return the frame, but a float between 0 and 1
@@ -333,7 +350,7 @@ function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for 
 		self.m_frameLast = frameNew
 	end
 end
-
+]]--
 function ENT:ANPlusHandleAnimationEvent(seq, ev)
 	if self:IsANPlus(true) && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCHandleAnimationEvent'] != nil then
 		self:ANPlusGetDataTab()['Functions']['OnNPCHandleAnimationEvent'](self, seq, ev)	
@@ -345,15 +362,15 @@ function ENT:ANPlusNPCThink()
 	if !IsValid(self) || !self:ANPlusAlive() then	
 		
 		return false			
-	elseif ( self:IsANPlus() && !GetConVar("ai_disabled"):GetBool() ) || self:IsANPlus(true) then
-		
-		self:ANPlusAnimationEventInternal()
-		self:ANPlusNPCAnimSpeed()
+	elseif ( self:IsANPlus() && !GetConVar("ai_disabled"):GetBool() ) || !self:IsNPC() && self:IsANPlus(true) then
+			
 		self:ANPlusNPCRelations()					
 		self:ANPlusNPCHealthRegen()					
-		self:ANPlusNPCWeaponSwitch()	
-		self:ANPlusNPCTranslateActivity()	
+		self:ANPlusNPCWeaponSwitch()			
 		self:ANPlusNPCStateChange()
+		self:ANPlusAnimationEventInternal()
+		self:ANPlusNPCAnimSpeed()
+		self:ANPlusNPCTranslateActivity()
 		
 		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCThink'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCThink'](self)	
@@ -377,6 +394,7 @@ function ENT:ANPlusNPCTranslateActivity()
 	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'] != nil then
 		local act = self:GetIdealActivity()
 		local actCur = self:GetActivity()
+		--self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act) 
 		local newAct, reset, speed = self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act) 
 		if speed != nil && newAct != nil && act != newAct then
 			self.m_tTACTData = {newAct, speed}
@@ -398,7 +416,7 @@ function ENT:ANPlusNPCTranslateActivity()
 			elseif !reset then 
 				if statAct then
 					self:SetIdealActivity( newAct ) 
-					self:SetCycle( 0 )
+					--self:SetCycle( 0 )
 				elseif !statAct && self:GetMovementActivity() != newAct then
 					self:SetMovementActivity( newAct )
 				end
@@ -475,8 +493,16 @@ function ANPlusSameType(ent1, ent2)
 end
 
 local function ANPlusOnLoad(ply, ent, data)
-	if IsValid(ent) && istable( data ) && data['Name'] then -- Adv. Duplicator 2 Support!
-		ent:SetSaveValue( "m_iName", data['Name'] )
+	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!
+		ent:ANPlusIgnoreTillSet()
+		ent:ANPlusNPCApply(data['CurName'])
+		--[[
+		ent:SetSaveValue( "m_iName", data['CurName'] )
+		local physCheck = ent:GetPhysicsObject()
+		if !IsValid(physCheck) || ent:GetSolid() != SOLID_VPHYSICS then
+			ent:SetSequence( ent:SelectWeightedSequence( ACT_IDLE ) )
+		end
+		]]--
 	end
 	timer.Simple( 0, function()
 		if !IsValid(ent) || !istable( data ) then return end

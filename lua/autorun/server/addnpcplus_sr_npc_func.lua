@@ -193,14 +193,6 @@ function ENT:ANPlusNPCApply(name)
 				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil
 				self:SetSaveValue( "m_iName", data['Name'] )
 				
-				----
-				local dupeData = {
-					['Name'] = data['Name']
-				}
-				--duplicator.StoreEntityModifier( self, "anp_advdupe_support", dupeData )
-				self:ANPlusStoreEntityModifier(dupeData) -- Adv. Duplicator 2 Support
-				-----
-				
 				self.ANPlusIDName = IDCreate( data['Name'] )
 				self:ANPlusApplyDataTab( data )					
 				self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
@@ -878,8 +870,9 @@ function ENT:ANPlusPlayActivity(act, speed, faceent, facespeed, callback, postca
 	self:SetKeyValue( "sleepstate", 2 )
 	self:ResetSequenceInfo()
 	self:ResetSequence( actSeq )	
-	self:ResetIdealActivity( act )
 	self:SetIdealActivity( act )
+	self:ResetIdealActivity( act )
+	self:SetActivity( act )
 	--self:StartEngineTask( ai.GetTaskID( "TASK_PLAY_SCRIPT" ), act )
 	self.m_bANPlusPlayingActivity = true
 	local seqID, seqDur = self:LookupSequence( self:GetSequenceName( actSeq ) )	
@@ -887,7 +880,7 @@ function ENT:ANPlusPlayActivity(act, speed, faceent, facespeed, callback, postca
 	if isfunction( callback ) then
 		callback( seqID, seqDur )
 	end
-self.m_fLastCycle = 0
+
 	timer.Create( "ANP_ACT_RESET" .. self:EntIndex(), seqDur, 1, function() 
 		if !IsValid(self) then return end	
 		self.m_bANPlusPlayingActivity = false
@@ -902,7 +895,7 @@ self.m_fLastCycle = 0
 
 	timer.Create( "ANP_ACT_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
 		if !IsValid(self) || !self.m_bANPlusPlayingActivity then return end
-		self:MaintainActivity()
+		-- self:MaintainActivity()
 		self:SetPlaybackRate( speed ) 
 		if IsValid(faceent) && facespeed >= 0 then 
 			self:ANPlusFaceEntity( faceent, facespeed )

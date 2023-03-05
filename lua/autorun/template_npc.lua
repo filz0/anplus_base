@@ -30,7 +30,7 @@ local ENTTab = {
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
 ----------------------------------------------------------------- Displays author of this Entity.
-	['Author']					= "Your name or something",
+	['Author']					= "filz0",
 ----------------------------------------------------------------- Sets if NPC should only be spawnable on the ceiling.
 	['OnCeiling'] 				= false,
 ----------------------------------------------------------------- Sets if NPC should only be spawnable on the floor.

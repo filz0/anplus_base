@@ -1,6 +1,6 @@
 
 util.AddNetworkString("anplus_data_tab")
-util.AddNetworkString("anplus_gmodsave_load_from_the_menu")
+--util.AddNetworkString("anplus_gmodsave_load_from_the_menu")
 util.AddNetworkString("anplus_fix_bones")
 util.AddNetworkString("anplus_set_ik")
 util.AddNetworkString("anplus_holo_eff")

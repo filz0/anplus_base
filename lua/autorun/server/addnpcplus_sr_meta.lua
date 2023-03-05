@@ -837,42 +837,41 @@ function ANPlusCreateBeam(texture, spawnStart, spawnEnd, color, width, sfs, kvs)
 	return ent, ent.m_pBeamTarget
 end
 
-function metaENT:ANPlusDissolve(attacker, inflictor, dtype)
+function metaENT:ANPlusDissolve(attacker, inflictor, dealDMG, dtype)
 
 	if self:IsPlayer() then
 		local dmgInfo = DamageInfo()
-		dmgInfo:SetDamage(self:Health())
-		dmgInfo:SetAttacker(attacker)
-		dmgInfo:SetInflictor(inflictor)
-		dmgInfo:SetDamageType(DMG_DISSOLVE)
-		dmgInfo:SetDamagePosition(self:GetPos())
-		self:TakeDamageInfo(dmgInfo)
+		dmgInfo:SetDamage( self:Health() )
+		dmgInfo:SetAttacker( attacker )
+		dmgInfo:SetInflictor( inflictor )
+		dmgInfo:SetDamageType( DMG_DISSOLVE )
+		dmgInfo:SetDamagePosition( self:GetPos() )
+		self:TakeDamageInfo( dmgInfo )
 		return
 	end
 	
 	attacker = attacker || self
 	inflictor = inflictor || self
 	local _sName = self:GetName()
-	local sName = _sName
+	local sName = "entDissolve" .. self:EntIndex() .. "_entTarget"
 	
-	if string.len(sName) == 0 then
-		sName = "entDissolve" .. self:EntIndex() .. "_entTarget"
-		self:SetName(sName)
-	end
+	--if string.len( sName ) == 0 then
+	--	sName = "entDissolve" .. self:EntIndex() .. "_entTarget"
+	--	self:SetName( sName )
+	--end
 	
-	local entDissolver = ents.Create("env_entity_dissolver")
-	entDissolver:SetKeyValue("dissolvetype", dtype || 2)
+	local entDissolver = ents.Create( "env_entity_dissolver" )
+	entDissolver:SetKeyValue( "dissolvetype", dtype || 2 )
 	entDissolver:Spawn()
 	entDissolver:Activate()
-	entDissolver:SetOwner(attacker)
-	entDissolver:Fire("Dissolve", sName, 0)
-	self:TakeDamage(self:Health(), attacker, inflictor)
+	entDissolver:SetOwner( attacker )
+	self:SetName( sName )
+	entDissolver:Fire( "Dissolve", sName, 0 )
+	self:TakeDamage( dealDMG && self:Health() || 0, attacker, inflictor )
 	
-	timer.Simple(0, function()
-	
-		if IsValid(entDissolver) then entDissolver:Remove() end
-		if IsValid(self) then self:SetName(_sName) end
-		
+	timer.Simple( 0.01, function()	
+		if IsValid( entDissolver ) then entDissolver:Remove() end	
+		if IsValid( self ) then self:SetName( _sName ) end		
 	end)
 	
 end
@@ -915,4 +914,24 @@ end
 
 function metaENT:ANPlusGetSquadName()
 	return self:GetKeyValues().squadname || false
+end
+
+function metaENT:ANPlusIsDoor()	
+	local doorClass = self:GetClass()	
+	if ( doorClass == "func_door" or doorClass == "func_door_rotating" or doorClass == "prop_door" or doorClass == "prop_door_rotating" ) then
+		return true		
+	else	
+		return false		
+	end	
+end
+
+function metaENT:ANPlusIsDoorOpen()	
+	local doorClass = self:GetClass()
+	if ( doorClass == "func_door" or doorClass == "func_door_rotating" ) then
+		return self:GetInternalVariable( "m_toggle_state" ) == 0
+	elseif ( doorClass == "prop_door_rotating" ) then
+		return self:GetInternalVariable( "m_eDoorState" ) != 0
+	else
+		return false
+	end
 end

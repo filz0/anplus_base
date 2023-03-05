@@ -378,11 +378,11 @@ ANPlus.AddNPC( NPCTab )
 
 local ENTTab = {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
-	['Category'] 				= "Half-Life 2",
+	['Category'] 				= "My ANP",
 ----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
-	['Name'] 					= "Suit Charger (Citadel)",   
+	['Name'] 					= "Cool Name",   
 ----------------------------------------------------------------- Entity class of your NPC aka base NPC       
-	['Class'] 					= "item_suitcharger",
+	['Class'] 					= "ent_class",
 ----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
 --[[
 	['Models'] = {
@@ -440,12 +440,12 @@ local ENTTab = {
 ----------------------------------------------------------------- Set if your NPC should drop to the floor on spawn (seems to be only working on NPCs that do not possess any physics).
 	['NoDrop'] 					= false, 
 ----------------------------------------------------------------- NPC health and max health.	
-	['Health'] 					= 50,
+	['Health'] 					= false,
 ----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
 --[[ EXAMPLE
 	['KeyValues'] 			= { citizentype = CT_REBEL, SquadName = "resistance" },
 --]]
-	['KeyValues'] 				= { SpawnFlags = 8192, SetCharge = 500 },
+	['KeyValues'] 				= {},
 ----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
 	['SpawnFlags'] 				= 0, 
 ----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
