@@ -8,7 +8,7 @@ function ENT:ANPlusNPCApply(name)
 		
 			local dataTab = ANPlusLoadGlobal[ i ]
 
-			if ( dataTab && dataTab['Name'] == name && dataTab['Class'] == self:GetClass() ) then
+			if ( dataTab && dataTab['Name'] == name && dataTab['Class'] == self:GetClass() && !self:IsANPlus(true) ) then
 				
 				local data = table.Copy( dataTab )
 				

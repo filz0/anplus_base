@@ -212,21 +212,23 @@ end
 
 function ENT:ANPlusNPCAnimSpeed() 
 		
-	if self.m_tbANPlusACTOther && ( self.m_tbANPlusACTOther[ self:ANPlusTranslateSequence( self:GetIdealActivity() ) ] || self.m_tbANPlusACTOther[ self:GetSequenceName( self:GetSequence() ) ] ) then
+	if self.m_tbANPlusACTOther && ( self.m_tbANPlusACTOther[ self:GetIdealActivity() ] || self.m_tbANPlusACTOther[ self:GetSequenceName( self:GetSequence() ) ] ) then
 		
-		local aTab1 = self.m_tbANPlusACTOther[ self:ANPlusTranslateSequence( self:GetIdealActivity() ) ] || self.m_tbANPlusACTOther[ self:GetSequenceName( self:GetSequence() ) ]
+		local aTab1 = self.m_tbANPlusACTOther[ self:GetIdealActivity() ] || self.m_tbANPlusACTOther[ self:GetSequenceName( self:GetSequence() ) ]
 		local aTab2 = istable( aTab1[ 2 ] ) && aTab1[ 2 ][ math.random( 1, #aTab1[ 2 ] ) ] || aTab1[ 2 ] 
-			
+		aTab2 = self:ANPlusTranslateSequence( aTab2 )
+		
 		if aTab1[ 2 ] then self:ResetIdealActivity( aTab2 ); self:SetActivity( aTab2 ) end
 
 		self:SetPlaybackRate( ( istable( aTab1 ) && aTab1[ 1 ] || aTab1 ) / 100 )
 		
 	end
 
-	if self.m_tbANPlusACTMovement && self.m_tbANPlusACTMovement[ self:ANPlusTranslateSequence( self:GetIdealActivity() ) ] then
+	if self.m_tbANPlusACTMovement && ( self.m_tbANPlusACTMovement[ self:GetMovementActivity() ] || self.m_tbANPlusACTMovement[ self:GetSequenceName( self:GetSequence() ) ] ) then
 		
-		local aTab1 = self.m_tbANPlusACTMovement[ self:ANPlusTranslateSequence( self:GetIdealActivity() ) ] || self.m_tbANPlusACTMovement[ self:GetSequenceName( self:GetSequence() ) ]
-		local aTab2 = aTab1[ 3 ] && istable( aTab1[ 3 ] ) && aTab1[ 3 ][ math.random( 1, #aTab1[ 3 ] ) ] || aTab1[ 3 ] 
+		local aTab1 = self.m_tbANPlusACTMovement[ self:GetMovementActivity() ] || self.m_tbANPlusACTMovement[ self:GetSequenceName( self:GetSequence() ) ]
+		local aTab2 = istable( aTab1[ 3 ] ) && aTab1[ 3 ][ math.random( 1, #aTab1[ 3 ] ) ] || aTab1[ 3 ]
+		aTab2 = self:ANPlusTranslateSequence( aTab2 )
 		
 		if aTab1[ 3 ] && self:GetMovementActivity() != aTab2 then self:SetMovementActivity( aTab2 ) end
 		
