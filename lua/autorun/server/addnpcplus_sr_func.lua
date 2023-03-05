@@ -250,6 +250,7 @@ function ENT:ANPlusNPCAnimSpeed()
 		end
 				--print( self:GetVelocity():Length() )
 		local rate = ( istable( aTab1 ) && aTab1[ 1 ] || aTab1 ) / 100
+
 		self:SetPlaybackRate( rate )
 		/*
 		print(tostring(self:IsMoving()).." IS_MOVING")
@@ -424,7 +425,7 @@ function ENT:ANPlusNPCTranslateActivity()
 			self:SetActivity( newAct )
 			self:ANPlusSetIdealSequence( seqID )
 		end
-		self:SetPlaybackRate( self.m_tTACTData && act == self.m_tTACTData[1] && self.m_tTACTData[2] || 1 )
+		if self.m_tTACTData && act == self.m_tTACTData[1] then self:SetPlaybackRate( self.m_tTACTData[2] || 1 ) end
 		--self:MaintainActivity()
 	end
 end

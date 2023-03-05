@@ -643,3 +643,25 @@ function metaPLAYER:ANPlusGetEyeTrace()
 	})	
 	return tr
 end
+
+function ANPlusOverrideSound(toReplace, data, sndReplace, play, sndLVL, sndPitch, sndChannel, sndVolume, sndFlags, sndDSP, sndTime) -- Men't to be used with EntityEmitSound hook
+	if data && string.find( string.lower( data.SoundName ), toReplace ) then
+		local sndReplace = istable( sndReplace ) && sndReplace[ math.random( 1, #sndReplace ) ] || sndReplace || data.SoundName
+		local sndLVL = istable( sndLVL ) && math.random( sndLVL[ 1 ], sndLVL[ 2 ] ) || sndLVL || data.SoundLevel
+		local sndPitch = istable( sndPitch ) && math.random( sndPitch[ 1 ], sndPitch[ 2 ] ) || sndPitch || data.Pitch
+		local sndChannel = sndChannel || data.Channel
+		local sndVolume = istable( sndVolume ) && math.random( sndVolume[ 1 ], sndVolume[ 2 ] ) || sndVolume || data.Volume
+		local sndFlags = sndFlags || data.Flags
+		local sndDSP = sndDSP || data.DSP
+		local sndTime = sndTime || data.SoundTime
+		data.SoundName	= sndReplace
+		data.SoundLevel = sndLVL
+		data.Pitch 		= sndPitch 
+		data.Channel 	= sndChannel
+		data.Volume 	= sndVolume
+		data.Flags		= sndFlags
+		data.DSP 		= sndDSP	
+		data.SoundTime 	= sndTime
+		return play
+	end
+end

@@ -103,8 +103,8 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 			end			
 		end
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'] != nil then
-			---ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
-			local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)	
+			--ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
+			local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)
 			return bool
 		end	
 	end	
