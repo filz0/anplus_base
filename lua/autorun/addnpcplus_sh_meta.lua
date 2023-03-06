@@ -500,6 +500,7 @@ function ANPlusAIFindClosestNode(pos, iType, noOccupied)
 	local iType = iType || 2
 	local distClosest = math.huge
 	local nodeClosest
+	if !ANPlusAIGetNodes( iType ) then return end
 	for _, node in pairs( ANPlusAIGetNodes( iType ) ) do		
 		
 		local dist = ( node['pos'] - pos ):LengthSqr()

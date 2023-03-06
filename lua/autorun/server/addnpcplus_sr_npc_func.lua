@@ -197,12 +197,12 @@ function ENT:ANPlusNPCApply(name)
 				self:ANPlusApplyDataTab( data )					
 				self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
 
-				timer.Simple( 0, function()
-					if !IsValid(self) then return end
-					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
-						self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self)		
-					end	
-				end)
+				--timer.Simple( 0, function()
+					--if !IsValid(self) then return end
+				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
+					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self)		
+				end	
+				--end)
 				
 				hook.Add( "Think", self, self.ANPlusNPCThink )
 				hook.Add( "AcceptInput", self, self.ANPlusAcceptInput )
