@@ -1,4 +1,6 @@
 ANPlusLoadGlobal = { ['Base']  = { ['Name'] = "ANPlus BASE" }, ['entids'] = {} }
+ANPlusDangerStuffGlobalNameOrClass = { "grenade", "missile", "rocket", "frag", "flashbang", "portal", "spore", "prop_combine_ball", "bolt" }
+ANPlusDangerStuffGlobal = {}
 ANPCustomSquads = { base_squad = {} }
 
 ANPDefaultGMODWeapons = {
@@ -38,9 +40,15 @@ ANPlus = {
 				language.Add( "#" .. id, id )
 			end		
 			
-			if listType == "NPC" && tab['Relations'] && !tab['Relations'][ tab['Name'] ] then			
-				local addTab = { [''.. tab['Name'] ..''] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, } 
-				table.Merge( tab['Relations'], addTab )			
+			if listType == "NPC" && tab['Relations'] then
+				if !tab['Relations'][ tab['Name'] ] then			
+					local addTab = { [''.. tab['Name'] ..''] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, } 
+					table.Merge( tab['Relations'], addTab )		
+				end
+				if !tab['Relations']['Default'] then
+					local addTab = { ['Default'] = { ['MeToNPC'] = { "Default", 0 }, ['NPCToMe'] = { "Default", 0 } }, } 
+					table.Merge( tab['Relations'], addTab )	
+				end
 			end
 			
 			tab['KeyValues'] = tab['KeyValues'] || {}

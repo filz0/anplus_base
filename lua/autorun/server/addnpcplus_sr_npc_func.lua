@@ -146,6 +146,8 @@ function ENT:ANPlusNPCApply(name)
 					self.m_tbANPlusRelationsMem = {}				
 					self.m_fANPlusCurMemoryLast = 0
 					self.m_fANPlusCurMemoryDelay = 1
+					self.m_fANPlusDangerDetectLast = 0
+					self.m_fANPlusDangerDetectDelay = data['Functions'] && data['Functions']['DetectionDelay'] || 1
 					--self.m_bDeathAnim = { ACT_DIESIMPLE, 0, 0, true }
 					self.m_tbANPlusACTOther = data['ActivityOther']
 					self.m_tbANPlusACTMovement = data['ActivityMovement']	
@@ -153,6 +155,7 @@ function ENT:ANPlusNPCApply(name)
 					self.m_tTACTData = {}
 					if data['UseANPSquadSystem'] then self:ANPlusAddToCSquad( self:ANPlusGetSquadName() ) end
 				end
+				self.m_fANPUseLast = 0
 				self:SetUseType(SIMPLE_USE)
 				self.m_tbAnimationFrames = {}
 				for _, v in pairs( self:GetSequenceList() ) do
@@ -185,7 +188,7 @@ function ENT:ANPlusNPCApply(name)
 				self.m_fANPlusDmgDealt = data['DamageDealtScale'] || 0
 				self.m_fANPlusDmgSelf = data['DamageSelfScale'] || 0
 				self.m_fANPlusVelLast = 0
-	
+
 				local sndTab = data['SoundModification']						
 				local addTab = { ['SoundModification'] = sndTab }
 				table.Merge( data['CurData'], addTab )

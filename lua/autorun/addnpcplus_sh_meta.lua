@@ -223,7 +223,9 @@ end
 
 function metaENT:ANPlusGetRange(target)
 	local distTSqr = self:GetPos():DistToSqr( target:GetPos() )
-	return distTSqr
+	local dist = math.sqrt( distTSqr )
+	dist = math.Round( dist )
+	return distTSqr, dist
 end
 
 --[[////////////////////////
@@ -239,6 +241,7 @@ end
 function ANPlusGetRangeVector(pos1, pos2)
 	local distTSqr = pos1:DistToSqr( pos2 )
 	local dist = math.sqrt( distTSqr )
+	dist = math.Round( dist )
 	return distTSqr, dist
 end
 

@@ -181,7 +181,7 @@ function ENT:ANPlusGetEmittedLastSound()
 end
 
 function ENT:ANPlusGetHearDistance()
-	return self:ANPlusGetDataTab()['HearDistance']
+	return self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['HearDistance'] || nil
 end
 
 function ENT:ANPlusNPCGetEyeTrace(dist, mask) -- Almost certainly doens't work.	

@@ -62,7 +62,7 @@ function ENT:ANPlusIgnoreTillSet()
 		
 		local v = entsAround[ i ]
 			
-		if v:IsANPlus() && v:ANPlusGetDataTab()['Relations'] && !table.HasValue( v.m_tbANPlusRelationsMem, self )  then
+		if v:IsANPlus() && v:ANPlusGetDataTab()['Relations'] && v:ANPlusGetDataTab()['Relations']['Default'] && !table.HasValue( v.m_tbANPlusRelationsMem, self )  then
 
 			if v:ANPlusGetDataTab()['Relations']['Default']['NPCToMe'][ 1 ] != "Default" then self:AddEntityRelationship( v, D_NU, 0 ) end
 			if v:ANPlusGetDataTab()['Relations']['Default']['MeToNPC'][ 1 ] != "Default" then v:AddEntityRelationship( self, D_NU, 0 ) end
@@ -374,6 +374,7 @@ function ENT:ANPlusNPCThink()
 		self:ANPlusAnimationEventInternal()
 		self:ANPlusNPCAnimSpeed()
 		self:ANPlusNPCTranslateActivity()
+		self:ANPlusDetectDanger()
 		
 		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCThink'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCThink'](self)	
@@ -381,6 +382,18 @@ function ENT:ANPlusNPCThink()
 		
 	end
 
+end
+
+function ENT:ANPlusDetectDanger()
+	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCDetectDanger'] != nil && CurTime() - self.m_fANPlusDangerDetectLast >= self.m_fANPlusDangerDetectDelay then
+		for k, v in ipairs( ANPlusDangerStuffGlobal ) do
+			if IsValid(v) && self:ANPlusInRange( v, self:ANPlusGetDataTab()['Functions']['DetectionRange'] ) then
+				local distTSqr, dist = self:ANPlusGetRange( v )				
+				self:ANPlusGetDataTab()['Functions']['OnNPCDetectDanger'](self, v, dist)
+				self.m_fANPlusDangerDetectLast = CurTime()
+			end
+		end
+	end
 end
 
 function ENT:ANPlusNPCStateChange()
@@ -447,7 +460,7 @@ function ENT:ANPlusAcceptInput(ent, input, activator, caller, data)
 end
 
 function ENT:ANPlusOnUse(activator, caller, type)
-	if IsValid(activator) && ( type == 3 && CurTime() - ( self.m_fANPUseLast || 0 ) >= 0.05 || type != 3 ) then 
+	if IsValid(activator) && ( type == 3 && CurTime() - self.m_fANPUseLast >= 0.05 || type != 3 ) then 
 		if self:ANPlusGetDataTab()['CanFollowPlayers'] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] then self:ANPlusFollowPlayer( activator, self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] ) end
 		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCUse'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCUse'](self, activator, caller, type)					

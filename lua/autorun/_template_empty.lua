@@ -115,9 +115,7 @@ local NPCTab = {
 ----------------------------------------------------------------- If a weapon from the ['DefaultWeapons'] is not valid, a weapon from this table will be issued instead (mind the order and make sure that amount of values in both tables is equal).
 	['ReplacementWeapons'] 		= nil, 
 ----------------------------------------------------------------- Set a distance at which your NPC will be able to spot enemies.	
-	['LookDistance'] 			= nil,  
------------------------------------------------------------------ Set a distance at which your NPC will be able to hear things (doesn't literally set NPCs' hearing distance but rather affects ['OnNPCHearSound'] function).	
-	['HearDistance'] 			= nil,   
+	['LookDistance'] 			= nil,    
 ----------------------------------------------------------------- Set how well your NPC should handle certain weapons. You can either specify a certain weapon by its Class or HoldType https://wiki.facepunch.com/gmod/Hold_Types . Default refers to weapons that do not meet the Class or HoldType requirement.	 
 --[[ EXAMPLE
 	['WeaponProficiencyTab'] 	= {
@@ -260,6 +258,12 @@ local NPCTab = {
 		['OnNPCStateChange'] = function(self, newState, oldState)
 		end,
 		
+		------------------------------------------------------------ OnNPCDetectDanger - It is called whenever NPC gets near anything from the ANPlusDangerStuffGlobal table.
+		['DetectionRange']    = 200,
+		['DetectionDelay']    = 0.15,
+		['OnNPCDetectDanger'] = function(self, entDanger, dist)
+		end,
+		
 		------------------------------------------------------------ OnNPCTranslateActivity - Can be used to replace activites based on your own conditions. It's not 1:1 with a normal TranslateActivity but close enough.
 		['OnNPCTranslateActivity'] = function(self, act) -- return newAct, speed	
 		end,
@@ -354,6 +358,7 @@ local NPCTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCHearSound - This function runs whenever NPC hears any sounds (no scripted sequences and affected by ['HearDistance']).
+		['HearDistance']   = 200, 
 		['OnNPCHearSound'] = function(self, ent, dist, data) -- SHARED ( CLIENT & SERVER )
 		end,
 		

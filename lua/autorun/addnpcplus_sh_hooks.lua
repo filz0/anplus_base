@@ -3,24 +3,30 @@
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 
-	timer.Simple( 0, function()
-
-		if IsValid(ent) && IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
+	timer.Simple( 0, function()		
+		if !IsValid(ent) then return end				
+		if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
 			local npc = ent:GetOwner()		
 			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'] != nil then
 				npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'](npc, ent)		
 			end				
 		end
+		
+		if ( SERVER ) then
 
-		if !IsValid(ent) then return end
-		
-		if ( SERVER ) && !ent:IsANPlus(true) then 		
-			ent:ANPlusIgnoreTillSet()	
-			ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
+			for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
+				local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
+				if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:GetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
+					table.insert( ANPlusDangerStuffGlobal, ent )
+				end			
+			end
+
+			if !ent:IsANPlus(true) then 		
+				ent:ANPlusIgnoreTillSet()	
+				ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
+			end	
 		end
-		
-	end)
-	
+	end)	
 end)
 
 --[[////////////////////////
@@ -66,7 +72,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 	
 	if ( ent:IsNPC() || ent:IsWeapon() || ( ent:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) ) && !GetConVar("ai_disabled"):GetBool() then
 		for k, v in ipairs( ents.GetAll() ) do
-			if IsValid(v) && v != ent && v:IsANPlus(true) && v:ANPlusGetDataTab()['HearDistance'] && v:ANPlusGetDataTab()['Functions'] && v:ANPlusGetDataTab()['Functions']['OnNPCHearSound'] != nil then			
+			if IsValid(v) && v != ent && v:IsANPlus(true) && v:ANPlusGetDataTab()['Functions'] && v:ANPlusGetDataTab()['Functions']['HearDistance'] && v:ANPlusGetDataTab()['Functions']['OnNPCHearSound'] != nil then			
 				if ANPlusInRangeVector( v:GetPos(), pos, data.SoundLevel * ( v:ANPlusGetDataTab()['HearDistance'] * 0.10 ) ) then
 					local distSqr, dist = ANPlusGetRangeVector(v:GetPos(), pos)
 					v:ANPlusGetDataTab()['Functions']['OnNPCHearSound'](v, ent, dist, data)

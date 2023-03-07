@@ -440,13 +440,19 @@ hook.Add( "PlayerCanPickupWeapon", "ANPlusLoad_PlayerCanPickupWeapon", function(
 	end		
 end)
 
-hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(npc)	
-	if IsValid(npc) && npc:IsANPlus(true) then
-		if npc:IsNPC() && npc:ANPlusGetDataTab()['UseANPSquadSystem'] then 
-			npc:ANPlusRemoveFromCSquad( npc:ANPlusGetSquadName() )
+hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)	
+	if IsValid(ent) then
+		if !ent:IsWeapon() && table.HasValue( ANPlusDangerStuffGlobal, ent ) then
+			table.RemoveByValue( ANPlusDangerStuffGlobal, ent )
+			--ANPlusTableDeNull( ANPlusDangerStuffGlobal ) -- Just in case.
 		end
-		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
-			npc:ANPlusGetDataTab()['Functions']['OnNPCRemove'](npc)	
+		if ent:IsANPlus(true) then
+			if ent:IsNPC() && ent:ANPlusGetDataTab()['UseANPSquadSystem'] then 
+				ent:ANPlusRemoveFromCSquad( ent:ANPlusGetSquadName() )
+			end
+			if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
+				ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'](ent)	
+			end
 		end
 	end	
 end)
