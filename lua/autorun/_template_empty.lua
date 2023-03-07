@@ -261,7 +261,7 @@ local NPCTab = {
 		------------------------------------------------------------ OnNPCDetectDanger - It is called whenever NPC gets near anything from the ANPlusDangerStuffGlobal table.
 		['DetectionRange']    = 200,
 		['DetectionDelay']    = 0.15,
-		['OnNPCDetectDanger'] = function(self, entDanger, dist)
+		['OnNPCDetectDanger'] = function(self, ent, dist)
 		end,
 		
 		------------------------------------------------------------ OnNPCTranslateActivity - Can be used to replace activites based on your own conditions. It's not 1:1 with a normal TranslateActivity but close enough.
