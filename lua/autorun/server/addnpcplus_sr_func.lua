@@ -510,15 +510,11 @@ end
 
 local function ANPlusOnLoad(ply, ent, data)
 	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!
-		ent:ANPlusIgnoreTillSet()
-		ent:ANPlusNPCApply(data['CurName'])
-		--[[
-		ent:SetSaveValue( "m_iName", data['CurName'] )
-		local physCheck = ent:GetPhysicsObject()
-		if !IsValid(physCheck) || ent:GetSolid() != SOLID_VPHYSICS then
-			ent:SetSequence( ent:SelectWeightedSequence( ACT_IDLE ) )
-		end
-		]]--
+		timer.Simple( 0, function()
+			if !IsValid(ent) then return end
+			ent:ANPlusIgnoreTillSet()
+			ent:ANPlusNPCApply(data['CurName'])
+		end)
 	end
 	timer.Simple( 0, function()
 		if !IsValid(ent) || !istable( data ) then return end

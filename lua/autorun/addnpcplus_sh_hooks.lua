@@ -73,7 +73,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 	if ( ent:IsNPC() || ent:IsWeapon() || ( ent:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) ) && !GetConVar("ai_disabled"):GetBool() then
 		for k, v in ipairs( ents.GetAll() ) do
 			if IsValid(v) && v != ent && v:IsANPlus(true) && v:ANPlusGetDataTab()['Functions'] && v:ANPlusGetDataTab()['Functions']['HearDistance'] && v:ANPlusGetDataTab()['Functions']['OnNPCHearSound'] != nil then			
-				if ANPlusInRangeVector( v:GetPos(), pos, data.SoundLevel * ( v:ANPlusGetDataTab()['HearDistance'] * 0.10 ) ) then
+				if ANPlusInRangeVector( v:GetPos(), pos, data.SoundLevel * ( v:ANPlusGetDataTab()['Functions']['HearDistance'] * 0.10 ) ) then
 					local distSqr, dist = ANPlusGetRangeVector(v:GetPos(), pos)
 					v:ANPlusGetDataTab()['Functions']['OnNPCHearSound'](v, ent, dist, data)
 				end
@@ -103,7 +103,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 					data.Channel 	= sndChannel
 					data.Volume 	= sndVolume
 					data.Flags		= sndFlags
-					data.DSP 		= sndDSP						
+					data.DSP 		= sndDSP	
 					return true			
 				end			
 			end			

@@ -668,4 +668,5 @@ function ANPlusOverrideSound(toReplace, data, sndReplace, play, sndLVL, sndPitch
 		data.SoundTime 	= sndTime
 		return play
 	end
+	return nil
 end
