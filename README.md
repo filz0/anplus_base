@@ -44,6 +44,8 @@ Commands
 * anplus_start_invasion
 >A command to start the invasion.
 
+* anplus_ff_disabled 0/1
+>Disable Anti-FriendlyFire feature.
 Templates
 -
 <a href="https://github.com/filz0/anplus_base/blob/main/lua/autorun/_template_empty.lua">Empty Template</a>
