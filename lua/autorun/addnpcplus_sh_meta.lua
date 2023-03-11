@@ -110,21 +110,18 @@ end
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function metaENT:ANPlusTranslateSequence(anim)
-
 	if isstring( anim ) then
 		local result = self:GetSequenceActivity( self:LookupSequence( anim ) )	
 		if result == nil || result == -1 then	
 			return false			
 		else		
 			return result			
-		end
-		
+		end		
 	elseif isnumber( anim ) then 	
 		return anim		
 	else	
 		return false		
-	end
-	
+	end	
 end
 
 --[[////////////////////////
@@ -269,7 +266,7 @@ end
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function metaENT:ANPlusAlive()
-	if IsValid(self) && ( ( self:IsNPC() && !self.m_bDeathAnimPlay && ( ( (SERVER) && self:GetNPCState() != 7 ) || ( (CLIENT) && self:Health() > 0 ) ) ) || ( !self:IsNPC() && self:Health() > 0 ) || ( self:IsPlayer() && self:Alive() ) ) then
+	if IsValid(self) && ( ( self:IsNPC() && ( ( (SERVER) && !self:ANPlusInDeathAnim() && self:GetNPCState() != 7 ) || ( (CLIENT) && self:Health() > 0 ) ) ) || ( !self:IsNPC() && self:Health() > 0 ) || ( self:IsPlayer() && self:Alive() ) ) then
 		return true		
 	else	
 		return false		
