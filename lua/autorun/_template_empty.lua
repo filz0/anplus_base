@@ -524,7 +524,7 @@ local ENTTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCInput - Almost anything that happens to this NPC/Entity will go through here. Great for detecting inputs.
-		['OnNPCInput'] = function(input, activator, self, data)			
+		['OnNPCInput'] = function(self, input, activator, caller, data)			
 		end,
 		
 		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like the Combine Soldier throwing a grenade).
