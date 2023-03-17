@@ -224,9 +224,9 @@ function SWEP:ANPlusCanPrimaryFire()
 end
 
 local angCheck = {
-	['Pitch'] 	= 180,
-	['Yaw'] 	= 45,
-	['Roll'] 	= 180,
+	['Pitch'] 	= { 180, -180 },
+	['Yaw'] 	= { 45, -45 },
+	['Roll'] 	= { 180, -180 },
 }
 
 function SWEP:CanPrimaryAttack()	
@@ -241,7 +241,7 @@ function SWEP:CanPrimaryAttack()
 	end	
 
 	local posTarget = enemy:GetPos()
-	if !self:ANPlusValidAngles( posTarget, angCheck ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange1" ) ) || ( !owner:Visible( enemy ) && !owner:IsCurrentSchedule( 39 ) ) then		
+	if !self:ANPlusValidAnglesNormal( posTarget, angCheck ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange1" ) ) || ( !owner:Visible( enemy ) && !owner:IsCurrentSchedule( 39 ) ) then		
 		return false
 	end
 	
@@ -463,11 +463,11 @@ function SWEP:ThinkServer()
 		end
 		
 		local OwnerACT = owner:GetActivity()		
-		if self.BlackListACTs[ OwnerACT ] && !self.BlackListACTs[ self.LastOwnerACT ] then
+		if self.LastOwnerACT != OwnerACT && self.BlackListACTs[ OwnerACT ] && !self.BlackListACTs[ self.LastOwnerACT ] then
 			self:Reload()
-		end
+		end		
+        self.LastOwnerACT = OwnerACT	
 		
-        self.LastOwnerACT = ownerActivity	
 		if self:Clip1() <= 0 && !self.Primary.InfiniteAmmo && !owner:IsCurrentSchedule(SCHED_RELOAD) && !owner:IsCurrentSchedule(SCHED_HIDE_AND_RELOAD) then  
             owner:SetSchedule(SCHED_RELOAD)      
         end

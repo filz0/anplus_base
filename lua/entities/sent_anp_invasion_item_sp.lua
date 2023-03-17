@@ -174,7 +174,7 @@ end
 			self.ent:SetParent( self )
 			self:SetNWEntity( "ANP_INV_ISP_ENT", self.ent )
 		elseif self.ent:IsNPC() then
-			if !self.ent.IsVJBaseSNPC then self.ent:ANPlusNPCApply( self.ent:GetName() ) end		
+			if !self.ent.IsVJBaseSNPC then self.ent:ANPlusNPCApply( self.ent:ANPlusGetName() ) end		
 			if IsValid(self.ent:GetActiveWeapon()) then
 				local fx = EffectData()
 					fx:SetEntity( self.ent:GetActiveWeapon() )

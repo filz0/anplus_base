@@ -194,3 +194,73 @@ function ENT:ANPlusNPCGetEyeTrace(dist, mask) -- Almost certainly doens't work.
 	
 	return tr	
 end
+
+function ENT:ANPlusFakeModel(model, visualTab)
+
+	if (SERVER) then
+	
+		if model && !IsValid(self.m_pFakeModel) then
+			self.m_pFakeModel = ents.Create( "prop_dynamic" )
+			self.m_pFakeModel:SetModel( model )
+			if visualTab then self.m_pFakeModel:ANPlusCopyVisualFrom( visualTab ) end
+			self.m_pFakeModel:Spawn()
+			self.m_pFakeModel:SetSolid( SOLID_NONE )
+			self.m_pFakeModel:SetMoveType( MOVETYPE_NONE )
+			self.m_pFakeModel:SetNotSolid( true )
+			self.m_pFakeModel:SetParent( self )
+			self.m_pFakeModel:AddEffects( EF_BONEMERGE )
+			self.m_pFakeModel:SetOwner( self )
+			self:SetNoDraw( true )
+			self:DrawShadow( false )
+			self:DeleteOnRemove( self.m_pFakeModel )
+			
+			if self:IsNPC() then
+				local addTab = { ['CurFakeModel'] = { ['Model'] = model, ['VisualTab'] = self.m_pFakeModel:ANPlusGetVisual() } }
+				table.Merge( self:ANPlusGetDataTab()['CurData'], addTab )			
+				self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
+			end
+			
+		elseif model && IsValid(self.m_pFakeModel) then
+		
+			self.m_pFakeModel:SetModel( model )
+			if visualTab then self.m_pFakeModel:ANPlusCopyVisualFrom( visualTab ) end
+			if self:IsNPC() then
+				local addTab = { ['CurFakeModel'] = { ['Model'] = model, ['VisualTab'] = self.m_pFakeModel:ANPlusGetVisual() } }
+				table.Merge( self:ANPlusGetDataTab()['CurData'], addTab )			
+				self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
+			end
+		end
+		
+		return IsValid(self.m_pFakeModel) && self.m_pFakeModel || false
+		
+	elseif (CLIENT) then
+	
+		if model && !IsValid(self.m_pCFakeModel) then
+			self.m_pCFakeModel = ents.CreateClientProp( model )
+			self.m_pCFakeModel:ANPlusCopyVisualFrom( visualTab || self )
+			self.m_pCFakeModel:Spawn()
+			self.m_pCFakeModel:SetSolid( SOLID_VPHYSICS )
+			self.m_pCFakeModel:SetMoveType( MOVETYPE_NONE )
+			self.m_pCFakeModel:SetNotSolid( true )
+			self.m_pCFakeModel:SetParent( self )
+			self.m_pCFakeModel:AddEffects( EF_BONEMERGE )
+			self.m_pCFakeModel:SetOwner( self )
+			self:SetNoDraw( true )
+			self:DrawShadow( false )
+			
+			function self.m_pCFakeModel:ANPlus_CheckCRemoval() -- Because C_Ragdolls don't call for the remove hooks.
+				if !IsValid(self:GetParent()) then self:Remove() end
+			end
+			
+			hook.Add( "Think", self.m_pCFakeModel, self.m_pCFakeModel.ANPlus_CheckCRemoval )
+			
+		elseif model && IsValid(self.m_pCFakeModel) then
+			self.m_pCFakeModel:SetModel( model )
+			if visualTab then self.m_pFakeModel:ANPlusCopyVisualFrom( visualTab ) end
+		end
+		
+		return IsValid(self.m_pCFakeModel) && self.m_pCFakeModel || false
+		
+	end
+	
+end

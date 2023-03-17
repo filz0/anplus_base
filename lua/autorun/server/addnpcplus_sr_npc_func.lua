@@ -1,6 +1,6 @@
 local ENT = FindMetaTable("Entity")
 
-function ENT:ANPlusNPCApply(name)
+function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 
 	if IsValid(self) && name && isstring( name ) && ANPlusLoadGlobal then
 
@@ -8,10 +8,27 @@ function ENT:ANPlusNPCApply(name)
 		
 			local dataTab = ANPlusLoadGlobal[ i ]
 
-			if ( dataTab && dataTab['Name'] == name && dataTab['Class'] == self:GetClass() ) then
+			if ( dataTab && dataTab['Name'] == name ) then
+				if ( !override && dataTab['Class'] != self:GetClass() ) then 
+					return	
+				elseif ( isfunction( preCallback ) && dataTab['Class'] == self:GetClass() ) then 
+					preCallback( self )
+				elseif ( override && dataTab['Class'] != self:GetClass() ) then				
+					local newSelf = ents.Create( dataTab['Class'] )	
+					newSelf:SetPos( self:GetPos() )
+					newSelf:SetAngles( self:GetAngles() )
+					newSelf:Spawn()
+					newSelf:Activate()
+					
+					if isfunction( preCallback ) then
+						preCallback( newSelf )
+					end
+					
+					self:Remove()
+					self = newSelf
+				end
 				
 				local data = table.Copy( dataTab )
-				
 				local colBoundsMin, colBoundsMax = self:GetCollisionBounds()
 				--local min2, max2 = self:GetSurroundingBounds()
 				local hull = self:IsNPC() && self:GetHullType()	|| "Not NPC"			
@@ -20,7 +37,10 @@ function ENT:ANPlusNPCApply(name)
 				--ANPdevMsg( "Surrounding Bounds: Min[" .. tostring(min2) .. "] Max[" .. tostring(max2), 1 )
 	
 				data['CurData'] = {}
-	
+				
+				local addTab = { ['CurName'] = data['Name'] }
+				table.Merge( data['CurData'], addTab )	
+				
 				if data['Models'] then
 					
 					local modelTab = data['Models'][ math.random( 1, #data['Models'] ) ]		
@@ -31,6 +51,7 @@ function ENT:ANPlusNPCApply(name)
 					local CurMaterial = ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && math.random( modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""
 					local CurBoneEdit = ( modelTab && modelTab['BoneEdit'] ) || nil
 					local CurColBoundsMin, CurColBoundsMax = ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Max'] || colBoundsMax )
+					local CurHull = modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['HullType'] || hull
 					local CurScale, CurScaleDelta = modelTab['Scale'] && modelTab['Scale'][ 1 ] / 100 || 1, modelTab['scale'] && modelTab['scale'][ 2 ] || 0
 					
 					for i = 1, #data['Models'] do
@@ -55,13 +76,16 @@ function ENT:ANPlusNPCApply(name)
 					self:SetCollisionGroup( modelTab['SetCollisionGroup'] || self:GetCollisionGroup() )
 					self:SetSolid( modelTab['SetSolid'] || self:GetSolid() )
 					
+					if self:IsNPC() then
+						self:SetHullType( CurHull )
+						self:SetHullSizeNormal()
+					end
+					
 					local physCheck = self:GetPhysicsObject()
 					if !IsValid(physCheck) || self:GetSolid() != SOLID_VPHYSICS then
 						self:SetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
 					end
-					
-					local addTab = { ['CurName'] = data['Name'] }
-					table.Merge( data['CurData'], addTab )		
+						
 					local addTab = { ['CurModel'] = CurModel }
 					table.Merge( data['CurData'], addTab )			
 					local addTab = { ['CurSkin'] = CurSkin }
@@ -86,11 +110,11 @@ function ENT:ANPlusNPCApply(name)
 						--
 						if table.Count( data['CurData']['CurBGS'] ) <= 0 then
 			
-							for i = 1, self:GetNumBodyGroups() do		
-								if !table.HasValue( CurBGS, i ) then table.insert( CurBGS, i ) end		
-							end
+							--for i = 1, self:GetNumBodyGroups() do		
+							--	if !table.HasValue( CurBGS, i ) then table.insert( CurBGS, i ) end		
+							--end
 	
-							for i = 1, #CurBGS do		
+							for i = 1, #self:GetBodyGroups() do		
 								CurBGS[ i ] = self:GetBodygroup( i )	
 							end
 				 
@@ -129,9 +153,7 @@ function ENT:ANPlusNPCApply(name)
 	
 				end
 
-				if self:IsNPC() then				
-					self:SetHullType( data['CollisionBounds'] && data['CollisionBounds']['HullType'] || hull )
-					self:SetHullSizeNormal()	
+				if self:IsNPC() then					
 					if data['WeaponProficiency'] then self:SetCurrentWeaponProficiency( data['WeaponProficiency'] ) end	
 					if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end
 					if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
@@ -196,21 +218,22 @@ function ENT:ANPlusNPCApply(name)
 				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil
 				self:SetSaveValue( "m_iName", data['Name'] )
 				
-				self.ANPlusIDName = IDCreate( data['Name'] )
+				self.ANPlusIDName = ANPlusIDCreate( data['Name'] )
 				self:ANPlusApplyDataTab( data )					
 				self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
 
 				--timer.Simple( 0, function()
 					--if !IsValid(self) then return end
+				if isfunction( postCallback ) then
+					postCallback( newSelf )
+				end
+					
 				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
 					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self)		
 				end	
 				--end)
-				
 				hook.Add( "Think", self, self.ANPlusNPCThink )
-				hook.Add( "AcceptInput", self, self.ANPlusAcceptInput )
 				self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide )
-				
 			end
 	
 		end
@@ -336,9 +359,9 @@ local posTarget = target:GetPos()
 ]]--
 --[[
 local full360 = {
-	['Pitch'] 	= 70,
-	['Yaw'] 	= 45,
-	['Roll'] 	= 360,
+	['Pitch'] 	= { 70, -70 },
+	['Yaw'] 	= { 45, -45 },
+	['Roll'] 	= { 180, -180 },
 }
 
 --OR--
@@ -364,7 +387,7 @@ function ENT:ANPlusDealMeleeDamage(dist, dmg, dmgt, viewpunch, force, full360, s
 		if IsValid(ent) && IsValid(self:GetEnemy()) && self:GetEnemy() == ent && self:Visible(ent) && ent:ANPlusAlive() then
 		
 			local posTarget = ent:GetPos()
-			local validAng = isbool( full360 ) || self:ANPlusValidAngles( posTarget, full360 )
+			local validAng = isbool( full360 ) || self:ANPlusValidAnglesNormal( posTarget, full360 )
 			
 			if validAng then
 			
@@ -404,7 +427,7 @@ function ENT:ANPlusDealMeleeDamage(dist, dmg, dmgt, viewpunch, force, full360, s
 	end
 end
 
-function ENT:ANPlusMeleeAct(target, act, speed, rspeed, dist, full360, cooldown, callback)
+function ENT:ANPlusMeleeAct(target, act, speed, movementVel, rspeed, dist, full360, cooldown, callback)
 	
 	if !IsValid(self) || !IsValid(target) || self:Health() <= 0 then return end	
 	self.m_fANPMeleeLast = self.m_fANPMeleeLast || 0	
@@ -413,11 +436,11 @@ function ENT:ANPlusMeleeAct(target, act, speed, rspeed, dist, full360, cooldown,
 	if IsValid( self:GetActiveWeapon() ) && self:GetActiveWeapon():GetHoldType() != "" && ANPlusNoMeleeWithThese[ self:GetActiveWeapon():GetHoldType() ] then return end
 
 	local posTarget = target:GetPos()
-	local validAng = isbool( full360 ) || self:ANPlusValidAngles( posTarget, full360 )
+	local validAng = isbool( full360 ) || self:ANPlusValidAnglesNormal( posTarget, full360 )
 	
 	if self:Visible( target ) && self:ANPlusInRange( target, dist ) && target:ANPlusAlive() && validAng && CurTime() - self.m_fANPMeleeLast > self.m_fANPMeleeDelay then
 		
-		self:ANPlusPlayActivity( act, speed, target, rspeed, function(seqID, seqDur)
+		self:ANPlusPlayActivity( act, speed, movementVel, target, rspeed, function(seqID, seqDur)
 			self.m_fANPMeleeDelay = self.m_fANPMeleeDelay == 0 && seqDur || self.m_fANPMeleeDelay
 			if isfunction( callback ) then
 				callback(seqID, seqDur)
@@ -427,17 +450,17 @@ function ENT:ANPlusMeleeAct(target, act, speed, rspeed, dist, full360, cooldown,
 	end
 end
 
-function ENT:ANPlusRangeAct(target, act, speed, rspeed, distMax, distMin, full360, cooldown, callback) -- angMax/angMin if full360 is false or nil
+function ENT:ANPlusRangeAct(target, act, speed, movementVel, rspeed, distMax, distMin, full360, cooldown, callback) -- angMax/angMin if full360 is false or nil
 	
 	if !IsValid(self) || !IsValid(target) || self:Health() <= 0 then return end	
 	self.m_fANPRangeLast = self.m_fANPRangeLast || 0	
 	self.m_fANPRangeDelay = self.m_fANPRangeDelay || cooldown || 0	
 	local posTarget = target:GetPos()
-	local validAng = isbool( full360 ) || self:ANPlusValidAngles( posTarget, full360 )
+	local validAng = isbool( full360 ) || self:ANPlusValidAnglesNormal( posTarget, full360 )
 
 	if self:Visible( target ) && self:ANPlusInRange( target, distMax ) && ( distMin && !self:ANPlusInRange( target, distMin ) ) && target:ANPlusAlive() && validAng && CurTime() - self.m_fANPRangeLast > self.m_fANPRangeDelay then
 		
-		self:ANPlusPlayActivity( act, speed, target, rspeed, function(seqID, seqDur)
+		self:ANPlusPlayActivity( act, speed, movementVel, target, rspeed, function(seqID, seqDur)
 			self.m_fANPRangeDelay = self.m_fANPRangeDelay == 0 && seqDur || self.m_fANPRangeDelay
 			if isfunction( callback ) then
 				callback(seqID, seqDur)
@@ -537,7 +560,7 @@ local ANPlusGrenadeScheduleWL = {
 	[SCHED_RANGE_ATTACK2] = true,
 }
 
-function ENT:ANPlusGrenadeThrow(target, entity, anim, speed, bonename, throwdelay, forcemul, distmin, distmax, maxlastseen, cooldown, callback) -- Broken AF. Fix it you dummy.
+function ENT:ANPlusGrenadeThrow(target, entity, act, speed, movementVel, bonename, throwdelay, forcemul, distmin, distmax, maxlastseen, cooldown, callback) -- Broken AF. Fix it you dummy.
 
 	if !IsValid(self) || !IsValid(target) then return end
 
@@ -552,7 +575,7 @@ function ENT:ANPlusGrenadeThrow(target, entity, anim, speed, bonename, throwdela
 			
 			if ( self:Visible( target ) && !ANPlusGrenadeScheduleBL[ self:GetCurrentSchedule() ] ) || ( !self:Visible( target ) && ANPlusGrenadeScheduleWL[ self:GetCurrentSchedule() ] ) then
 			
-				self:ANPlusPlayActivity( anim, speed, target, 3 )
+				self:ANPlusPlayActivity( act, speed, movementVel, target, 3 )
 					
 				timer.Simple( throwdelay, function()
 				
@@ -627,26 +650,23 @@ end
 
 function ENT:ANPlusPlayScriptedSequence(delay)	
 	local delay = delay || 0
-	if IsValid(self.anp_seq) then self.anp_seq:Fire( "BeginSequence", "", delay ) end		
+	if IsValid(self.m_pScriptedSequence) then self.m_pScriptedSequence:Fire( "BeginSequence", "", delay ) end		
 end
 
 function ENT:ANPlusCancelScriptedSequence(delay)	
 	local delay = delay || 0
-	if IsValid(self.anp_seq) then self.anp_seq:Fire( "CancelSequence", "", delay ) end		
+	if IsValid(self.m_pScriptedSequence) then self.m_pScriptedSequence:Fire( "CancelSequence", "", delay ) end		
 end
 
 function ENT:ANPlusGetScriptedSequence()	
-	if IsValid(self.anp_seq) then 
-		return self.anp_seq
-	else
-		return false
-	end		
+	return IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || false
 end
 
 /*
 local seqDataTab = {
 	['Pos']				= nil, -- Will set self pos if nil
 	['Ang']				= nil, -- Will set self angles if nil
+	['Parent']			= false,
 	['Delay']			= 0, -- Delay before startrting scripted sequence, set to nil to spawn it but not start it and use ANPlusPlayScriptedSequence to do so.
 	['PlayBackRate']	= 1, -- Animation playback rate.
 	['SpawnFlags'] 		= 32 + 64, -- Spawnflags. https://developer.valvesoftware.com/wiki/Scripted_sequence  
@@ -669,33 +689,57 @@ local seqDataTab = {
 self:ANPlusCreateScriptedSequence(seqDataTab)
 */
 
-function ENT:ANPlusCreateScriptedSequence(seqDataTab)
+function ENT:ANPlusCreateScriptedSequence(seqDataTab, faceEnt, faceSpeed, callback, postCallback)
 	
 	if !IsValid(self) || !self:ANPlusAlive() then return end
-	if IsValid(self.anp_seq) then self.anp_seq:Remove() end
+	if IsValid(self.m_pScriptedSequence) then self.m_pScriptedSequence:Remove() end
 	if !seqDataTab then return end
-	self:SetNPCState(4)
-	self.anp_seq = ents.Create( "scripted_sequence" )
-	self.anp_seq:SetName( self:GetInternalVariable( "m_iName" ) .. self.anp_seq:EntIndex() )
-	self.anp_seq:SetKeyValue( "spawnflags", ( seqDataTab['SpawnFlags'] || 0 ) )
-	self.anp_seq:SetKeyValue( "m_iszEntity", self:GetInternalVariable( "m_iName" ) )		
+	
+	self.m_pScriptedSequence = ents.Create( "scripted_sequence" )	
+	local ssName = self:GetInternalVariable( "m_iName" ) .. "_ScriptedSequence_" .. self.m_pScriptedSequence:EntIndex()	
+	self.m_pScriptedSequence:SetName( ssName )
+	self.m_pScriptedSequence:SetKeyValue( "spawnflags", ( seqDataTab['SpawnFlags'] || 0 ) )
+		
+	self.m_pScriptedSequence:SetSaveValue( "m_hForcedTarget", self ) -- No need for new names :D
+	
 	for _, v in pairs( seqDataTab['KeyValues'] ) do	
 		if seqDataTab['KeyValues'].m_flRadius && seqDataTab['KeyValues'].m_flRadius < 1 then seqDataTab['KeyValues'].m_flRadius = 1 end
-		self.anp_seq:SetKeyValue( tostring( _ ), v )				
+		self.m_pScriptedSequence:SetKeyValue( tostring( _ ), v )				
 	end		
-	self.anp_seq:SetPos( seqDataTab['Pos'] || self:GetPos() )
-	self.anp_seq:SetAngles( seqDataTab['Ang'] || self:GetAngles() )
-	self.anp_seq:SetOwner( self )
-	self.anp_seq:Spawn()
-	self.anp_seq:Activate()
-	self.anp_seq:SetSaveValue( "m_interruptable", false )
-	if seqDataTab['Delay'] then self.anp_seq:Fire( "BeginSequence", "", seqDataTab['Delay'] ) end
-	--self.anp_seq:Fire( "AddOutput", "OnEndSequence "..self:GetInternalVariable( "m_iName" ) .. self.anp_seq:EntIndex()..":Kill", 0 )
-	self:DeleteOnRemove( self.anp_seq )
 	
-	timer.Create( "ANP_ACT_SS_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
-		if !IsValid(self) || self:GetNPCState() != 4 then return false end
+	self.m_pScriptedSequence:SetPos( seqDataTab['Pos'] || self:GetPos() )
+	self.m_pScriptedSequence:SetAngles( seqDataTab['Ang'] || self:GetAngles() )
+	if seqDataTab['Parent'] then self.m_pScriptedSequence:SetParent( self )	end
+	self.m_pScriptedSequence:SetOwner( self )
+	self.m_pScriptedSequence:Spawn()
+	self.m_pScriptedSequence:Activate()
+	self.m_pScriptedSequence:SetSaveValue( "m_interruptable", false )
+	self.m_pScriptedSequence.Speed = seqDataTab['PlayBackRate']
+	
+	if seqDataTab['Delay'] then self.m_pScriptedSequence:Fire( "BeginSequence", "", seqDataTab['Delay'] ) end
+	--self.m_pScriptedSequence:Fire( "AddOutput", "OnEndSequence "..self:GetInternalVariable( "m_iName" ) .. self.m_pScriptedSequence:EntIndex()..":Kill", 0 )
+	self:DeleteOnRemove( self.m_pScriptedSequence )
+	
+	self.m_pSSLuaRun = ents.Create( "lua_run" )
+	local lrName = self:GetInternalVariable( "m_iName" ) .. "_LuaRun_" .. self.m_pSSLuaRun:EntIndex()
+	self.m_pSSLuaRun:SetName( lrName )
+	self.m_pSSLuaRun:Spawn()
+	self.m_pScriptedSequence:DeleteOnRemove( self.m_pSSLuaRun )
+	
+	if isfunction( callback ) then self.m_pScriptedSequence.callback = callback end
+	if isfunction( postCallback ) then self.m_pScriptedSequence.postCallback = postCallback end
+	
+	self.m_pScriptedSequence:Fire( "AddOutput", "OnBeginSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnStartScriptedSequence' ):0:-1" )
+	self.m_pScriptedSequence:Fire( "AddOutput", "OnEndSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnEndScriptedSequence' ):0:-1" )
+	
+	timer.Create( "ANP_SS_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
+		if !IsValid(self) || !self:IsCurrentSchedule( SCHED_AISCRIPT ) then return end
+		self:ANPlusSetNextFlinch( 1 ) -- Don't flinch during SS
+		self:MaintainActivity()
 		self:SetPlaybackRate( seqDataTab['PlayBackRate'] || 1 ) 
+		if IsValid(faceEnt) && faceSpeed >= 0 then 
+			self:ANPlusFaceEntity( faceEnt, faceSpeed )
+		end
 	end)
 	
 end
@@ -748,7 +792,7 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 		if !IsValid(self) || !IsValid(self.anp_fTarget) || !self.anp_fTarget:ANPlusAlive() || ( ( self.anp_fTarget:IsNPC() || self.anp_fTarget:IsPlayer() ) && self:Disposition( self.anp_fTarget ) != D_LI ) then 
 			if IsValid(self) then			
 				if IsValid(self.anp_fTarget) then
-					if self.anp_fTarget:IsPlayer() && self:Disposition( self.anp_fTarget ) != D_LI then ANPlusMSGPlayer( self.anp_fTarget, self:GetName() .. " is no longer following you because it doens't like you anymore.", Color( 255, 200, 0 ), "ANP.UI.Error" ) end			
+					if self.anp_fTarget:IsPlayer() && self:Disposition( self.anp_fTarget ) != D_LI then ANPlusMSGPlayer( self.anp_fTarget, self:ANPlusGetName() .. " is no longer following you because it doens't like you anymore.", Color( 255, 200, 0 ), "ANP.UI.Error" ) end			
 					
 					if self:IsANPlus() && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCFollow'] != nil then
 						self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.anp_fTarget, false)	
@@ -840,15 +884,15 @@ end
 
 function ENT:ANPlusFollowPlayer(ply, followdist, followrundist, followcombatdist, followcombatrundist)
 	if self:Disposition( ply ) != D_LI then
-		ANPlusMSGPlayer( ply, self:GetName() .. " doesn't like you, therefore it won't follow you.", Color( 255, 50, 0 ), "ANP.UI.Error" )
+		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " doesn't like you, therefore it won't follow you.", Color( 255, 50, 0 ), "ANP.UI.Error" )
 	elseif !IsValid(self:ANPlusGetFollowTarget()) || ( IsValid(self:ANPlusGetFollowTarget()) && !self:ANPlusGetFollowTarget():IsPlayer() ) || self:ANPlusGetFollowTarget() != ply then
 		self:ANPlusFollowTarget( ply, followdist, followrundist, followcombatdist, followcombatrundist )
-		ANPlusMSGPlayer( ply, self:GetName() .. " is following you now.", Color( 50, 255, 0 ), "ANP.UI.Click" )
+		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " is following you now.", Color( 50, 255, 0 ), "ANP.UI.Click" )
 	elseif IsValid(self:ANPlusGetFollowTarget()) && self:ANPlusGetFollowTarget() == ply then
 		self:ANPlusFollowTarget()
-		ANPlusMSGPlayer( ply, self:GetName() .. " is no longer following you.", Color( 255, 200, 0 ), "ANP.UI.Error" )
+		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " is no longer following you.", Color( 255, 200, 0 ), "ANP.UI.Error" )
 	else
-		ANPlusMSGPlayer( ply, self:GetName() .. " is following someone else.", Color( 255, 50, 0 ), "ANP.UI.Error" )
+		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " is following someone else.", Color( 255, 50, 0 ), "ANP.UI.Error" )
 	end	
 end
 
@@ -862,98 +906,167 @@ function ENT:ANPlusFaceEntity( ent, speed )
 	end
 end
 
-function ENT:ANPlusPlayActivity(act, speed, faceent, facespeed, callback, postcallback)
-	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 ) then return end
-	local actSeq = self:SelectWeightedSequence( act )
+function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, callback, postCallback)
+	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() ) then return end
+	--act = self:ANPlusTranslateSequence( act )
 	local speed = speed || 1
 	local facespeed = facespeed || 0
-	self:StopMoving()
+	
+	self:TaskComplete()
+	self:ClearGoal()
 	self:SetCondition( 67 )
 	self:ClearCondition( 68 )
-	self:SetKeyValue( "sleepstate", 2 )
+	if movementVel && self:GetMoveType() == 3 then 
+		self.m_fIdealMoveType = self.m_fIdealMoveType || self:GetMoveType()
+		self:SetMoveType( 5 ) 
+	end
 	self:ResetSequenceInfo()
-	self:ResetSequence( actSeq )	
+	--self:ResetSequence( actSeq )	
 	self:SetIdealActivity( act )
 	self:ResetIdealActivity( act )
 	self:SetActivity( act )
 	--self:StartEngineTask( ai.GetTaskID( "TASK_PLAY_SCRIPT" ), act )
 	self.m_bANPlusPlayingActivity = true
-	local seqID, seqDur = self:LookupSequence( self:GetSequenceName( actSeq ) )	
+	
+	local seqName = self:GetSequenceName( self:GetSequence() )
+	local seqID, seqDur = self:LookupSequence( seqName )	
+	local seqSpeed = self:GetSequenceGroundSpeed( seqID )
 	seqDur = seqDur / speed
+	self:ANPlusSetNextFlinch( seqDur )
+	
 	if isfunction( callback ) then
-		callback( seqID, seqDur )
+		callback( seqID, seqDur, seqSpeed )
 	end
 
 	timer.Create( "ANP_ACT_RESET" .. self:EntIndex(), seqDur, 1, function() 
-		if !IsValid(self) then return end	
+		if !IsValid(self) then return end			
 		self.m_bANPlusPlayingActivity = false
 		self:SetCondition( 68 )
 		self:ClearCondition( 67 )
-		self:SetKeyValue( "sleepstate", 0 )
-		self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
-		if isfunction( postcallback ) then
-			postcallback( seqID, seqDur )
+		if movementVel && self.m_fIdealMoveType then 
+			self:SetMoveType( self.m_fIdealMoveType )
 		end
+		self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
+		
+		if isfunction( postCallback ) then
+			postCallback( seqID, seqDur )
+		end
+		
 	end)
 
-	timer.Create( "ANP_ACT_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
+	timer.Create( "ANP_ACT_THINK" .. self:EntIndex(), 0, 0, function() 
 		if !IsValid(self) || !self.m_bANPlusPlayingActivity then return end
-		-- self:MaintainActivity()
+		self:MaintainActivity()
+		if isbool( movementVel ) && movementVel == true then
+			local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
+			seqVel:Rotate( self:GetAngles() )
+			self:SetLocalVelocity( seqVel + Vector( 0, 0, 1 ) )
+		elseif isnumber( movementVel ) then
+			local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
+			seqVel:Rotate( self:GetAngles() )
+			self:SetLocalVelocity( seqVel * movementVel )
+		elseif isvector( movementVel ) then
+			self:SetLocalVelocity( movementVel )
+		end
 		self:SetPlaybackRate( speed ) 
-		if IsValid(faceent) && facespeed >= 0 then 
-			self:ANPlusFaceEntity( faceent, facespeed )
+		if IsValid(faceEnt) && faceSpeed >= 0 then 
+			self:ANPlusFaceEntity( faceEnt, faceSpeed )
 		end
 	end)
 	
 end
---[[
-function ENT:ANPlusPlaySequence(seq, speed, faceent, facespeed, callback, postcallback)
 
-	self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
-	local seqID, seqDur = self:LookupSequence( isnumber( seq ) && self:GetSequenceName( seq ) || seq )
+function ENT:ANPlusPlayScene(scene, speed, stopMoving, faceEnt, faceSpeed, callback, postCallback)
+	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() ) then return end
 	local speed = speed || 1
 	local facespeed = facespeed || 0
-	self:StopMoving()
-	self:SetCondition( 67 )
-	self:ClearCondition( 68 )
-	self:ResetSequenceInfo()
-	self:ResetSequence( seqID )	
-	self:SetCycle( 0 )	
-	self:ANPlusSetIdealSequence( seqID )
-	--self:StartEngineTask( ai.GetTaskID( "TASK_PLAY_SCRIPT" ), act )
-	self.m_bANPlusPlayingActivity = true
+	
+	self.m_fLastState = self:GetNPCState()
+	self:TaskComplete()
+	self:ClearGoal()
+	
+	local scnDur, scnEnt = self:PlayScene( scene, 0 )
+	self.m_bANPlusPlayingActivity = true		
+	scnDur = scnDur / speed
+	 
+	if isfunction( callback ) then
+		callback( scnEnt, scnDur )
+	end
+	
+	timer.Create( "ANP_SCENE_RESET" .. self:EntIndex(), scnDur, 1, function() 
+		if !IsValid(self) then return end	
 		
+		self.m_bANPlusPlayingActivity = false
+		self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
+		
+		if isfunction( postCallback ) then
+			postCallback( scnEnt, scnDur )
+		end
+		
+	end)
+
+	timer.Create( "ANP_SCENE_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
+		if !IsValid(self) || !self.m_bANPlusPlayingActivity then return end
+		if stopMoving then self:StopMoving() end
+		self:MaintainActivity()
+		self:SetPlaybackRate( speed ) 
+		if IsValid(faceEnt) && faceSpeed >= 0 then 
+			self:ANPlusFaceEntity( faceEnt, faceSpeed )
+		end
+	end)	
+end
+
+function ENT:ANPlusPlaySequence(seq, speed, stopMoving, faceEnt, faceSpeed, callback, postCallback)
+	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() ) then return end
+	local speed = speed || 1
+	local facespeed = facespeed || 0
+	 
+	self.m_fLastState = self:GetNPCState()
+	self:SetNPCState( 4 )
+	self:TaskComplete()
+	self:ClearGoal()
+	
+	local seqID, seqDur = self:LookupSequence( seq )
+	self.m_bANPlusPlayingActivity = true		
 	seqDur = seqDur / speed
+	--self:SetSchedule( SCHED_NPC_FREEZE )
+	--self:NextThink( CurTime() + 2 )
+	--self:SetSaveValue( "m_flAnimTime", 1 )
+	--self:SetSaveValue( "m_flNextDecisionTime", seqDur )
+	self:SetMoveType( 3 )
+	self:SetArrivalSequence( seqID )
+	--self:StartEngineTask( ai.GetTaskID( "TASK_PLAY_SEQUENCE" ), seqID )
+	 
 	if isfunction( callback ) then
 		callback( seqID, seqDur )
 	end
-self.m_fLastCycle = 0
-	timer.Create( "ANP_SEQ_RESET" .. self:EntIndex(), seqDur, 1, function() 
+	
+	timer.Create( "ANP_SCENE_RESET" .. self:EntIndex(), seqDur, 1, function() 
 		if !IsValid(self) then return end	
+		
 		self.m_bANPlusPlayingActivity = false
 		self:SetCondition( 68 )
-		self:ClearCondition( 67 )
+		self:SetNPCState( self.m_fLastState || 1 )
 		self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
-		if isfunction( postcallback ) then
-			postcallback( seqID, seqDur )
+		
+		if isfunction( postCallback ) then
+			postCallback( seqID, seqDur )
 		end
+		
 	end)
 
-	timer.Create( "ANP_SEQ_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
+	timer.Create( "ANP_SCENE_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
 		if !IsValid(self) || !self.m_bANPlusPlayingActivity then return end
-		--local lastCycle = self:GetCycle()
-		--if !self:IsCurrentSchedule( SCHED_NPC_FREEZE ) then self:SetSchedule( SCHED_NPC_FREEZE ); self:SetIdealActivity( act ); self:SetCycle(self.m_fLastCycle) end
-		--self.m_fLastCycle = lastCycle
+		if stopMoving then self:StopMoving() end
 		self:MaintainActivity()
 		self:SetPlaybackRate( speed ) 
-		if IsValid(faceent) && facespeed >= 0 then 
-			self:ANPlusFaceEntity( faceent, facespeed )
+		if IsValid(faceEnt) && faceSpeed >= 0 then 
+			self:ANPlusFaceEntity( faceEnt, faceSpeed )
 		end
-	end)
-	
+	end)	
 end
-]]--
-function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, atHPLevel, dmgMin, dmgMax, chance, interruptible, precallback, postcallback)
+
+function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, movementVel, atHPLevel, dmgMin, dmgMax, chance, interruptible, precallback, postcallback)
 	local att = dmginfo:GetAttacker()
 	local inf = dmginfo:GetInflictor()
 	local dmg = dmginfo:GetDamage()
@@ -961,7 +1074,6 @@ function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, atHPLevel, dmgMin, dmgMax, c
 	local atHPLevel = atHPLevel || 1
 	local targethp = math.Approach( self:Health(), atHPLevel, dmg ) == atHPLevel
 	if act && ( !dmgMin || ( dmgMin && dmg >= dmgMin ) ) && ( !dmgMax || ( dmgMax && dmg <= dmgMax ) ) && targethp && !self.m_bDeathAnimPlay && ANPlusPercentageChance( chance ) then
-		self.m_bDeathAnimPlay = true
 		if isfunction( precallback ) then
 			precallback( self )
 		end
@@ -978,7 +1090,7 @@ function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, atHPLevel, dmgMin, dmgMax, c
 		dmginfo:SetDamage( 0 )
 		self:SetHealth( 1 )
 		--self:SetNPCState( 6 )
-		self:ANPlusPlayActivity( act, speed, nil, nil, nil, function()
+		self:ANPlusPlayActivity( act, speed, movementVel, nil, nil, nil, function()
 			self.m_bNPCNoDamage = false
 			if isfunction( postcallback ) then
 				postcallback( self, lastDMGinfo )
@@ -991,6 +1103,7 @@ function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, atHPLevel, dmgMin, dmgMax, c
 			self:TakeDamageInfo( newDMGinfo )
 			--self:SetHealth( 0 )
 		end)
+		self.m_bDeathAnimPlay = true
 	end
 end
 
@@ -1048,23 +1161,16 @@ end
 
 function ENT:ANPlusRemoveFromCSquad(squad)
 	if ANPCustomSquads[squad] && table.HasValue( ANPCustomSquads[squad], self ) then table.RemoveByValue( ANPCustomSquads[squad], self ) end
-end
-
-function ENT:SetIdealMoveSpeed(val)
-	self:SetSaveValue( "m_flGroundSpeed", val )
-end
-
-function ENT:ANPlusClearTarget()
-	self:SetSaveValue( "m_hTargetEnt", NULL )
-end
+end			
 
 function ENT:ANPlusOverrideMoveSpeed(speed, rate)	
-	if speed != 1 && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() && self:GetMinMoveStopDist() > 10 then			
-		if speed > 1 && ( self:GetVelocity():Length() <= self:GetIdealMoveSpeed() * speed ) then
-			self:SetVelocity( self:GetGroundSpeedVelocity() * speed ) 		
-		elseif speed < 1 then		
-			self:SetMoveVelocity( self:GetGroundSpeedVelocity() * speed ) 
-		end					
+	if speed != 1 && self:IsGoalActive() && self:GetPathDistanceToGoal() > 10 * speed && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() then			
+		self:SetMoveVelocity( self:GetGroundSpeedVelocity() * speed ) 
+		local seqName = self:GetSequenceName( self:GetSequence() )
+		local seqID, seqDur = self:LookupSequence( seqName )
+		local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
+		seqVel:Rotate( self:GetAngles() )
+		self:SetLocalVelocity( seqVel * speed )				
 	end	
 	if rate != 1 then self:SetPlaybackRate( rate ) end
 end

@@ -1,6 +1,8 @@
 hook.Add("CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", function(npc, rag)
 
 	if IsValid(npc) && npc:IsANPlus() then
+
+		if npc:ANPlusGetDataTab()['CurFakeModel'] then rag = rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
 		
 		if npc:ANPlusGetDataTab()['CurBGS'] then
 		
@@ -20,6 +22,17 @@ hook.Add("CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", functi
 				
 			end
 				
+		end
+		
+		if npc:ANPlusGetDataTab()['CurBones'] then
+			for i = 1, #npc:ANPlusGetDataTab()['CurBones'] do		
+				local bone = rag:GetPhysicsObjectNum( i )					
+				if IsValid( bone ) then
+					bone:SetPos( npc:ANPlusGetDataTab()['CurBones'][ i ][ 1 ] )
+					bone:SetAngles( npc:ANPlusGetDataTab()['CurBones'][ i ][ 2 ] )
+					bone:EnableMotion( true )				
+				end			
+			end
 		end
 
 		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then

@@ -2,6 +2,7 @@ ANPlusLoadGlobal = { ['Base']  = { ['Name'] = "ANPlus BASE" }, ['entids'] = {} }
 ANPlusDangerStuffGlobalNameOrClass = { "grenade", "missile", "rocket", "frag", "flashbang", "portal", "spore", "prop_combine_ball", "bolt" }
 ANPlusDangerStuffGlobal = {}
 ANPCustomSquads = { base_squad = {} }
+ANPToolMenuGlobal = {}
 
 ANPDefaultGMODWeapons = {
 ['weapon_pistol'] 		= true,
@@ -31,7 +32,7 @@ ANPlus = {
 			local addTab = { [ ANPlusLoadGlobal['entids'][ id ] && ANPlusLoadGlobal['entids'][ id ][ 2 ] || #ANPlusLoadGlobal + 1 ] = tab } 		
 			table.Merge( ANPlusLoadGlobal, addTab )	
 			
-			local addTab = { [ id ] = { true, #ANPlusLoadGlobal, IDCreate( tab['Name'] ) } } 
+			local addTab = { [ id ] = { true, #ANPlusLoadGlobal, ANPlusIDCreate( tab['Name'] ) } } 
 			table.Merge( ANPlusLoadGlobal['entids'], ANPlusLoadGlobal['entids'][ id ] || addTab )
 			
 			if (CLIENT) then				
@@ -39,15 +40,23 @@ ANPlus = {
 				language.Add( id, id )
 				language.Add( "#" .. id, id )
 			end		
-			
-			if listType == "NPC" && tab['Relations'] then
-				if !tab['Relations'][ tab['Name'] ] then			
-					local addTab = { [''.. tab['Name'] ..''] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, } 
-					table.Merge( tab['Relations'], addTab )		
+			--	
+			if listType == "NPC" then -- Default stuff that We need for other stuff to not break.
+				if tab['Relations'] then
+					if !tab['Relations'][ tab['Name'] ] then			
+						local addTab = { [''.. tab['Name'] ..''] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, } 
+						table.Merge( tab['Relations'], addTab )		
+					end
+					if !tab['Relations']['Default'] then
+						local addTab = { ['Default'] = { ['MeToNPC'] = { "Default", 0 }, ['NPCToMe'] = { "Default", 0 } }, } 
+						table.Merge( tab['Relations'], addTab )	
+					end
 				end
-				if !tab['Relations']['Default'] then
-					local addTab = { ['Default'] = { ['MeToNPC'] = { "Default", 0 }, ['NPCToMe'] = { "Default", 0 } }, } 
-					table.Merge( tab['Relations'], addTab )	
+				if tab['WeaponProficiencyTab'] then
+					if !tab['WeaponProficiencyTab']['Default'] then
+						local addTab = { ['Default'] = { ['Proficiency'] = 1, ['PrimaryMinRange'] = nil,  ['SecondaryMinRange'] = nil, ['PrimaryMaxRange'] = nil, ['SecondaryMaxRange'] = nil }, } 
+						table.Merge( tab['WeaponProficiencyTab'], addTab )	
+					end
 				end
 			end
 			
@@ -136,6 +145,13 @@ ANPlus = {
 	
 	end,
 	
+	AddToolMenu = function( category, name, panel, tab )
+		if ANPToolMenuGlobal then 
+			local addTab = { [ #ANPToolMenuGlobal + 1 ] = { ['Category'] = category, ['Name'] = name, ['Panel'] = panel, ['Table'] = tab } } -- This should help with all these NPC spawner tools :/
+			table.Merge( ANPToolMenuGlobal, addTab )				
+		end
+	end,
+	
 } 
 
 timer.ANPlusDelayed = function( id, delay, time, repeats, callback ) -- This is stupid and has to go... Far away...
@@ -174,7 +190,7 @@ local ANPlusInvalidChars = {
 "~"
 }
 
-function IDCreate( name )
+function ANPlusIDCreate( name )
 	for i = 1, #ANPlusInvalidChars do
 		name = string.Replace( name, ANPlusInvalidChars[ i ], ANPlusInvalidChars[ i ] == " " && "_" || "" )	
 	end	
@@ -182,6 +198,39 @@ function IDCreate( name )
 	return id	
 end
 
+if (CLIENT) then
+
+	local ply = LocalPlayer()
+	
+	local function ANPlusMenuDefault_Settings(panel)
+		panel:ClearControls()	
+		
+		local image = panel:ANPlus_CreateImage( 0, 20, 250 * ANPlusGetFixedScreenW(), 250 * ANPlusGetFixedScreenH(), "vgui/anplus_log.png", false, true, false )		
+		image:Dock( TOP )
+		
+		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Disable Anti-FriendlyFire", "anplus_ff_disabled" ), "Disable Anti-FriendlyFire feature built-in to the base." )
+	end
+	local function ANPlusMenuDefault_Functions(panel)
+		panel:ClearControls()	
+		
+		local image = panel:ANPlus_CreateImage( false, false, 250 * ANPlusGetFixedScreenW(), 250 * ANPlusGetFixedScreenH(), "vgui/anplus_log.png", false, true, false )	
+		image:Dock( TOP )
+		
+		panel:ANPlus_SecureMenuItem( panel:Button( "[NPC]: Frezee", "anplus_sleep_npcs" ), "Frezee all NPCs." )
+		panel:ANPlus_SecureMenuItem( panel:Button( "[NPC]: Unfrezee", "anplus_wake_npcs" ), "Unfrezee all NPCs." )
+	end
+	
+	hook.Add( "AddToolMenuTabs", "ANPlusLoad_AddToolMenuTabs", function( category, name, panel, tab )
+		spawnmenu.AddToolTab( "ANPlus", "ANPlus", "vgui/anp_ico.png" )
+		spawnmenu.AddToolMenuOption( "ANPlus", "[BASE]", "anplus_mainsettings", "Settings", nil, nil, ANPlusMenuDefault_Settings )
+		spawnmenu.AddToolMenuOption( "ANPlus", "[BASE]", "anplus_mainfunctions", "Functions", nil, nil, ANPlusMenuDefault_Functions )
+		for i = 1, #ANPToolMenuGlobal do
+			local toolData = ANPToolMenuGlobal[ i ]
+			if toolData then spawnmenu.AddToolMenuOption( "ANPlus", toolData['Category'], ANPlusIDCreate( toolData['Name'] ), toolData['Name'], nil, nil, toolData['Panel'], toolData['Table'] || nil ) end
+		end		
+	end)
+	
+end
 
 
 

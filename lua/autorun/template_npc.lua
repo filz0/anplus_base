@@ -636,7 +636,7 @@ local NPCTab = {
 
 			activator:SetHealth( 200 )
 			self:EmitSound( "vo/npc/male01/health05.wav", 75, 50, 1, CHAN_VOICE, 0, 0 )
-			self:ANPlusPlayActivity( self:ANPlusTranslateSequence("heal"), 1, activator, 4 )   
+			self:ANPlusPlayActivity( self:ANPlusTranslateSequence("heal"), 1, false, activator, 4 )   
 		
 		end,
 		
@@ -982,7 +982,7 @@ local NPCTab = {
 			
 			activator:TakeDamage( 999, self, self )
 			self:EmitSound( "vo/npc/male01/yeah02.wav", 75, 50, 1, CHAN_VOICE, 0, 0 )
-			self:ANPlusPlayActivity( self:ANPlusTranslateSequence("heal"), 1, activator, 4 )   
+			self:ANPlusPlayActivity( self:ANPlusTranslateSequence("heal"), 1, false, activator, 4 )   
 		
 		end,
 		

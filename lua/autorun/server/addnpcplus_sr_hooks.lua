@@ -9,7 +9,7 @@ util.AddNetworkString("anplus_dev_isemptyspace")
 util.AddNetworkString("anplus_play_ui_snd")
 util.AddNetworkString("anplus_chatmsg_ply")
 util.AddNetworkString("anplus_screenmsg_ply")
-util.AddNetworkString("anplus_anim_fix")
+util.AddNetworkString("anplus_add_fakename_language")
 
 net.Receive("anplus_gmodsave_load_from_the_menu", function(len, ply)	
 	--ANPlusNPCPreApply()	
@@ -56,7 +56,7 @@ concommand.Add( "anplus_set_ent", function(ply, cmd, args, argStr)
 		local tr = ply:GetEyeTrace()		
 		if tr.Hit && IsValid(tr.Entity) && argStr && !tr.Entity:IsANPlus(true) then
 			--npc:ANPlusIgnoreTillSet()		
-			tr.Entity:ANPlusNPCApply( argStr )	
+			tr.Entity:ANPlusNPCApply( argStr, true )	
 		end		
 	end	
 end)
@@ -72,16 +72,19 @@ concommand.Add( "anplus_reload_ents", function(ply)
 		for _, npc in pairs( ents.GetAll() ) do		
 			if !IsValid(npc) || npc:IsANPlus(true) then continue end
 			--npc:ANPlusIgnoreTillSet()		
-			npc:ANPlusNPCApply( npc:GetInternalVariable( "m_iName" ) )	
+			npc:ANPlusNPCApply( npc:GetInternalVariable( "m_iName" ), true )	
 		end		
 	end	
 end)
 
 hook.Add( "PlayerDeath", "ANPlusLoad_PlayerDeath", function(ply, inf, att)
-	if IsValid(ply) && IsValid(att) && att:IsANPlus(true) then		
-		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCKilledPlayer'] != nil then	
-			att:ANPlusGetDataTab()['Functions']['OnNPCKilledPlayer'](ply, inf, att)			
-		end		
+	if IsValid(ply) then
+		if IsValid(att) && att:IsANPlus(true) then		
+			if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCKilledPlayer'] != nil then	
+				att:ANPlusGetDataTab()['Functions']['OnNPCKilledPlayer'](ply, inf, att)			
+			end		
+		end
+		if ply.ANPlusPlayerDeath != nil then ply:ANPlusPlayerDeath(ply, inf, att) end
 	end
 end)
 
@@ -89,31 +92,31 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 
 	if IsValid(npc) && npc:IsANPlus() then
 		
-		if npc:ANPlusGetDataTab()['CurData'] && npc:ANPlusGetDataTab()['CurData']['CurBGS'] then
-			
-			for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBGS'] do
-				rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurData']['CurBGS'][ i ] )		
-			end
-			
-		end
-			
-		if npc:ANPlusGetDataTab()['CurData'] && npc:ANPlusGetDataTab()['CurData']['CurSMS'] then
-
-			for i = 0, #npc:ANPlusGetDataTab()['CurData']['CurSMS'] do
-				rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurData']['CurSMS'][ i + 1 ] )					
-			end
-				
-		end
-		
 		if npc:ANPlusGetDataTab()['CurData'] then
 		
-			for i = 1, npc:ANPlusGetDataTab()['CurData']['CurBones'] && #npc:ANPlusGetDataTab()['CurData']['CurBones'] || 0 do		
-				local bone = rag:GetPhysicsObjectNum( i )					
-				if IsValid( bone ) then
-					bone:SetPos( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 1 ] )
-					bone:SetAngles( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 2 ] )
-					bone:EnableMotion( true )				
-				end			
+			if npc:ANPlusGetDataTab()['CurData']['CurFakeModel'] then rag = rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurData']['CurFakeModel'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
+			
+			if npc:ANPlusGetDataTab()['CurData']['CurBGS'] then			
+				for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBGS'] do
+					rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurData']['CurBGS'][ i ] )		
+				end				
+			end
+				
+			if npc:ANPlusGetDataTab()['CurData']['CurSMS'] then
+				for i = 0, #npc:ANPlusGetDataTab()['CurData']['CurSMS'] do
+					rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurData']['CurSMS'][ i + 1 ] )					
+				end					
+			end
+			
+			if npc:ANPlusGetDataTab()['CurData']['CurBones'] then
+				for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBones'] do		
+					local bone = rag:GetPhysicsObjectNum( i )					
+					if IsValid( bone ) then
+						bone:SetPos( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 1 ] )
+						bone:SetAngles( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 2 ] )
+						bone:EnableMotion( true )				
+					end			
+				end
 			end
 		
 		end
@@ -137,88 +140,85 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 end)
 
 hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
-	
-	if IsValid(npc) && npc:IsANPlus() then
-
-		if npc:ANPlusGetDataTab()['CurData'] && npc:ANPlusGetDataTab()['CurData']['CurModel'] then
-			
-			local CurBGS = {}
-			
-			for i = 1, npc:GetNumBodyGroups() do
-		
-				if !table.HasValue( CurBGS, i ) then table.insert( CurBGS, i ) end
-	
-			end
-	
-			for i = 1, #CurBGS do
-		
-				CurBGS[ i ] = npc:GetBodygroup( i )
-	
-			end
+	if IsValid(npc) then
+		if npc:IsANPlus() then
+			if npc:ANPlusGetDataTab()['CurData'] && npc:ANPlusGetDataTab()['CurData']['CurModel'] then
 				
-			local addTab = { ['CurBGS'] = CurBGS }
-			table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
-			
-			local CurSMS = {}
-			
-			for i = 0, #npc:GetMaterials() do
-		
-				CurSMS[ i + 1 ] = npc:GetSubMaterial( i ) || npc:GetMaterials()[ i ]
-	
-			end
-				
-			local addTab = { ['CurSMS'] = CurSMS }
-			table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
-			
-			local CurBones = {}
-			
-			for i = 0, npc:GetBoneCount() do
-				
-				local bone = npc:LookupBone( npc:GetBoneName( i ) )
-				
-				if bone then
+				local CurBGS = {}				
+				for i = 1, #npc:GetBodyGroups() do		
+					CurBGS[ i ] = npc:GetBodygroup( i )	
+				end
 					
-					local bonepos, boneang = npc:GetBonePosition( npc:TranslatePhysBoneToBone( i ) )
+				local addTab = { ['CurBGS'] = CurBGS }
+				table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+				
+				local CurSMS = {}			
+				for i = 0, #npc:GetMaterials() do		
+					CurSMS[ i + 1 ] = npc:GetSubMaterial( i ) || npc:GetMaterials()[ i ]
+				end
 					
-					CurBones[ i ] = { bonepos, boneang }
+				local addTab = { ['CurSMS'] = CurSMS }
+				table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+				
+				local CurBones = {}			
+				for i = 0, npc:GetBoneCount() do
+					
+					local bone = npc:LookupBone( npc:GetBoneName( i ) )
+					
+					if bone then
+						
+						local bonepos, boneang = npc:GetBonePosition( npc:TranslatePhysBoneToBone( i ) )
+						
+						CurBones[ i ] = { bonepos, boneang }
+					
+					end
 				
 				end
-			
+				
+				local addTab = { ['CurBones'] = CurBones }
+				table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+				
+				local addTab = { ['CurFakeModel'] = { ['Model'] = npc:ANPlusFakeModel() && npc:ANPlusFakeModel():GetModel() || "", ['VisualTab'] = npc:ANPlusGetVisual() } }			
+				table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+				
+				npc:ANPlusApplyDataTab( npc:ANPlusGetDataTab() )
+				
+				npc:SetModel( npc:ANPlusGetDataTab()['CurData']['CurModel'] )
+				
 			end
 			
-			local addTab = { ['CurBones'] = CurBones }
-			table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCDeath'] != nil then				
+				npc:ANPlusGetDataTab()['Functions']['OnNPCDeath'](npc, att, inf)			
+			end
 			
-			npc:ANPlusApplyDataTab( npc:ANPlusGetDataTab() )
+			if IsValid( npc:ANPlusGetFollowTarget() ) && npc:ANPlusGetFollowTarget():IsPlayer() then ANPlusMSGPlayer( npc:ANPlusGetFollowTarget(), "Following you " .. npc:ANPlusGetName() .. " has died.", Color( 255, 50, 0 ), "ANP.UI.Error" ) end
 			
-			npc:SetModel( npc:ANPlusGetDataTab()['CurData']['CurModel'] )
-		
+			if npc:ANPlusGetDataTab()['UseANPSquadSystem'] then 
+				npc:ANPlusRemoveFromCSquad( npc:ANPlusGetSquadName() )
+			end
+			
+			if IsValid(npc:ANPlusFakeModel()) then npc:ANPlusFakeModel():Remove() end
+			
 		end
-		
-		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCDeath'] != nil then				
-			npc:ANPlusGetDataTab()['Functions']['OnNPCDeath'](npc, att, inf)			
-		end
-		
-		if IsValid( npc:ANPlusGetFollowTarget() ) && npc:ANPlusGetFollowTarget():IsPlayer() then ANPlusMSGPlayer( npc:ANPlusGetFollowTarget(), "Following you " .. npc:GetName() .. " has died.", Color( 255, 50, 0 ), "ANP.UI.Error" ) end
-		
-		if npc:ANPlusGetDataTab()['UseANPSquadSystem'] then 
-			npc:ANPlusRemoveFromCSquad( npc:ANPlusGetSquadName() )
-		end
-		
-	end
 	
-	if IsValid(npc) && IsValid(att) && att:IsANPlus(true) then
-
-		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCKilledNPC'] != nil then			
-			att:ANPlusGetDataTab()['Functions']['OnNPCKilledNPC'](att, npc, inf)			
+		if IsValid(att) && att:IsANPlus(true) then
+			if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCKilledNPC'] != nil then			
+				att:ANPlusGetDataTab()['Functions']['OnNPCKilledNPC'](att, npc, inf)			
+			end	
 		end
-		
-		--ANPlusNPCKillFeed(npc, att, inf)
-		
-		--return false
 	
+		if npc.ANPlusNPCDeath != nil then npc:ANPlusNPCDeath(npc, att, inf) end
 	end
+end)
 
+hook.Add( "AcceptInput", "ANPlusLoad_AcceptInput", function(ent, input, activator, caller, data)
+	if ( ent && ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCInput'] != nil ) then
+		ent:ANPlusGetDataTab()['Functions']['OnNPCInput'](ent, input, activator, caller, data)					
+	end
+	if ( ent:IsANPlus(true) && string.Left( input, 6 ) == "event_" ) then
+		ent:ANPlusEvent( string.sub( input, 7 ) )
+		return true
+	end	
 end)
 
 hook.Add( "PhysgunPickup", "ANPlusLoad_PhysgunPickup", function(ply, npc)
@@ -344,6 +344,28 @@ hook.Add( "ScaleNPCDamage", "ANPlusLoad_EntityTakeDamage", function(npc, hg, dmg
 	
 end)
 
+hook.Add( "ANPOnStartScriptedSequence", "ANPlusLoad_SS_Start", function()
+	local activator, caller = ACTIVATOR, CALLER
+	if IsValid(caller) && IsValid(caller:GetInternalVariable( "m_hOwnerEntity" )) && caller:GetInternalVariable( "m_hOwnerEntity" ):IsANPlus() then
+		local ent = caller:GetInternalVariable( "m_hOwnerEntity" )
+		local seq = isstring( caller:GetKeyValues().m_iszPlay ) && caller:GetKeyValues().m_iszPlay || ent:GetSequenceName( ent:SelectWeightedSequence( caller:GetKeyValues().m_iszPlay ) )
+		local seqID, seqDur = ent:LookupSequence( seq )
+		seqDur = seqDur / caller.Speed
+		if isfunction( caller.callback ) then caller:callback(seqID, seqDur, ent, caller) end	
+	end
+end)
+
+hook.Add( "ANPOnEndScriptedSequence", "ANPlusLoad_SS_End", function()
+	local activator, caller = ACTIVATOR, CALLER
+	if IsValid(caller) && IsValid(caller:GetInternalVariable( "m_hOwnerEntity" )) && caller:GetInternalVariable( "m_hOwnerEntity" ):IsANPlus() then
+		local ent = caller:GetInternalVariable( "m_hOwnerEntity" )
+		local seq = isstring( caller:GetKeyValues().m_iszPlay ) && caller:GetKeyValues().m_iszPlay || ent:GetSequenceName( ent:SelectWeightedSequence( caller:GetKeyValues().m_iszPlay ) )
+		local seqID, seqDur = ent:LookupSequence( seq )
+		seqDur = seqDur / caller.Speed
+		if isfunction( caller.postCallback ) then caller:postCallback(seqID, seqDur, ent, caller) end	
+	end
+end)
+
 hook.Add( "GravGunPunt", "ANPlusLoad_GravGunPunt", function(ply, npc)
 	if npc:IsANPlus(true) && npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCGravGunPunt'] != nil then	
 		npc:ANPlusGetDataTab()['Functions']['OnNPCGravGunPunt'](ply, npc)		
@@ -438,21 +460,4 @@ hook.Add( "PlayerCanPickupWeapon", "ANPlusLoad_PlayerCanPickupWeapon", function(
 		wep:Remove()
 		return false 
 	end		
-end)
-
-hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)	
-	if IsValid(ent) then
-		if !ent:IsWeapon() && table.HasValue( ANPlusDangerStuffGlobal, ent ) then
-			table.RemoveByValue( ANPlusDangerStuffGlobal, ent )
-			--ANPlusTableDeNull( ANPlusDangerStuffGlobal ) -- Just in case.
-		end
-		if ent:IsANPlus(true) then
-			if ent:IsNPC() && ent:ANPlusGetDataTab()['UseANPSquadSystem'] then 
-				ent:ANPlusRemoveFromCSquad( ent:ANPlusGetSquadName() )
-			end
-			if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
-				ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'](ent)	
-			end
-		end
-	end	
 end)

@@ -16,7 +16,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 
 			for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
 				local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
-				if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:GetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
+				if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
 					table.insert( ANPlusDangerStuffGlobal, ent )
 				end			
 			end
@@ -70,13 +70,15 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 	local ent = data.Entity	
 	local pos = data.Pos || IsValid(ent) && ent:GetPos()
 	
-	if ( ent:IsNPC() || ent:IsWeapon() || ( ent:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) ) && !GetConVar("ai_disabled"):GetBool() then
+	if IsValid(ent) && ( ent:IsNPC() || ent:IsWeapon() || ( ent:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) ) && !GetConVar("ai_disabled"):GetBool() then
 		for k, v in ipairs( ents.GetAll() ) do
-			if IsValid(v) && v != ent && v:IsANPlus(true) && v:ANPlusGetDataTab()['Functions'] && v:ANPlusGetDataTab()['Functions']['HearDistance'] && v:ANPlusGetDataTab()['Functions']['OnNPCHearSound'] != nil then			
-				if ANPlusInRangeVector( v:GetPos(), pos, data.SoundLevel * ( v:ANPlusGetDataTab()['Functions']['HearDistance'] * 0.10 ) ) then
-					local distSqr, dist = ANPlusGetRangeVector(v:GetPos(), pos)
-					v:ANPlusGetDataTab()['Functions']['OnNPCHearSound'](v, ent, dist, data)
-				end
+			if IsValid(v) && v != ent && v:IsANPlus(true) && v:ANPlusGetDataTab()['Functions'] && v:ANPlusGetDataTab()['Functions']['HearDistance'] && v:ANPlusGetDataTab()['Functions']['OnNPCHearSound'] != nil then						
+				local distSqr, dist = ANPlusGetRangeVector(v:GetPos(), pos)
+				local formula = v:ANPlusGetDataTab()['Functions']['HearDistance'] * 5 * ( data.SoundLevel * data.Volume ) / dist
+				--print("formula ", formula, data.SoundLevel * data.Volume, v:ANPlusGetDataTab()['Functions']['HearDistance'])
+				--if formula >= v:ANPlusGetDataTab()['Functions']['HearDistance'] then			
+					v:ANPlusGetDataTab()['Functions']['OnNPCHearSound'](v, ent, formula, data)
+				--end
 			end
 		end
 	end
@@ -113,5 +115,25 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 			local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)
 			return bool
 		end	
+	end	
+end)
+
+hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)	
+	if IsValid(ent) then
+		if (SERVER) then
+			if !ent:IsWeapon() && table.HasValue( ANPlusDangerStuffGlobal, ent ) then
+				table.RemoveByValue( ANPlusDangerStuffGlobal, ent )
+				--ANPlusTableDeNull( ANPlusDangerStuffGlobal ) -- Just in case.
+			end
+			if ent:IsANPlus(true) then
+				if ent:IsNPC() && ent:ANPlusGetDataTab()['UseANPSquadSystem'] then 
+					ent:ANPlusRemoveFromCSquad( ent:ANPlusGetSquadName() )
+				end
+				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
+					ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'](ent)	
+				end
+			end
+		elseif (CLIENT) then
+		end
 	end	
 end)

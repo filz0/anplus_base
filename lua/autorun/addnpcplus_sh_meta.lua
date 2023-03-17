@@ -88,21 +88,30 @@ end
 
 /*
 local angTab = {
-	['Pitch'] 	= 70,
-	['Yaw'] 	= 45,
-	['Roll'] 	= 360,
+	['Pitch'] 	= { 70, -70 },
+	['Yaw'] 	= { 45, -45 },
+	['Roll'] 	= { 180, -180 },
 }
 */
 
-function metaENT:ANPlusValidAngles(pos, full360)
+function metaENT:ANPlusValidAnglesNormal(pos, full360)
 	local sPos, sAng = self:GetPos(), self:GetAngles()	
 	local aimDir = ( pos - sPos ):Angle()
 	local pitch = math.Round( math.NormalizeAngle( sAng.p - aimDir.p ) * 1000 ) / 1000	
 	local yaw = math.Round( math.NormalizeAngle( sAng.y - aimDir.y ) * 1000 ) / 1000	
 	local roll = math.Round( math.NormalizeAngle( sAng.r - aimDir.r ) * 1000 ) / 1000	
-	local validAng = ( ( ( pitch <= ( full360.Pitch ) && pitch >= 0 ) || ( pitch <= 0 && pitch >= ( -full360.Pitch ) ) ) && ( ( yaw <= ( full360.Yaw ) && yaw >= 0 ) || ( yaw <= 0 && yaw >= ( -full360.Yaw ) ) ) && ( ( roll <= ( full360.Roll ) && roll >= 0 ) || ( roll <= 0 && roll >= ( -full360.Roll ) ) ) )
-	ANPdevMsg( "ValidAngles: "..pitch.." "..yaw.." "..roll.." "..tostring(validAng), 2 )
+	local validAng = ( ( ( pitch <= ( full360.Pitch[ 1 ] ) && pitch >= 0 ) || ( pitch <= 0 && pitch >= ( full360.Pitch[ 2 ] ) ) ) && ( ( yaw <= ( full360.Yaw[ 1 ] ) && yaw >= 0 ) || ( yaw <= 0 && yaw >= ( full360.Yaw[ 2 ] ) ) ) && ( ( roll <= ( full360.Roll[ 1 ] ) && roll >= 0 ) || ( roll <= 0 && roll >= ( full360.Roll[ 2 ] ) ) ) )
+	ANPdevMsg( "ValidAnglesNormal: "..pitch.." "..yaw.." "..roll.." "..tostring(validAng), 2 )
 	return validAng
+end
+
+function metaENT:ANPlusGetAngPosRelated(pos)
+	local ang = self:GetAngles()
+	local angCalc = ( pos - self:GetPos() ):Angle()
+	local x = math.NormalizeAngle( ang.x - angCalc.x )
+	local y = math.NormalizeAngle( ang.y - angCalc.y )
+	local z = math.NormalizeAngle( ang.z - angCalc.z )
+	return x, y, z
 end
 
 --[[////////////////////////
@@ -666,4 +675,105 @@ function ANPlusOverrideSound(toReplace, data, sndReplace, play, sndLVL, sndPitch
 		return play
 	end
 	return nil
+end
+
+function ANPlusRandTab(tab)
+	return tab[ math.random( 1, #tab ) ]
+end
+
+/*
+local entORtab = {
+	['Skin'] = 3,
+	['Color'] = Color( 255, 255, 255, 255 ),
+	['Material'] = "some/main/material.vtf",
+	['BodyGroups'] = {
+		[1] = 3,
+		[2] = 1,
+	},
+	['Materials'] = {
+		[1] = "some/material/lol.vtf",
+		[2] = "some/material/lol2.vtf",
+		[3] = "some/material/lmao.vtf",
+	},
+}
+*/
+
+function metaENT:ANPlusCopyVisualFrom(entORtab)
+
+	if isentity(entORtab) then
+		self:SetSkin( entORtab:GetSkin() )
+		self:SetColor( entORtab:GetColor() )
+		self:SetMaterial( entORtab:GetMaterial() )
+		
+		for i = 1, #entORtab:GetBodyGroups() do				
+			self:SetBodygroup( i, entORtab:GetBodygroup( i ) )
+		end
+		
+		for i = 1, #entORtab:GetMaterials() do	
+			self:SetSubMaterial( i - 1, entORtab:GetSubMaterial( i - 1 ) )
+		end
+		
+	elseif istable(entORtab) then
+	
+		self:SetSkin( entORtab['Skin'] )
+		self:SetColor( entORtab['Color'] )
+		self:SetMaterial( entORtab['Material'] )
+		
+		for i = 1, #entORtab['BodyGroups'] do				
+			self:SetBodygroup( i, entORtab['BodyGroups'][ i ] )
+		end
+		
+		for i = 1, #entORtab['Materials'] do	
+			self:SetSubMaterial( i - 1, entORtab['Materials'][ i ] )
+		end
+		
+	end	
+	if self:ANPlusGetDataTab() then
+	
+		local CurBGS = {}				
+		for i = 1, #self:GetBodyGroups() do		
+			CurBGS[ i ] = self:GetBodygroup( i )	
+		end		
+		
+		local addTab = { ['CurBGS'] = CurBGS }
+		table.Merge( self:ANPlusGetDataTab()['CurData'], addTab )	
+		
+		local CurSMS = {}			
+		for i = 0, #self:GetMaterials() do		
+			CurSMS[ i + 1 ] = self:GetSubMaterial( i ) || self:GetMaterials()[ i ]
+		end	
+		
+		local addTab = { ['CurSMS'] = CurSMS }
+		table.Merge( self:ANPlusGetDataTab()['CurData'], addTab )
+		
+		self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
+	end	
+end
+
+function metaENT:ANPlusGetVisual()
+	if !IsValid(self) then return end	
+	local visualTab = {
+	['Skin'] = self:GetSkin(),
+	['Color'] = self:GetColor(),
+	['Material'] = self:GetMaterial(),
+	['BodyGroups'] = {},
+	['Materials'] = {},
+	}		
+	for i = 1, #self:GetBodyGroups() do						
+		local addTab = { [ i ] = self:GetBodygroup( i ) }
+		table.Merge( visualTab['BodyGroups'], addTab )		
+	end
+	for i = 1, #self:GetMaterials() do	
+		local addTab = { [ i ] = self:GetSubMaterial( i - 1 ) }
+		table.Merge( visualTab['Materials'], addTab )		
+	end
+	return visualTab
+end
+
+function metaENT:ANPlusHasBones(boneTab)
+	for i = 1, #boneTab do
+		local bone = boneTab[ i ]
+		if !self:LookupBone( bone ) then return false end
+	end
+	return true
 end

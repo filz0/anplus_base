@@ -105,7 +105,7 @@ function ENT:ANPlusNPCRelations()
 		
 			if ent != self then 
 
-				local dispTab = self:ANPlusGetDataTab()['Relations'][ ent:GetInternalVariable( "m_iName" ) ] || self:ANPlusGetDataTab()['Relations'][ ent:GetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
+				local dispTab = self:ANPlusGetDataTab()['Relations'][ ent:GetInternalVariable( "m_iName" ) ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
 
 				if dispTab then
 					
@@ -232,38 +232,25 @@ function ENT:ANPlusNPCAnimSpeed()
 		
 		if aTab1[ 3 ] && self:GetMovementActivity() != aTab2 then self:SetMovementActivity( aTab2 ) end
 		
-		if CurTime() - self.m_fANPlusVelLast >= 0.01 then
+		--if CurTime() - self.m_fANPlusVelLast >= 0.01 then
 		
 		local speed = ( istable( aTab1 ) && aTab1[ 2 ] && aTab1[ 2 ] || 100 ) / 100
 		
-		if speed != 1 && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() then--&& self:GetMinMoveStopDist() > 10 then
-				
-			--if speed > 1 && ( self:GetVelocity():Length() <= self:GetIdealMoveSpeed() * speed ) then
-
-				--self:SetVelocity( self:GetGroundSpeedVelocity() * speed ) 
-				self:SetMoveVelocity( self:GetGroundSpeedVelocity() * speed ) 
-				
-			--elseif speed < 1 then
-
-			--	self:SetMoveVelocity( self:GetGroundSpeedVelocity() * speed ) 
-
-			--end	
-				
-		end
+		if speed != 1 && self:IsGoalActive() && self:GetPathDistanceToGoal() > 10 * speed && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() then--&& self:GetMinMoveStopDist() > 10 then
+			
+			self:SetMoveVelocity( self:GetGroundSpeedVelocity() * speed ) 
+			local seqName = self:GetSequenceName( self:GetSequence() )
+			local seqID, seqDur = self:LookupSequence( seqName )
+			local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
+			seqVel:Rotate( self:GetAngles() )
+			self:SetLocalVelocity( seqVel * speed )
+		--end
 				--print( self:GetVelocity():Length() )
 		local rate = ( istable( aTab1 ) && aTab1[ 1 ] || aTab1 ) / 100
 
 		self:SetPlaybackRate( rate )
-		/*
-		print(tostring(self:IsMoving()).." IS_MOVING")
-		print(self:GetMinMoveStopDist().." NEXT_STOP_D")
-		print(self:GetIdealMoveSpeed() * speed.. " REQ_SPEED")
-		print(self:GetMoveVelocity():Length().." MY_MVEL_SPEED") 
-		print(self:GetVelocity():Length().." MY_VEL_SPEED") 
-		print(self:GetGroundSpeedVelocity():Length().." MY_GSVEL_SPEED") 
-		print("-----") 
-		*/
-		self.m_fANPlusVelLast = CurTime()
+
+		--self.m_fANPlusVelLast = CurTime()
 				
 		end
 		 
@@ -445,20 +432,6 @@ function ENT:ANPlusNPCTranslateActivity()
 	end
 end
 
-function ENT:ANPlusAcceptInput(ent, input, activator, caller, data)
-	if ( ent == self && ent:IsANPlus(true) && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCInput'] != nil ) then
-		self:ANPlusGetDataTab()['Functions']['OnNPCInput'](self, input, activator, caller, data)					
-	end
-	if ( ent == self && ent:IsANPlus(true) && string.Left( input, 6 ) == "event_" ) then
-		self:ANPlusEvent( string.sub( input, 7 ) )
-		return true
-	end	
-	--if ( ent == self && ent:IsANPlus(true) && input == "Use" ) then
-		--self:ANPlusOnUse( activator, caller, data )
-		--return true
-	--end
-end
-
 function ENT:ANPlusOnUse(activator, caller, type)
 	if IsValid(activator) && ( type == 3 && CurTime() - self.m_fANPUseLast >= 0.05 || type != 3 ) then 
 		if self:ANPlusGetDataTab()['CanFollowPlayers'] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] then self:ANPlusFollowPlayer( activator, self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] ) end
@@ -472,7 +445,6 @@ end
 
 local argsDef = {}
 function ENT:ANPlusEvent(strEv)
-
 	local sp = string.find( strEv, "%s" )
 	local evEnd = sp || string.find( strEv, "$" )
 	local event = string.Left( strEv, evEnd -1 )

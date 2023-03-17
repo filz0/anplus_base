@@ -526,7 +526,7 @@ end
 			npc.FindEnemy_UseSphere = true
 			npc.FindEnemy_CanSeeThroughWalls = true
 		else
-			npc:ANPlusNPCApply( npc:GetName() )	
+			npc:ANPlusNPCApply( npc:ANPlusGetName() )	
 			npc:Fire( "SetMaxLookDistance", 20000 ) 
 		end	
 		
@@ -572,7 +572,7 @@ end
 			npc.FindEnemy_UseSphere = true
 			npc.FindEnemy_CanSeeThroughWalls = true
 		else
-			npc:ANPlusNPCApply( npc:GetName() )	
+			npc:ANPlusNPCApply( npc:ANPlusGetName() )	
 			npc:Fire( "SetMaxLookDistance", 20000 ) 
 		end	
 		

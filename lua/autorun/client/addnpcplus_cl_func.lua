@@ -5,17 +5,9 @@ local scrHeight = 1080
 local multX = ScrW() / scrWidth
 local multY = ScrH() / scrHeight
 
-net.Receive("anplus_anim_fix", function()
-	local seq = net.ReadFloat()
-	local ent = net.ReadEntity()
-	if IsValid(ent) then
-		ent:SetSaveValue( "m_nPrevSequence", seq )
-		ent:SetSaveValue( "m_nSequence", seq )
-		ent:SetCycle( 0 )
---m_nSequence
---m_nNewSequenceParity
---m_nPrevSequence		
-	end	
+net.Receive("anplus_add_fakename_language", function()
+	local name = net.ReadString()
+	if name then language.Add( name, name ); language.Add( "#" .. name, name ) end	
 end)
 
 net.Receive("anplus_fix_bones", function()
@@ -124,7 +116,7 @@ net.Receive("anplus_data_tab", function()
 		
 	end
 	
-	npc.ANPlusIDName = IDCreate( tab['CurName'] )
+	npc.ANPlusIDName = ANPlusIDCreate( tab['CurName'] )
 	npc.ANPlusDataCur = tab
 
 end)

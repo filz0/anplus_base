@@ -41,7 +41,7 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 
 		if ( attacker:IsPlayer() ) then
 			
-			local anpInf = inflictor:IsANPlus(true) && inflictor:ANPlusGetDataTab()['Name'] || inflictor:GetClass()
+			local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['FakeName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
 			
 			net.Start( "PlayerKilledByPlayer" )
 
@@ -57,8 +57,8 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 
 		net.Start( "PlayerKilled" )
 			
-			local anpInf = inflictor:IsANPlus(true) && inflictor:ANPlusGetDataTab()['Name'] || inflictor:GetClass()
-			local anpAtt = attacker:IsANPlus(true) && attacker:ANPlusGetDataTab()['Name'] || attacker:GetClass()
+			local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['FakeName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
+			local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['FakeName'] || attacker:ANPlusGetDataTab()['Name'] ) || attacker:GetClass()
 			
 			net.WriteEntity( ply )
 			net.WriteString( anpInf )
@@ -106,7 +106,7 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 
 			if ( attacker:IsPlayer() ) then
 				
-				local anpVic = ent:IsANPlus() && ent:ANPlusGetDataTab()['Name'] || ent:GetClass()
+				local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['FakeName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
 				
 				net.Start( "PlayerKilledNPC" )
 			
@@ -123,9 +123,9 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 
 		if ( ent:GetClass() == "npc_turret_floor" ) then AttackerClass = ent:GetClass() end
 		
-			local anpVic = ent:IsANPlus() && ent:ANPlusGetDataTab()['Name'] || ent:GetClass()
-			local anpInf = inflictor:IsANPlus(true) && inflictor:ANPlusGetDataTab()['Name'] || InflictorClass
-			local anpAtt = attacker:IsANPlus(true) && attacker:ANPlusGetDataTab()['Name'] || AttackerClass
+			local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['FakeName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
+			local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['FakeName'] || inflictor:ANPlusGetDataTab()['Name'] ) || InflictorClass
+			local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['FakeName'] || attacker:ANPlusGetDataTab()['Name'] ) || AttackerClass
 			
 		net.Start( "NPCKilledNPC" )
 		
@@ -137,6 +137,25 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 
 	end
 end)
+
+function metaENT:ANPlusGetName()
+	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Name'] || self:GetName()
+end
+
+function metaENT:ANPlusSetKillfeedName(name)
+	if !name || name == "" then name = nil end
+	if self:ANPlusGetDataTab() then
+		self:ANPlusGetDataTab()['FakeName'] = name
+		if !name then return end
+		net.Start( "anplus_add_fakename_language" )
+		net.WriteString( name )
+		net.Broadcast()
+	end
+end
+
+function metaENT:ANPlusGetKillfeedName()
+	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['FakeName'] || self:ANPlusGetName()
+end
 
 function metaENT:ANPlusIsLookingAtPos( pos )
 	
@@ -852,7 +871,7 @@ function metaENT:ANPlusDissolve(attacker, inflictor, dealDMG, dtype)
 	
 	attacker = attacker || self
 	inflictor = inflictor || self
-	local _sName = self:GetName()
+	local _sName = self:ANPlusGetName()
 	local sName = "entDissolve" .. self:EntIndex() .. "_entTarget"
 	
 	--if string.len( sName ) == 0 then
@@ -912,8 +931,30 @@ function metaENT:ANPlusSetTranslatedActivity(act)
 	self:SetSaveValue( "m_translatedActivity", act )
 end
 
+function metaENT:ANPlusGetNextFlinch()
+	if !self:GetInternalVariable( "m_flNextFlinchTime" ) then return nil end
+	return self:GetInternalVariable( "m_flNextFlinchTime" )
+end
+
+function metaENT:ANPlusSetNextFlinch(value)
+	if !self:GetInternalVariable( "m_flNextFlinchTime" ) then return nil end
+	self:SetSaveValue( "m_flNextFlinchTime", value )
+end
+
+function metaENT:SetIdealMoveSpeed(val)
+	self:SetSaveValue( "m_flGroundSpeed", val )
+end
+
+function metaENT:ANPlusClearTarget()
+	self:SetSaveValue( "m_hTargetEnt", NULL )
+end
+
 function metaENT:ANPlusGetSquadName()
 	return self:GetKeyValues().squadname || false
+end
+
+function metaENT:ANPlusInDeathAnim()
+	return self.m_bDeathAnimPlay
 end
 
 function metaENT:ANPlusIsDoor()	
