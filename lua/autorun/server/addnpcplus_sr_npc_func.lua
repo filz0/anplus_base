@@ -955,7 +955,7 @@ function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, cal
 	end)
 
 	timer.Create( "ANP_ACT_THINK" .. self:EntIndex(), 0, 0, function() 
-		if !IsValid(self) || !self.m_bANPlusPlayingActivity then return end
+		if !IsValid(self) || !self:ANPlusPlayingAnim() then return end
 		self:MaintainActivity()
 		if isbool( movementVel ) && movementVel == true then
 			local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
@@ -1006,7 +1006,7 @@ function ENT:ANPlusPlayScene(scene, speed, stopMoving, faceEnt, faceSpeed, callb
 	end)
 
 	timer.Create( "ANP_SCENE_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
-		if !IsValid(self) || !self.m_bANPlusPlayingActivity then return end
+		if !IsValid(self) || !self:ANPlusPlayingAnim() then return end
 		if stopMoving then self:StopMoving() end
 		self:MaintainActivity()
 		self:SetPlaybackRate( speed ) 
@@ -1056,7 +1056,7 @@ function ENT:ANPlusPlaySequence(seq, speed, stopMoving, faceEnt, faceSpeed, call
 	end)
 
 	timer.Create( "ANP_SCENE_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
-		if !IsValid(self) || !self.m_bANPlusPlayingActivity then return end
+		if !IsValid(self) || !self:ANPlusPlayingAnim() then return end
 		if stopMoving then self:StopMoving() end
 		self:MaintainActivity()
 		self:SetPlaybackRate( speed ) 

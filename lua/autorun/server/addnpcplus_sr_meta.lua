@@ -953,8 +953,12 @@ function metaENT:ANPlusGetSquadName()
 	return self:GetKeyValues().squadname || false
 end
 
-function metaENT:ANPlusInDeathAnim()
+function metaENT:ANPlusPlayingDeathAnim()
 	return self.m_bDeathAnimPlay
+end
+
+function metaENT:ANPlusPlayingAnim()
+	return self.m_bANPlusPlayingActivity
 end
 
 function metaENT:ANPlusIsDoor()	
@@ -975,4 +979,17 @@ function metaENT:ANPlusIsDoorOpen()
 	else
 		return false
 	end
+end
+
+function metaENT:ANPlusHasSpawnFlag(sf)
+	return bit.band( self:GetSpawnFlags(), sf ) == sf
+end
+
+function ANPlusIsNPCWeapon(wep)
+	wep = isstring(wep) && wep || wep:IsWeapon() && wep:GetClass()
+	for i = 1, #list.GetForEdit( "NPCUsableWeapons" ) do
+		local wepTab = list.GetForEdit( "NPCUsableWeapons" )[ i ]
+		if wepTab && wepTab['class'] == wep then return true end
+	end
+	return false
 end
