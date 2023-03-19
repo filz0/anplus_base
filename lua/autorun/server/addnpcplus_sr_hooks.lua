@@ -94,7 +94,7 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 		
 		if npc:ANPlusGetDataTab()['CurData'] then
 		
-			if npc:ANPlusGetDataTab()['CurData']['CurFakeModel'] then rag = rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurData']['CurFakeModel'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
+			if npc:ANPlusGetDataTab()['CurData']['CurFakeModel'] then rag = rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
 			
 			if npc:ANPlusGetDataTab()['CurData']['CurBGS'] then			
 				for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBGS'] do
