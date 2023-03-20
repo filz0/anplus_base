@@ -151,54 +151,45 @@ ANPlus = {
 			table.Merge( ANPToolMenuGlobal, addTab )				
 		end
 	end,
+	
 	--[[////////////////////////
 	||||| Wanted to make a ANPC but model/s comes with its own NPC/s? Use this function to get rid of it/them.
-	]]--\\\\\\\\\\\\\\\\\\\\\\\\
+	
 	RemoveFromSpawnList = function(name)	
 		local dataTab = list.GetForEdit( "NPC" )[name]
 		if dataTab then
 			table.Empty( dataTab )
 		end
 	end,
+	--]]
+	AddConVar = function(command, defaultValue, flags, help, min, max)
+		if !ConVarExists( command ) then
+			CreateConVar( command, defaultValue, flags || FCVAR_NONE, help || "", min, max )
+		end
+	end,
 	
+	AddClientConVar = function(command, defaultValue, help, min, max)
+		if !ConVarExists( command ) then
+			CreateClientConVar( command, defaultValue, true, true, help || "", min, max )
+		end
+	end,
 } 
 
-timer.ANPlusDelayed = function( id, delay, time, repeats, callback ) -- This is stupid and has to go... Far away...
-	
-	if id && delay == -1 then timer.Remove( id .. "ANPlusDelayed" ); timer.Remove( id ) return end
-	
-	if !timer.Exists( id .. "ANPlusDelayed" ) then
-	
-		timer.Create( id .. "ANPlusDelayed", delay, 1, function()
-		
-			timer.Create( id, time, repeats, callback )
-		
-		end)
-	
+timer.ANPlusDelayed = function( id, delay, time, repeats, callback ) -- This is stupid and has to go... Far away... Pls don't use.	
+	if id && delay == -1 then timer.Remove( id .. "ANPlusDelayed" ); timer.Remove( id ) return end	
+	if !timer.Exists( id .. "ANPlusDelayed" ) then	
+		timer.Create( id .. "ANPlusDelayed", delay, 1, function()		
+			timer.Create( id, time, repeats, callback )		
+		end)	
 	end
-
 end
 
-local ANPlusInvalidChars = {
-" ",
-"{",
-"}",
-"[",
-"]",
-"(",
-")",
-"!",
-"+",
-"=",
-"?",
-".",
-",",
-"/",
-"-",
-"`",
-"~"
-}
+ANPlus.AddConVar( "anplus_ff_disabled", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Allow friendly fire.", 0, 1 )
+ANPlus.AddConVar( "anplus_force_swep_anims", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Force fixed swep animations.", 0, 1 )
+ANPlus.AddConVar( "anplus_random_placement", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "If enabled and spawned by Players, ANPCs will be placed randomy around the map.", 0, 1 )
+ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply NPC's health.", 0.1 )
 
+local ANPlusInvalidChars = {" ","{","}","[","]","(",")","!","+","=","?",".",",","/","-","`","~"}
 function ANPlusIDCreate( name )
 	for i = 1, #ANPlusInvalidChars do
 		name = string.Replace( name, ANPlusInvalidChars[ i ], ANPlusInvalidChars[ i ] == " " && "_" || "" )	
@@ -219,6 +210,7 @@ if (CLIENT) then
 		
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Disable Anti-FriendlyFire", "anplus_ff_disabled" ), "Disable Anti-FriendlyFire feature built-in to the base." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Random Placement", "anplus_random_placement" ), "If enabled, ANPCs spawned by the Players will be placed randomly if possible." )
+		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Health Multiplier", "anplus_hp_mul", 1, 10, 2 ), "Multiply health values of ANPCs." )
 	end
 	local function ANPlusMenuDefault_Functions(panel)
 		panel:ClearControls()	

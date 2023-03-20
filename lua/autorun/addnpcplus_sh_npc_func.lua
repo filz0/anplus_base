@@ -248,7 +248,7 @@ function ENT:ANPlusFakeModel(model, visualTab)
 			self:SetNoDraw( true )
 			self:DrawShadow( false )
 			
-			function self.m_pCFakeModel:ANPlus_CheckCRemoval() -- Because C_Ragdolls don't call for the remove hooks.
+			function self.m_pCFakeModel:ANPlus_CheckCRemoval() -- Because C_Ragdolls return nothing in Remove hooks.
 				if !IsValid(self:GetParent()) then self:Remove() end
 			end
 			

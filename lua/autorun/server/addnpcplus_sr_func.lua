@@ -105,7 +105,7 @@ function ENT:ANPlusNPCRelations()
 		
 			if ent != self then 
 
-				local dispTab = self:ANPlusGetDataTab()['Relations'][ ent:GetInternalVariable( "m_iName" ) ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
+				local dispTab = ent:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetDataTab()['Name'] ] || self:ANPlusGetDataTab()['Relations'][ ent:GetInternalVariable( "m_iName" ) ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
 
 				if dispTab then
 					
@@ -472,14 +472,14 @@ function ENT:ANPlusForceDefaultWeapons(weaponData)
 		self:Give( weaponData[ math.random( 1, #weaponData ) ] || "None" )			
 	end		
 end
-
+--[[ Outdated
 function ANPlusSameType(ent1, ent2)
 	if ent1:GetInternalVariable( "m_iName" ) == ent2:GetInternalVariable( "m_iName" ) then	
 		return true		
 	end	
 	return false		
 end
-
+]]--
 local function ANPlusOnLoad(ply, ent, data)
 	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!
 		timer.Simple( 0, function()

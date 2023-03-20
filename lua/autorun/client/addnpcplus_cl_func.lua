@@ -119,86 +119,29 @@ net.Receive("anplus_data_tab", function()
 
 end)
 ]]--
-local clientSounds = {}
-net.Receive("anplus_play_ui_snd", function()
-		
-	local ply = LocalPlayer()
+
+net.Receive("anplus_play_ui_snd", function()		
 	local snd = net.ReadString() || ""
 	local vol = net.ReadFloat() || 100
-	
-	if snd != "" then	
-		ply:EmitSound( snd, nil, nil, vol / 100 )
-		table.insert( clientSounds, snd )	
-	elseif snd != "" && clientSounds && vol == 0 then
-		for k, v in ipairs ( clientSounds ) do
-			if v == snd then
-				ply:StopSound( v ) 	
-				table.remove( clientSounds, k ) 						
-			end			
-		end			
-	elseif snd == "" && clientSounds then		
-		for k, v in ipairs ( clientSounds ) do
-			if v != nil then
-				ply:StopSound( v ) 
-				table.remove( clientSounds, k ) 						
-			end			
-		end
-	end	
+	ANPlusEmitUISound( nil, snd, vol )
 end)
 
-/*
-net.Receive("anplus_play_ui_snd", function()
-		
-	local ply = LocalPlayer()
+net.Receive("anplus_notify", function()		
 	local snd = net.ReadString() || ""
-	local vol = net.ReadFloat() || 100
-	
-	if snd != "" then
-	
-		ply:EmitSound( snd, nil, nil, vol / 100 )
-		table.insert( clientSounds, snd )
-	
-	elseif snd != "" && clientSounds && vol == 0 then
-
-		for k, v in ipairs ( clientSounds ) do
-			if v == snd then
-				timer.Simple( 0.1, function()
-					ply:StopSound( v ) 
-				end)
-				timer.Simple( 0.2, function()		
-					table.remove( clientSounds, k ) 				
-				end)		
-			end			
-		end	
-		
-	elseif snd == "" && clientSounds then
-		
-		for k, v in ipairs ( clientSounds ) do
-
-			if v != nil then
-				timer.Simple( 0.1, function()
-					ply:StopSound( v ) 
-				end)
-				timer.Simple( 0.2, function()		
-					table.remove( clientSounds, k ) 				
-				end)		
-			end			
-		end
-	end	
+	local text = net.ReadString() || ""
+	local type = net.ReadFloat()
+	local length = net.ReadFloat()	
+	ANPlusSendNotify( nil, snd, text, type, length )		
 end)
-*/
 
 net.Receive("anplus_chatmsg_ply", function()	
-	local ply = LocalPlayer()
 	local snd = net.ReadString() || ""
 	local color = net.ReadColor() || ""
 	local text = net.ReadString()
-	chat.AddText( color, text )
-	if snd then EmitSound( snd, ply:GetPos(), -2 ) end		
+	ANPlusMSGPlayer( nil, text, color, snd )
 end)
 
 net.Receive("anplus_screenmsg_ply", function()
-	local ply = LocalPlayer()
 	local dur = net.ReadFloat()
 	local x = net.ReadFloat()
 	local y = net.ReadFloat()
@@ -206,17 +149,5 @@ net.Receive("anplus_screenmsg_ply", function()
 	local font = net.ReadString()
 	local color = net.ReadColor()
 	local text = net.ReadString() || ""	
-	if IsValid(ply.anp_ScreenMSG) then ply.anp_ScreenMSG:Remove() end
-	if text == "" then return end	
-	ply.anp_ScreenMSG = vgui.Create( "DLabel" )
-	ply.anp_ScreenMSG:SetPos( x * multX, y * multY )
-	ply.anp_ScreenMSG:SetSize( ScrW(), size * multY )
-	ply.anp_ScreenMSG:SetText( text )
-	ply.anp_ScreenMSG:SetTextColor( color )
-	ply.anp_ScreenMSG:SetFont( font )
-	ply.anp_ScreenMSG:SetWrap( false )
-	ply.anp_ScreenMSG:ParentToHUD()	
-	timer.Create( "CHATMODmsgRemove" .. ply:EntIndex(), dur, 1, function()	
-		if IsValid(ply.anp_ScreenMSG) then ply.anp_ScreenMSG:Remove() end	
-	end)
+	ANPlusScreenMsg( nil, x, y, size, dur, text, font, color)
 end)

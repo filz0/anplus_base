@@ -188,12 +188,18 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 			ANPdevMsg( self.m_tbAnimationFrames, 1 )
 			self.m_tbAnimEvents = {}
 			self.m_frameLast = -1
-			self.m_seqLast = -1						
-			self:SetHealth( data['Health'] || self:Health() )				
-			self:SetMaxHealth( data['Health'] || self:Health() )
+			self.m_seqLast = -1		
+			
+			ANPlusSendNotify( true, nil, "bazinga", 1, 1 )	
+			
+			local hpMul = GetConVar( "anplus_hp_mul" ):GetFloat()
+			self:SetHealth( ( data['Health'] || self:Health() ) * hpMul )				
+			self:SetMaxHealth( ( data['Health'] || self:Health() ) * hpMul )
 			
 			for _, v in pairs( data['KeyValues'] ) do
-				self:SetKeyValue( tostring( _ ), v )			
+				if _ != "targetname" then -- We don't have to do that anymore.
+					self:SetKeyValue( tostring( _ ), v )		
+				end
 			end
 		
 			self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )		
@@ -205,31 +211,26 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end		
 			end		
 
-			self.m_fANPlusDmgDealt = data['DamageDealtScale'] || 0
-			self.m_fANPlusDmgSelf = data['DamageSelfScale'] || 0
+			--self.m_fANPlusDmgDealt = data['DamageDealtScale'] || 0
+			--self.m_fANPlusDmgSelf = data['DamageSelfScale'] || 0
 			self.m_fANPlusVelLast = 0
 
 			local sndTab = data['SoundModification']						
 			local addTab = { ['SoundModification'] = sndTab }
 			table.Merge( data['CurData'], addTab )
 			
-			self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil
-			self:SetSaveValue( "m_iName", data['Name'] )
-			
-			--self.ANPlusIDName = ANPlusIDCreate( data['Name'] )				
+			self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
 			self:ANPlusApplyDataTab( data )					
 			self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
 
-			--timer.Simple( 0, function()
-				--if !IsValid(self) then return end
 			if isfunction( postCallback ) then
-				postCallback( newSelf )
+				postCallback( self )
 			end
 				
 			if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
 				self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
 			end	
-			--end)
+
 			hook.Add( "Think", self, self.ANPlusNPCThink )
 			self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide )
 			self.ANPlusEntity = true

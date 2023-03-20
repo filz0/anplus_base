@@ -644,6 +644,113 @@ function ANPlusIsEmptySpace(spos, epos, filterTab, vecmin, vecmax)
 	return true	
 end
 
+function ANPlusEmitUISound(ply, snd, vol)	
+	if (SERVER) then
+		if !ply then return end	
+		ANPlusSoundDuration(snd)
+		net.Start( "anplus_play_ui_snd" )
+		net.WriteString( snd || "" )
+		net.WriteFloat( vol || 100 )
+		if isbool( ply ) then
+			net.Broadcast()
+		elseif ply:IsPlayer() then
+			net.Send( ply )
+		end	
+	elseif (CLIENT) then	
+		local ply = LocalPlayer()
+		ply.m_tANPlusClientSounds = ply.m_tANPlusClientSounds || {}
+		if snd != "" then	
+			ply:EmitSound( snd, nil, nil, vol / 100 )
+			table.insert( ply.m_tANPlusClientSounds, snd )	
+		elseif snd != "" && ply.m_tANPlusClientSounds && vol == 0 then
+			for k, v in ipairs ( ply.m_tANPlusClientSounds ) do
+				if v == snd then
+					ply:StopSound( v ) 	
+					table.remove( ply.m_tANPlusClientSounds, k ) 						
+				end			
+			end			
+		elseif snd == "" && ply.m_tANPlusClientSounds then		
+			for k, v in ipairs ( ply.m_tANPlusClientSounds ) do
+				if v != nil then
+					ply:StopSound( v ) 
+					table.remove( ply.m_tANPlusClientSounds, k ) 						
+				end			
+			end
+		end			
+	end
+end
+
+function ANPlusSendNotify(ply, snd, text, type, length)	
+	if (SERVER) then
+		net.Start( "anplus_notify" )
+		net.WriteString( snd || "" )
+		net.WriteString( text || "" )
+		net.WriteFloat( type )
+		net.WriteFloat( length )
+		if isbool( ply ) then
+			net.Broadcast()
+		elseif ply:IsPlayer() then
+			net.Send( ply )
+		end
+	elseif (CLIENT) then
+		local ply = LocalPlayer()
+		notification.AddLegacy( text, type, length )
+		EmitSound( snd, ply:GetPos(), -2 )		
+	end
+end
+
+function ANPlusScreenMsg(ply, x, y, size, dur, text, font, color)	
+	if (SERVER) then
+		net.Start("anplus_screenmsg_ply")
+		net.WriteFloat( dur || 0 )
+		net.WriteFloat( x || 0 )
+		net.WriteFloat( y || 0 )
+		net.WriteFloat( size || 10 )
+		net.WriteString( font || "DermaDefault" )
+		net.WriteColor( color || Color( 255, 255, 255 ) )
+		net.WriteString( text )
+		if isbool( ply ) then
+			net.Broadcast()
+		elseif ply:IsPlayer() then
+			net.Send( ply )
+		end	
+	elseif (CLIENT) then		
+		local ply = LocalPlayer()
+		if IsValid(ply.anp_ScreenMSG) then ply.anp_ScreenMSG:Remove() end
+		if text == "" then return end	
+		ply.anp_ScreenMSG = vgui.Create( "DLabel" )
+		ply.anp_ScreenMSG:SetPos( x * ANPlusGetFixedScreenW(), y * ANPlusGetFixedScreenH() )
+		ply.anp_ScreenMSG:SetSize( ScrW(), size * ANPlusGetFixedScreenH() )
+		ply.anp_ScreenMSG:SetText( text )
+		ply.anp_ScreenMSG:SetTextColor( color )
+		ply.anp_ScreenMSG:SetFont( font )
+		ply.anp_ScreenMSG:SetWrap( false )
+		ply.anp_ScreenMSG:ParentToHUD()	
+		timer.Create( "CHATMODmsgRemove" .. ply:EntIndex(), dur, 1, function()	
+			if IsValid(ply.anp_ScreenMSG) then ply.anp_ScreenMSG:Remove() end	
+		end)		
+	end
+end
+
+function ANPlusMSGPlayer(ply, text, color, snd)	
+	if (SERVER) then
+		if !ply || !text then return end	
+		net.Start( "anplus_chatmsg_ply" )
+		net.WriteString( snd || "" )
+		net.WriteColor( color || Color( 255, 255, 255 ) )
+		net.WriteString( text )
+		if isbool( ply ) then
+			net.Broadcast()
+		elseif ply:IsPlayer() then
+			net.Send( ply )
+		end
+	elseif (CLIENT) then
+		local ply = LocalPlayer()
+		chat.AddText( color, text )
+		if snd then EmitSound( snd, ply:GetPos(), -2 ) end	
+	end
+end
+
 function metaPLAYER:ANPlusGetEyeTrace()	
 	local tr = util.TraceLine({
 	start = self:EyePos(),
@@ -673,6 +780,15 @@ function ANPlusOverrideSound(toReplace, data, sndReplace, play, sndLVL, sndPitch
 		data.DSP 		= sndDSP	
 		data.SoundTime 	= sndTime
 		return play
+	end
+	return nil
+end
+
+function ANPlusOverrideSoundDir(inDir, data, outDir)
+	if string.find( string.lower( data.SoundName ), inDir ) then
+		local newDir = string.Replace( data.SoundName, inDir, outDir )
+		data.SoundName = newDir
+		return true
 	end
 	return nil
 end

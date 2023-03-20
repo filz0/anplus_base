@@ -532,48 +532,6 @@ function metaENT:ANPlusLastHitGroup()
 	return self.m_fHitGroupLast || -1
 end
 
-function ANPlusEmitUISound( ply, snd, vol )	
-	if !ply then return end	
-	ANPlusSoundDuration(snd)
-	net.Start( "anplus_play_ui_snd" )
-	net.WriteString( snd || "" )
-	net.WriteFloat( vol || 100 )
-	if isbool( ply ) then
-		net.Broadcast()
-	elseif ply:IsPlayer() then
-		net.Send( ply )
-	end	
-end
-
-function ANPlusScreenMsg(ply, x, y, size, dur, text, font, color)	
-	net.Start("anplus_screenmsg_ply")
-	net.WriteFloat( dur || 0 )
-	net.WriteFloat( x || 0 )
-	net.WriteFloat( y || 0 )
-	net.WriteFloat( size || 10 )
-	net.WriteString( font || "DermaDefault" )
-	net.WriteColor( color || Color( 255, 255, 255 ) )
-	net.WriteString( text || "" )
-	if isbool( ply ) then
-		net.Broadcast()
-	elseif ply:IsPlayer() then
-		net.Send( ply )
-	end			
-end
-
-function ANPlusMSGPlayer( ply, text, color, snd )	
-	if !ply || !text then return end	
-	net.Start( "anplus_chatmsg_ply" )
-	net.WriteString( snd || "" )
-	net.WriteColor( color || Color( 255, 255, 255 ) )
-	net.WriteString( text )
-	if isbool( ply ) then
-		net.Broadcast()
-	elseif ply:IsPlayer() then
-		net.Send( ply )
-	end
-end
-
 function metaENT:ANPlusIsOnGround(dist)
 
 	local min, max = self:GetCollisionBounds()

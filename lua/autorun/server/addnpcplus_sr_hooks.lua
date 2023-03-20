@@ -10,6 +10,7 @@ util.AddNetworkString("anplus_play_ui_snd")
 util.AddNetworkString("anplus_chatmsg_ply")
 util.AddNetworkString("anplus_screenmsg_ply")
 util.AddNetworkString("anplus_add_fakename_language")
+util.AddNetworkString("anplus_notify")
 
 net.Receive("anplus_gmodsave_load_from_the_menu", function(len, ply)	
 	--ANPlusNPCPreApply()	
@@ -189,8 +190,10 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 				local addTab = { ['CurBones'] = CurBones }
 				table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
 				
-				local addTab = { ['CurFakeModel'] = { ['Model'] = npc:ANPlusFakeModel() && npc:ANPlusFakeModel():GetModel() || "", ['VisualTab'] = npc:ANPlusGetVisual() } }			
-				table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+				if npc:ANPlusFakeModel() then
+					local addTab = { ['CurFakeModel'] = { ['Model'] = npc:ANPlusFakeModel() && npc:ANPlusFakeModel():GetModel() || "", ['VisualTab'] = npc:ANPlusGetVisual() } }			
+					table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+				end
 				
 				npc:ANPlusApplyDataTab( npc:ANPlusGetDataTab() )
 				
@@ -401,9 +404,9 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 	
 		dmginfo:SetDamage( 0 )
 		
-	elseif ent:IsANPlus() && ent.m_fANPlusDmgSelf && IsValid(att) && ent == att then
+	elseif ent:IsANPlus() && IsValid(att) && ent == att then
 	
-		dmginfo:AddDamage( dmginfo:GetDamage() * ( ( ent.m_fANPlusDmgSelf / 100 ) >= -1 && ent.m_fANPlusDmgSelf / 100 || -1 ) )
+		dmginfo:AddDamage( dmginfo:GetDamage() * ( ( ent:ANPlusGetDataTab()['DamageSelfScale'] / 100 ) >= -1 && ent:ANPlusGetDataTab()['DamageSelfScale'] / 100 || -1 ) )
 		
 	elseif !GetConVar( "anplus_ff_disabled" ):GetBool() && IsValid(att) && att:IsPlayer() && ent:IsANPlus() && ent:Disposition( att ) == D_LI then	
 	
@@ -428,7 +431,8 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 	end
 	
 	if IsValid(att) && att:IsANPlus(true) then
-		dmginfo:AddDamage( dmginfo:GetDamage() * ( ( att.m_fANPlusDmgDealt / 100 ) >= -1 && att.m_fANPlusDmgDealt / 100 || -1 ) )
+	
+		dmginfo:AddDamage( dmginfo:GetDamage() * ( ( att:ANPlusGetDataTab()['DamageDealtScale'] / 100 ) >= -1 && att:ANPlusGetDataTab()['DamageDealtScale'] / 100 || -1 ) )
 		
 		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCDamageOnEntity'] != nil then
 			att:ANPlusGetDataTab()['Functions']['OnNPCDamageOnEntity'](att, ent, dmginfo)	
