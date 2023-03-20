@@ -1,4 +1,6 @@
-ANPlusLoadGlobal = { ['Base']  = { ['Name'] = "ANPlus BASE" }, ['entids'] = {} }
+ANPlusLoadGlobal = { ['Base']  = { ['Name'] = "ANPlus BASE" } }
+ANPlusLoadGlobalCount = 0
+
 ANPlusDangerStuffGlobalNameOrClass = { "grenade", "missile", "rocket", "frag", "flashbang", "portal", "spore", "prop_combine_ball", "bolt" }
 ANPlusDangerStuffGlobal = {}
 ANPCustomSquads = { base_squad = {} }
@@ -29,14 +31,12 @@ ANPlus = {
 			local listType = listType || "NPC"
 			local id = tostring( tab['Name'] ) 	
 			
-			local addTab = { [ ANPlusLoadGlobal['entids'][ id ] && ANPlusLoadGlobal['entids'][ id ][ 2 ] || #ANPlusLoadGlobal + 1 ] = tab } 		
+			local addTab = { [id] = tab } 		
 			table.Merge( ANPlusLoadGlobal, addTab )	
-			
-			local addTab = { [ id ] = { true, #ANPlusLoadGlobal, ANPlusIDCreate( tab['Name'] ) } } 
-			table.Merge( ANPlusLoadGlobal['entids'], ANPlusLoadGlobal['entids'][ id ] || addTab )
+			ANPlusLoadGlobalCount = ANPlusLoadGlobalCount + 1
 			
 			if (CLIENT) then				
-				print( "AddNPCPlus " .. ANPlusLoadGlobal['entids'][ id ][ 2 ] .. " Loaded: " .. tab['Name'] )  				
+				print( "AddNPCPlus " .. ANPlusLoadGlobalCount .. " Loaded: " .. tab['Name'] )  				
 				language.Add( id, id )
 				language.Add( "#" .. id, id )
 			end		
@@ -145,10 +145,19 @@ ANPlus = {
 	
 	end,
 	
-	AddToolMenu = function( category, name, panel, tab )
+	AddToolMenu = function(category, name, panel, tab)
 		if ANPToolMenuGlobal then 
 			local addTab = { [ #ANPToolMenuGlobal + 1 ] = { ['Category'] = category, ['Name'] = name, ['Panel'] = panel, ['Table'] = tab } } -- This should help with all these NPC spawner tools :/
 			table.Merge( ANPToolMenuGlobal, addTab )				
+		end
+	end,
+	--[[////////////////////////
+	||||| Wanted to make a ANPC but model/s comes with its own NPC/s? Use this function to get rid of it/them.
+	]]--\\\\\\\\\\\\\\\\\\\\\\\\
+	RemoveFromSpawnList = function(name)	
+		local dataTab = list.GetForEdit( "NPC" )[name]
+		if dataTab then
+			table.Empty( dataTab )
 		end
 	end,
 	
@@ -209,6 +218,7 @@ if (CLIENT) then
 		image:Dock( TOP )
 		
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Disable Anti-FriendlyFire", "anplus_ff_disabled" ), "Disable Anti-FriendlyFire feature built-in to the base." )
+		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Random Placement", "anplus_random_placement" ), "If enabled, ANPCs spawned by the Players will be placed randomly if possible." )
 	end
 	local function ANPlusMenuDefault_Functions(panel)
 		panel:ClearControls()	

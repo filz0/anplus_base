@@ -87,13 +87,11 @@ net.Receive("anplus_data_tab", function()
 	local npc = net.ReadEntity()
 	local tab = net.ReadTable()
 	
-	for i = 1, #ANPlusLoadGlobal do	
-		local dataTab = ANPlusLoadGlobal[ i ]
-		if ( dataTab && dataTab['Name'] == tab['CurName'] ) then		
-			local addTab = { ['Functions'] = dataTab['Functions'] }
-			table.Merge( tab, addTab )
-		end		
-	end
+	local dataTab = ANPlusLoadGlobal[tab['CurName']]
+	if dataTab then		
+		local addTab = { ['Functions'] = dataTab['Functions'] }
+		table.Merge( tab, addTab )
+	end		
 	npc['ANPlusData'] = tab
 end)
 

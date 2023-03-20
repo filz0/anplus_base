@@ -234,7 +234,7 @@ local NPCTab = {
 	['Functions'] = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
-		['OnNPCSpawn'] = function(self)	
+		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
@@ -499,7 +499,7 @@ local ENTTab = {
 	['Functions'] = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
-		['OnNPCSpawn'] = function(self)	
+		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.

@@ -76,6 +76,17 @@ concommand.Add( "anplus_reload_ents", function(ply)
 		end		
 	end	
 end)
+hook.Add( "PlayerSpawnedNPC", "ANPlusLoad_PlayerSpawnedNPC", function(ply, npc)		
+	local dataTab = ANPlusLoadGlobal[npc:GetInternalVariable( "m_iName" )]
+	if dataTab then
+		npc.m_pMyPlayer = ply
+		if GetConVar( "anplus_random_placement" ):GetBool() then
+			npc:ANPlusRandomTeleport( false, 2, Vector( 0, 0, 1 ), function()
+				npc:SetAngles( npc:GetAngles() + Angle( 0, math.random( 0, 360 ), 0 ) )
+			end )
+		end
+	end
+end)
 
 hook.Add( "PlayerDeath", "ANPlusLoad_PlayerDeath", function(ply, inf, att)
 	if IsValid(ply) then
@@ -90,11 +101,11 @@ end)
 
 hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc, rag)
 
-	if IsValid(npc) && npc:IsANPlus() then
+	if IsValid(npc) && IsValid(rag) && npc:IsANPlus() then
 		
 		if npc:ANPlusGetDataTab()['CurData'] then
 		
-			if npc:ANPlusGetDataTab()['CurData']['CurFakeModel'] then rag = rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
+			if npc:ANPlusGetDataTab()['CurData']['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['VisualTab'] ) end
 			
 			if npc:ANPlusGetDataTab()['CurData']['CurBGS'] then			
 				for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBGS'] do

@@ -4,6 +4,7 @@
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 
 	timer.Simple( 0, function()		
+
 		if !IsValid(ent) then return end				
 		if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
 			local npc = ent:GetOwner()		
@@ -13,7 +14,6 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 		end
 		
 		if ( SERVER ) then
-
 			for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
 				local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
 				if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
@@ -26,6 +26,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 				ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
 			end	
 		end
+		
 	end)	
 end)
 

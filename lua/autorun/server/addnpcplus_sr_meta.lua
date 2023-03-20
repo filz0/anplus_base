@@ -1,6 +1,7 @@
 local metaENT = FindMetaTable("Entity")
 
 hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
+
 	function GAMEMODE:PlayerDeath( ply, inflictor, attacker ) -- If you know a better way of doing this, please tell me :(
 
 		-- Don't spawn for at least 2 seconds
@@ -107,7 +108,7 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 			if ( attacker:IsPlayer() ) then
 				
 				local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['FakeName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
-				
+
 				net.Start( "PlayerKilledNPC" )
 			
 					net.WriteString( anpVic )
@@ -136,6 +137,7 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 		net.Broadcast()
 
 	end
+	 
 end)
 
 function metaENT:ANPlusGetName()
@@ -188,10 +190,8 @@ function ANPIsAnyoneLookingAtPos( ent, entTab, pos )
 	
 end
 
-function metaENT:ANPlusRandomTeleport( entTab, iType, poscorrection, callback )
-	
-	local v = ANPlusAIGetNodes( iType )[ math.random( 1, #ANPlusAIGetNodes( iType ) ) ]
-	
+function metaENT:ANPlusRandomTeleport( entTab, iType, poscorrection, callback )	
+	local v = ANPlusAIGetNodes( iType )[ math.random( 1, #ANPlusAIGetNodes( iType ) ) ]	
 	if v && v['type'] == iType && !ANPlusAINodeOccupied( v['pos'] ) && ( ( !entTab && v['pos'] != self:GetPos() ) || ( entTab && v['pos'] != self:GetPos() && !ANPIsAnyoneLookingAtPos( self, entTab, v['pos'] ) ) ) then
 		
 		self:SetPos( v['pos'] + ( poscorrection || Vector( 0, 0, 0 ) ) )
@@ -764,6 +764,14 @@ function ANPlusCreateSpotlight(color, width, length, sfs, kvs)
 	ent:SetColor( color )
 	ent:Spawn()
 	ent:Activate()
+	return ent
+end
+
+function ANPlusCreateSporeExplosion(spawnRate, startDisabled)
+	startDisabled = startDisabled || false
+	local ent = ents.Create( "env_sporeexplosion" )
+	ent:SetKeyValue( "spawnrate", spawnRate )
+	ent:SetKeyValue( "StartDisabled", tostring( startDisabled ) )
 	return ent
 end
 

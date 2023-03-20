@@ -1,8 +1,8 @@
 hook.Add("CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", function(npc, rag)
 
-	if IsValid(npc) && npc:IsANPlus() then
-
-		if npc:ANPlusGetDataTab()['CurFakeModel'] then rag = rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
+	if IsValid(npc) && IsValid(rag) && npc:IsANPlus() then
+		PrintTable(npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'])
+		if npc:ANPlusGetDataTab()['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
 		
 		if npc:ANPlusGetDataTab()['CurBGS'] then
 		

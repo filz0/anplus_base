@@ -87,7 +87,7 @@ local ENTTab = {
 	['Functions'] = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
-		['OnNPCSpawn'] = function(self)	
+		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
 			self:SetSaveValue( "m_iMaxJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
 			self:SetSaveValue( "m_iJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
 			self.m_sBatteryModel = "models/items/battery.mdl"
@@ -323,7 +323,7 @@ local NPCTab = {
 	['Functions'] = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
-		['OnNPCSpawn'] = function(self)	-- SHARED ( CLIENT & SERVER )
+		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
 		
 			self:ANPMuteSound( true )   
 			
@@ -622,7 +622,7 @@ local NPCTab = {
 	['Functions'] = {
 		
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
-		['OnNPCSpawn'] = function(self)	-- SHARED ( CLIENT & SERVER )
+		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
 		
 			if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():SetClip1( 9999 ) end
 			
@@ -964,7 +964,7 @@ local NPCTab = {
 	['Functions'] = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
-		['OnNPCSpawn'] = function(self)	
+		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
 		
 			if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():SetClip1( 9999 ) end
 			
