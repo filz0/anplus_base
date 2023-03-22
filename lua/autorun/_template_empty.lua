@@ -31,6 +31,8 @@ local NPCTab = {
 	['Category'] 				= "My ANP",
 ----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
 	['Name'] 					= "Cool Name",   
+----------------------------------------------------------------- If set, this name will be used in the killfeed instead keeping the Name/ID alone.
+	['KillfeedName'] 			= "New Cool Name",
 ----------------------------------------------------------------- Entity class of your NPC aka base NPC       
 	['Class'] 					= "npc_citizen",
 ----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
@@ -385,7 +387,9 @@ local ENTTab = {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
 	['Category'] 				= "My ANP",
 ----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
-	['Name'] 					= "Cool Name",   
+	['Name'] 					= "Cool Name", 
+----------------------------------------------------------------- If set, this name will be used in the killfeed instead keeping the Name/ID alone.
+	['KillfeedName'] 			= "New Cool Name",	
 ----------------------------------------------------------------- Entity class of your NPC aka base NPC       
 	['Class'] 					= "ent_class",
 ----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	

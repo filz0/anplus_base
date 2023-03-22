@@ -784,11 +784,17 @@ function ANPlusOverrideSound(toReplace, data, sndReplace, play, sndLVL, sndPitch
 	return nil
 end
 
-function ANPlusOverrideSoundDir(inDir, data, outDir)
+function ANPlusOverrideSoundDir(inDir, data, outDir, onFail) -- nil to play the original instead or false to mute.
 	if string.find( string.lower( data.SoundName ), inDir ) then
 		local newDir = string.Replace( data.SoundName, inDir, outDir )
-		data.SoundName = newDir
-		return true
+		local newDirFix = string.Replace( newDir, "*", "" )	
+		local newDirExists = file.Exists( "sound/" .. newDirFix, "GAME" ) -- Check if this sound actually exist and if not return the onFail choise.
+		if newDirExists then
+			data.SoundName = newDir
+			return true
+		else
+			return onFail
+		end
 	end
 	return nil
 end

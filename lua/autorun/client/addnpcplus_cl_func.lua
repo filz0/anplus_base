@@ -7,7 +7,11 @@ local multY = ScrH() / scrHeight
 
 net.Receive("anplus_add_fakename_language", function()
 	local name = net.ReadString()
-	if name then language.Add( name, name ); language.Add( "#" .. name, name ) end	
+	if name then
+		if language.GetPhrase( name ) == name then 
+			language.Add( name, name ) 
+		end
+	end	
 end)
 
 net.Receive("anplus_fix_bones", function()

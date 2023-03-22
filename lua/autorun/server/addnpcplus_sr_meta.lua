@@ -42,7 +42,7 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 
 		if ( attacker:IsPlayer() ) then
 			
-			local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['FakeName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
+			local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['KillfeedName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
 			
 			net.Start( "PlayerKilledByPlayer" )
 
@@ -58,8 +58,8 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 
 		net.Start( "PlayerKilled" )
 			
-			local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['FakeName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
-			local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['FakeName'] || attacker:ANPlusGetDataTab()['Name'] ) || attacker:GetClass()
+			local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['KillfeedName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
+			local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['KillfeedName'] || attacker:ANPlusGetDataTab()['Name'] ) || attacker:GetClass()
 			
 			net.WriteEntity( ply )
 			net.WriteString( anpInf )
@@ -107,7 +107,7 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 
 			if ( attacker:IsPlayer() ) then
 				
-				local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['FakeName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
+				local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['KillfeedName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
 
 				net.Start( "PlayerKilledNPC" )
 			
@@ -124,9 +124,9 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 
 		if ( ent:GetClass() == "npc_turret_floor" ) then AttackerClass = ent:GetClass() end
 		
-			local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['FakeName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
-			local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['FakeName'] || inflictor:ANPlusGetDataTab()['Name'] ) || InflictorClass
-			local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['FakeName'] || attacker:ANPlusGetDataTab()['Name'] ) || AttackerClass
+			local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['KillfeedName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
+			local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['KillfeedName'] || inflictor:ANPlusGetDataTab()['Name'] ) || InflictorClass
+			local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['KillfeedName'] || attacker:ANPlusGetDataTab()['Name'] ) || AttackerClass
 			
 		net.Start( "NPCKilledNPC" )
 		
@@ -147,7 +147,7 @@ end
 function metaENT:ANPlusSetKillfeedName(name)
 	if !name || name == "" then name = nil end
 	if self:ANPlusGetDataTab() then
-		self:ANPlusGetDataTab()['FakeName'] = name
+		self:ANPlusGetDataTab()['KillfeedName'] = name
 		if !name then return end
 		net.Start( "anplus_add_fakename_language" )
 		net.WriteString( name )
@@ -156,7 +156,7 @@ function metaENT:ANPlusSetKillfeedName(name)
 end
 
 function metaENT:ANPlusGetKillfeedName()
-	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['FakeName'] || self:ANPlusGetName()
+	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['KillfeedName'] || self:ANPlusGetName()
 end
 
 function metaENT:ANPlusIsLookingAtPos( pos )

@@ -27,9 +27,12 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 			end
 
 			local data = table.Copy( dataTab )
+			
+			
 			local colBoundsMin, colBoundsMax = self:GetCollisionBounds()
+			local hull = self:IsNPC() && self:GetHullType()	|| "Not NPC"	
+
 			--local min2, max2 = self:GetSurroundingBounds()
-			local hull = self:IsNPC() && self:GetHullType()	|| "Not NPC"			
 			ANPdevMsg( "Collision Bounds: Min[" .. tostring(min) .. "] Max[" .. tostring(max) .. "] | Hull: " .. tostring(hull), 1 )
 			ANPdevMsg( "SolidType: " .. self:GetSolid() .. " CollisionGroup: " .. self:GetCollisionGroup() .. " MoveCollide: " .. self:GetMoveCollide() .. " MoveType: " .. self:GetMoveType(), 1 )
 			--ANPdevMsg( "Surrounding Bounds: Min[" .. tostring(min2) .. "] Max[" .. tostring(max2), 1 )
@@ -190,7 +193,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 			self.m_frameLast = -1
 			self.m_seqLast = -1		
 			
-			ANPlusSendNotify( true, nil, "bazinga", 1, 1 )	
+			--ANPlusSendNotify( true, nil, "bazinga", 1, 1 )	
 			
 			local hpMul = GetConVar( "anplus_hp_mul" ):GetFloat()
 			self:SetHealth( ( data['Health'] || self:Health() ) * hpMul )				
@@ -222,6 +225,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 			self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
 			self:ANPlusApplyDataTab( data )					
 			self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
+			self:ANPlusSetKillfeedName( data['KillfeedName'] )
 
 			if isfunction( postCallback ) then
 				postCallback( self )
@@ -648,16 +652,16 @@ end
 
 function ENT:ANPlusPlayScriptedSequence(delay)	
 	local delay = delay || 0
-	if IsValid(self.m_pScriptedSequence) then self.m_pScriptedSequence:Fire( "BeginSequence", "", delay ) end		
+	if IsValid(self:GetInternalVariable( "m_hCine" )) then self:GetInternalVariable( "m_hCine" ):Fire( "BeginSequence", "", delay ) end		
 end
 
 function ENT:ANPlusCancelScriptedSequence(delay)	
 	local delay = delay || 0
-	if IsValid(self.m_pScriptedSequence) then self.m_pScriptedSequence:Fire( "CancelSequence", "", delay ) end		
+	if IsValid(self:GetInternalVariable( "m_hCine" )) then self:GetInternalVariable( "m_hCine" ):Fire( "CancelSequence", "", delay ) end		
 end
 
 function ENT:ANPlusGetScriptedSequence()	
-	return IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || false
+	return IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || false
 end
 
 /*
@@ -690,45 +694,45 @@ self:ANPlusCreateScriptedSequence(seqDataTab)
 function ENT:ANPlusCreateScriptedSequence(seqDataTab, faceEnt, faceSpeed, callback, postCallback)
 	
 	if !IsValid(self) || !self:ANPlusAlive() then return end
-	if IsValid(self.m_pScriptedSequence) then self.m_pScriptedSequence:Remove() end
+	--if IsValid(self.m_pScriptedSequence) then self.m_pScriptedSequence:Remove() end
 	if !seqDataTab then return end
 	
-	self.m_pScriptedSequence = ents.Create( "scripted_sequence" )	
-	local ssName = self:GetInternalVariable( "m_iName" ) .. "_ScriptedSequence_" .. self.m_pScriptedSequence:EntIndex()	
-	self.m_pScriptedSequence:SetName( ssName )
-	self.m_pScriptedSequence:SetKeyValue( "spawnflags", ( seqDataTab['SpawnFlags'] || 0 ) )
+	local sSequence = ents.Create( "scripted_sequence" )	
+	local ssName = self:GetInternalVariable( "m_iName" ) .. "_ScriptedSequence_" .. sSequence:EntIndex()	
+	sSequence:SetName( ssName )
+	sSequence:SetKeyValue( "spawnflags", ( seqDataTab['SpawnFlags'] || 0 ) )
 		
-	self.m_pScriptedSequence:SetSaveValue( "m_hForcedTarget", self ) -- No need for new names :D
+	sSequence:SetSaveValue( "m_hForcedTarget", self ) -- No need for new names :D
 	
 	for _, v in pairs( seqDataTab['KeyValues'] ) do	
 		if seqDataTab['KeyValues'].m_flRadius && seqDataTab['KeyValues'].m_flRadius < 1 then seqDataTab['KeyValues'].m_flRadius = 1 end
-		self.m_pScriptedSequence:SetKeyValue( tostring( _ ), v )				
+		sSequence:SetKeyValue( tostring( _ ), v )				
 	end		
 	
-	self.m_pScriptedSequence:SetPos( seqDataTab['Pos'] || self:GetPos() )
-	self.m_pScriptedSequence:SetAngles( seqDataTab['Ang'] || self:GetAngles() )
-	if seqDataTab['Parent'] then self.m_pScriptedSequence:SetParent( self )	end
-	self.m_pScriptedSequence:SetOwner( self )
-	self.m_pScriptedSequence:Spawn()
-	self.m_pScriptedSequence:Activate()
-	self.m_pScriptedSequence:SetSaveValue( "m_interruptable", false )
-	self.m_pScriptedSequence.Speed = seqDataTab['PlayBackRate']
+	sSequence:SetPos( seqDataTab['Pos'] || self:GetPos() )
+	sSequence:SetAngles( seqDataTab['Ang'] || self:GetAngles() )
+	if seqDataTab['Parent'] then sSequence:SetParent( self )	end
+	sSequence:SetOwner( self )
+	sSequence:Spawn()
+	sSequence:Activate()
+	sSequence:SetSaveValue( "m_interruptable", false )
+	sSequence.Speed = seqDataTab['PlayBackRate']
 	
-	if seqDataTab['Delay'] then self.m_pScriptedSequence:Fire( "BeginSequence", "", seqDataTab['Delay'] ) end
-	--self.m_pScriptedSequence:Fire( "AddOutput", "OnEndSequence "..self:GetInternalVariable( "m_iName" ) .. self.m_pScriptedSequence:EntIndex()..":Kill", 0 )
-	self:DeleteOnRemove( self.m_pScriptedSequence )
+	if seqDataTab['Delay'] then sSequence:Fire( "BeginSequence", "", seqDataTab['Delay'] ) end
+	--sSequence:Fire( "AddOutput", "OnEndSequence "..self:GetInternalVariable( "m_iName" ) .. sSequence:EntIndex()..":Kill", 0 )
+	self:DeleteOnRemove( sSequence )
 	
-	self.m_pSSLuaRun = ents.Create( "lua_run" )
-	local lrName = self:GetInternalVariable( "m_iName" ) .. "_LuaRun_" .. self.m_pSSLuaRun:EntIndex()
-	self.m_pSSLuaRun:SetName( lrName )
-	self.m_pSSLuaRun:Spawn()
-	self.m_pScriptedSequence:DeleteOnRemove( self.m_pSSLuaRun )
+	sSequence.m_pSSLuaRun = ents.Create( "lua_run" )
+	local lrName = self:GetInternalVariable( "m_iName" ) .. "_LuaRun_" .. sSequence.m_pSSLuaRun:EntIndex()
+	sSequence.m_pSSLuaRun:SetName( lrName )
+	sSequence.m_pSSLuaRun:Spawn()
+	sSequence:DeleteOnRemove( sSequence.m_pSSLuaRun )
 	
-	if isfunction( callback ) then self.m_pScriptedSequence.callback = callback end
-	if isfunction( postCallback ) then self.m_pScriptedSequence.postCallback = postCallback end
+	if isfunction( callback ) then sSequence.callback = callback end
+	if isfunction( postCallback ) then sSequence.postCallback = postCallback end
 	
-	self.m_pScriptedSequence:Fire( "AddOutput", "OnBeginSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnStartScriptedSequence' ):0:-1" )
-	self.m_pScriptedSequence:Fire( "AddOutput", "OnEndSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnEndScriptedSequence' ):0:-1" )
+	sSequence:Fire( "AddOutput", "OnBeginSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnStartScriptedSequence' ):0:-1" )
+	sSequence:Fire( "AddOutput", "OnEndSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnEndScriptedSequence' ):0:-1" )
 	
 	timer.Create( "ANP_SS_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
 		if !IsValid(self) || !self:IsCurrentSchedule( SCHED_AISCRIPT ) then return end

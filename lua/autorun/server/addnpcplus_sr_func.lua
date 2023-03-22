@@ -472,14 +472,14 @@ function ENT:ANPlusForceDefaultWeapons(weaponData)
 		self:Give( weaponData[ math.random( 1, #weaponData ) ] || "None" )			
 	end		
 end
---[[ Outdated
+
 function ANPlusSameType(ent1, ent2)
-	if ent1:GetInternalVariable( "m_iName" ) == ent2:GetInternalVariable( "m_iName" ) then	
+	if ent1:ANPlusGetDataTab() && ent2:ANPlusGetDataTab() && ent1:ANPlusGetDataTab()['Name'] == ent2:ANPlusGetDataTab()['Name'] then	
 		return true		
 	end	
 	return false		
 end
-]]--
+
 local function ANPlusOnLoad(ply, ent, data)
 	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!
 		timer.Simple( 0, function()
