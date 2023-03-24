@@ -959,3 +959,20 @@ function ANPlusIsNPCWeapon(wep)
 	end
 	return false
 end
+
+function metaENT:ANPlusPaintDecal(ply, decal, start, endPos, color, w, h)	
+	if !ply then return end	
+	net.Start( "anplus_paint_decal" )
+	net.WriteEntity( self )
+	net.WriteString( decal )
+	net.WriteVector( start )
+	net.WriteVector( endPos )
+	net.WriteColor( color || Color( 255, 255, 255 ) )
+	net.WriteFloat( w )
+	net.WriteFloat( h )
+	if isbool( ply ) then
+		net.Broadcast()
+	elseif ply:IsPlayer() then
+		net.Send( ply )
+	end
+end

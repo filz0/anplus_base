@@ -895,7 +895,8 @@ end
 function metaENT:ANPlusHasBones(boneTab)
 	for i = 1, #boneTab do
 		local bone = boneTab[ i ]
-		if !self:LookupBone( bone ) then return false end
+		if self:LookupBone( bone ) then return true end
 	end
-	return true
+	return false
 end
+--

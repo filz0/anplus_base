@@ -124,6 +124,20 @@ net.Receive("anplus_data_tab", function()
 end)
 ]]--
 
+net.Receive("anplus_paint_decal", function()
+	local ent = net.ReadEntity()
+	local decal = net.ReadString()
+	local sP = net.ReadVector()
+	local eP = net.ReadVector()
+	local col = net.ReadColor()
+	local w = net.ReadFloat()
+	local h = net.ReadFloat()
+	if IsValid(ent) then
+		local mat = string.find( decal, "decals/" ) && Material( decal ) || Material( util.DecalMaterial( decal ) )
+		util.DecalEx( mat, ent, sP, eP:GetNormalized(), col, w, h )
+	end
+end)
+
 net.Receive("anplus_play_ui_snd", function()		
 	local snd = net.ReadString() || ""
 	local vol = net.ReadFloat() || 100

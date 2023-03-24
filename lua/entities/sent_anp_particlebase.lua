@@ -15,8 +15,8 @@ function ENT:Initialize()
 	self:DrawShadow( false )
 	self:SetNoDraw( true )	
 	if self.Particle then 
-		if self.StartDelay > 0 then
-			timer.Simple( self.StartDelay, function()
+		if self.StartDelay >= 0 then
+			timer.Simple( self.StartDelay, function()				
 				if !IsValid(self) then return end
 				ParticleEffectAttach( self.Particle, 1, self, -1 ) 
 			end)

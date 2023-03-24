@@ -11,6 +11,7 @@ util.AddNetworkString("anplus_chatmsg_ply")
 util.AddNetworkString("anplus_screenmsg_ply")
 util.AddNetworkString("anplus_add_fakename_language")
 util.AddNetworkString("anplus_notify")
+util.AddNetworkString("anplus_paint_decal")
 
 net.Receive("anplus_gmodsave_load_from_the_menu", function(len, ply)	
 	--ANPlusNPCPreApply()	
@@ -404,7 +405,7 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 	
 		dmginfo:SetDamage( 0 )
 		
-	elseif ent:IsANPlus() && IsValid(att) && ent == att then
+	elseif ent:IsANPlus() && ent:ANPlusGetDataTab()['DamageSelfScale'] && IsValid(att) && ent == att then
 	
 		dmginfo:AddDamage( dmginfo:GetDamage() * ( ( ent:ANPlusGetDataTab()['DamageSelfScale'] / 100 ) >= -1 && ent:ANPlusGetDataTab()['DamageSelfScale'] / 100 || -1 ) )
 		
@@ -430,7 +431,7 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 
 	end
 	
-	if IsValid(att) && att:IsANPlus(true) then
+	if IsValid(att) && att:IsANPlus(true) && att:ANPlusGetDataTab()['DamageDealtScale'] then
 	
 		dmginfo:AddDamage( dmginfo:GetDamage() * ( ( att:ANPlusGetDataTab()['DamageDealtScale'] / 100 ) >= -1 && att:ANPlusGetDataTab()['DamageDealtScale'] / 100 || -1 ) )
 		
