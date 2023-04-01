@@ -15,11 +15,11 @@ function ANPlusUISound(snd)
 	EmitSound( snd, Vector( 0 ,0 ,0 ), -2 )
 end
 
-function metaPanel:ANPlusHighlightTextColor(color1, timed, color2)		
-	self:SetTextColor( color1 )			
-	timer.Create( "SAM_UI_Normal" .. self:EntIndex(), timed, 1, function()			
+function metaPanel:ANPlusHighlightTextColor(newCol, timed, defCol)		
+	self:SetTextColor( newCol )			
+	timer.Simple( timed, function()			
 		if !IsValid(self) then return end			
-		self:SetTextColor( color2 )				
+		self:SetTextColor( defCol )				
 	end)	
 end
 
@@ -69,7 +69,7 @@ function metaPanel:ANPlus_CreateLabel(x, y, w, text, color, font)
 	return panel
 end
 
-function metaPanel:ANPlus_CreateListView(x, y, w, h, multisel, sort, columntab, tooltp)
+function metaPanel:ANPlus_CreateListView(x, y, w, h, multisel, sort, columntab, tooltp, title)
 	local panel = vgui.Create( "DListView", self ) 
 	if x && y then panel:SetPos( x, y ) end
 	if isnumber( w ) && isnumber( h ) then
@@ -87,6 +87,15 @@ function metaPanel:ANPlus_CreateListView(x, y, w, h, multisel, sort, columntab, 
 		else
 			panel:AddColumn( column[ 1 ] )
 		end
+	end	
+	if title then
+		local panelN = vgui.Create( "DListView", self ) 
+		local pX, pY = panel:GetPos()
+		panelN:SetPos( pX, pY - 17 )
+		local pW, pH = panel:GetSize()
+		panelN:SetSize( pW, 18 )
+		panelN:SetTooltip( tooltp )
+		panelN:AddColumn( title )
 	end
 	return panel
 end
@@ -114,7 +123,7 @@ function metaPanel:ANPlus_CreateCheckBox(x, y, state, tooltp)
 	return panel
 end
 
-function metaPanel:ANPlus_CreateCheckBoxLabel(x, y, w, h, text, txtcolor, state, tooltp)
+function metaPanel:ANPlus_CreateCheckBoxLabel(x, y, text, txtcolor, state, tooltp)
 	local panel = vgui.Create( "DCheckBoxLabel", self ) 
 	if x && y then panel:SetPos( x, y ) end
 	panel:SetTextColor( txtcolor )

@@ -364,6 +364,10 @@ local NPCTab = {
 		['OnNPCHearSound'] = function(self, ent, dist, data) -- SHARED ( CLIENT & SERVER )
 		end,
 		
+		------------------------------------------------------------ OnNPCSoundHint - Called whenever NPC gets a new SoundHint. https://wiki.facepunch.com/gmod/Structures/SoundHintData
+		['OnNPCSoundHint'] = function(self, data)
+		end,
+		
 		------------------------------------------------------------ OnNPCEmitSound - This function runs whenever NPC emits any sounds (no scripted sequences).
 		['OnNPCEmitSound'] = function(self, data) -- SHARED ( CLIENT & SERVER )
 		end,

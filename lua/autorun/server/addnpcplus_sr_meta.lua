@@ -278,10 +278,6 @@ local effTab = {} -- Template (remove things that you ain't gonna use)
 metaENT:ANPlusClientEffect( effTab )
 */
 
-function metaENT:ANPlusBlockSchedule(sched)
-	if self:IsCurrentSchedule( sched ) then self:TaskComplete(); self:ResetIdealActivity( 1 ); self:SetActivity( 1 ); self:ClearSchedule() end
-end
-
 function metaENT:ANPlusHasEntLOS(ent) -- Big credit to the Captain Applesauce for this piece of work https://steamcommunity.com/profiles/76561198070248149
 
 	if !IsValid(self) then return end
@@ -861,72 +857,6 @@ function metaENT:ANPlusDissolve(attacker, inflictor, dealDMG, dtype)
 	
 end
 
-function metaENT:ANPlusGetIdealSequence()
-	if !self:GetInternalVariable( "m_nIdealSequence" ) then return nil end
-	return self:GetInternalVariable( "m_nIdealSequence" )
-end
-
-function metaENT:ANPlusSetIdealSequence(seq)
-	if !self:GetInternalVariable( "m_nIdealSequence" ) then return nil end
-	seq = isstring( seq ) && self:LookupSequence( seq ) || seq
-	self:SetSaveValue( "m_nIdealSequence", seq )
-end
-
-function metaENT:ANPlusGetIdealWeaponActivity()
-	if !self:GetInternalVariable( "m_IdealWeaponActivity" ) then return nil end
-	return self:GetInternalVariable( "m_IdealWeaponActivity" )
-end
-
-function metaENT:ANPlusSetIdealWeaponActivity(act)
-	if !self:GetInternalVariable( "m_IdealWeaponActivity" ) then return nil end
-	self:SetSaveValue( "m_IdealWeaponActivity", act )
-end
-
-function metaENT:ANPlusSetIdealTranslatedActivity(act)
-	if !self:GetInternalVariable( "m_IdealTranslatedActivity" ) then return nil end
-	self:SetSaveValue( "m_IdealTranslatedActivity", act )
-end
-
-function metaENT:ANPlusGetTranslatedActivity()
-	if !self:GetInternalVariable( "m_translatedActivity" ) then return nil end
-	return self:GetInternalVariable( "m_translatedActivity" )
-end
-
-function metaENT:ANPlusSetTranslatedActivity(act)
-	if !self:GetInternalVariable( "m_translatedActivity" ) then return nil end
-	self:SetSaveValue( "m_translatedActivity", act )
-end
-
-function metaENT:ANPlusGetNextFlinch()
-	if !self:GetInternalVariable( "m_flNextFlinchTime" ) then return nil end
-	return self:GetInternalVariable( "m_flNextFlinchTime" )
-end
-
-function metaENT:ANPlusSetNextFlinch(value)
-	if !self:GetInternalVariable( "m_flNextFlinchTime" ) then return nil end
-	self:SetSaveValue( "m_flNextFlinchTime", value )
-end
-
-function metaENT:SetIdealMoveSpeed(val)
-	self:SetSaveValue( "m_flGroundSpeed", val )
-end
-
-function metaENT:ANPlusClearTarget()
-	self:SetSaveValue( "m_hTargetEnt", NULL )
-end
-
-function metaENT:ANPlusGetSquadName()
-	return self:GetKeyValues().squadname || false
-end
-
-function metaENT:ANPlusPlayingDeathAnim()
-	return self.m_bDeathAnimPlay
-end
-
-function metaENT:ANPlusPlayingAnim()
-	return self.m_bANPlusPlayingActivity
-end
-
 function metaENT:ANPlusIsDoor()	
 	local doorClass = self:GetClass()	
 	if ( doorClass == "func_door" or doorClass == "func_door_rotating" or doorClass == "prop_door" or doorClass == "prop_door_rotating" ) then
@@ -975,4 +905,9 @@ function metaENT:ANPlusPaintDecal(ply, decal, start, endPos, color, w, h)
 	elseif ply:IsPlayer() then
 		net.Send( ply )
 	end
+end
+
+function metaENT:ANPlusEmitNPCSound(hint, radius, duration, soundName, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
+	self:EmitSound( soundName, soundLevel, pitchPercent, volume, channel, soundFlags, dsp )
+	sound.EmitHint( hint, self:GetPos(), radius, duration, self )
 end

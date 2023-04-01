@@ -761,6 +761,16 @@ function metaPLAYER:ANPlusGetEyeTrace()
 	return tr
 end
 
+ANPlusPlayerTools = {
+	['gmod_tool'] = true,
+	['weapon_physgun'] = true,
+}
+
+function metaPLAYER:ANPlusHasActiveTool()
+	if IsValid(self:GetActiveWeapon()) && ANPlusPlayerTools[ self:GetActiveWeapon():GetClass() ] then return true end
+	return false
+end
+
 function ANPlusOverrideSound(toReplace, data, sndReplace, play, sndLVL, sndPitch, sndChannel, sndVolume, sndFlags, sndDSP, sndTime) -- Men't to be used with EntityEmitSound hook
 	if data && string.find( string.lower( data.SoundName ), toReplace ) then
 		local sndReplace = istable( sndReplace ) && sndReplace[ math.random( 1, #sndReplace ) ] || sndReplace || data.SoundName

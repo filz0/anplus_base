@@ -264,3 +264,11 @@ function ENT:ANPlusFakeModel(model, visualTab)
 	end
 	
 end
+
+function ENT:ANPlusGetRagdollEntity()
+	if (SERVER) then
+		return self.m_pSRagdollEntity
+	elseif (CLIENT) then
+		return self.m_pCRagdollEntity
+	end
+end

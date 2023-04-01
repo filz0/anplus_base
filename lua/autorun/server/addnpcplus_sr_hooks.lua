@@ -78,10 +78,11 @@ concommand.Add( "anplus_reload_ents", function(ply)
 		end		
 	end	
 end)
+
 hook.Add( "PlayerSpawnedNPC", "ANPlusLoad_PlayerSpawnedNPC", function(ply, npc)		
 	local dataTab = ANPlusLoadGlobal[npc:GetInternalVariable( "m_iName" )]
+	npc.m_pMyPlayer = ply
 	if dataTab then
-		npc.m_pMyPlayer = ply
 		if GetConVar( "anplus_random_placement" ):GetBool() then
 			npc:ANPlusRandomTeleport( false, 2, Vector( 0, 0, 1 ), function()
 				npc:SetAngles( npc:GetAngles() + Angle( 0, math.random( 0, 360 ), 0 ) )
@@ -102,54 +103,60 @@ hook.Add( "PlayerDeath", "ANPlusLoad_PlayerDeath", function(ply, inf, att)
 end)
 
 hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc, rag)
-
-	if IsValid(npc) && IsValid(rag) && npc:IsANPlus() then
+	
+	if IsValid(npc) && npc:IsNPC() && IsValid(rag) then
 		
-		if npc:ANPlusGetDataTab()['CurData'] then
+		npc.m_pSRagdollEntity = rag
 		
-			if npc:ANPlusGetDataTab()['CurData']['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['VisualTab'] ) end
+		if npc:IsANPlus() then
+		
+			if npc:ANPlusGetDataTab()['CurData'] then
 			
-			if npc:ANPlusGetDataTab()['CurData']['CurBGS'] then			
-				for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBGS'] do
-					rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurData']['CurBGS'][ i ] )		
-				end				
-			end
+				if npc:ANPlusGetDataTab()['CurData']['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['VisualTab'] ) end
 				
-			if npc:ANPlusGetDataTab()['CurData']['CurSMS'] then
-				for i = 0, #npc:ANPlusGetDataTab()['CurData']['CurSMS'] do
-					rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurData']['CurSMS'][ i + 1 ] )					
-				end					
+				if npc:ANPlusGetDataTab()['CurData']['CurBGS'] then			
+					for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBGS'] do
+						rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurData']['CurBGS'][ i ] )		
+					end				
+				end
+					
+				if npc:ANPlusGetDataTab()['CurData']['CurSMS'] then
+					for i = 0, #npc:ANPlusGetDataTab()['CurData']['CurSMS'] do
+						rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurData']['CurSMS'][ i + 1 ] )					
+					end					
+				end
+				
+				if npc:ANPlusGetDataTab()['CurData']['CurBones'] then
+					for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBones'] do		
+						local bone = rag:GetPhysicsObjectNum( i )					
+						if IsValid( bone ) then
+							bone:SetPos( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 1 ] )
+							bone:SetAngles( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 2 ] )
+							bone:EnableMotion( true )				
+						end			
+					end
+				end
+			
 			end
 			
-			if npc:ANPlusGetDataTab()['CurData']['CurBones'] then
-				for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBones'] do		
-					local bone = rag:GetPhysicsObjectNum( i )					
-					if IsValid( bone ) then
-						bone:SetPos( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 1 ] )
-						bone:SetAngles( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 2 ] )
-						bone:EnableMotion( true )				
-					end			
-				end
+			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then				
+				npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](npc, rag)			
+			end
+			
+		end
+		
+		if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus() then
+		
+			local raggibOwner = npc:GetOwner()
+		
+			if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then			
+				raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, rag)		
 			end
 		
 		end
 		
-		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then				
-			npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](npc, rag)			
-		end
-		
 	end
 	
-	if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus() then
-	
-		local raggibOwner = npc:GetOwner()
-	
-		if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then			
-			raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, rag)		
-		end
-	
-	end
-
 end)
 
 hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)

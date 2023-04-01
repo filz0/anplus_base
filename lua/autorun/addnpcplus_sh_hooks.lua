@@ -20,13 +20,13 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 					table.insert( ANPlusDangerStuffGlobal, ent )
 				end			
 			end
-
-			if !ent:IsANPlus(true) then 		
+			
+			--if !ent:IsANPlus(true) then 	
 				ent:ANPlusIgnoreTillSet()	
 				ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
-			end	
-		end
-		
+			--end
+			ent.m_pMyPlayer = nil
+		end		
 	end)	
 end)
 

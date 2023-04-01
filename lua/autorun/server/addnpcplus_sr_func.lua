@@ -19,6 +19,16 @@ function ENT:ANPlusNPCHealthRegen()
 	
 end
 
+function ENT:ANPlusOnRestore()
+	timer.Simple( 0, function()
+		if IsValid(self) then
+			print(self, "LOADED")
+			self:ANPlusIgnoreTillSet()	
+			self:ANPlusNPCApply( self:GetInternalVariable( "m_iName" ) )	
+		end
+	end)
+end
+
 function ENT:ANPlusPhysicsCollide(data, physobj)
 	if self:IsANPlus(true) && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCPhysicsCollide'] != nil then			
 		self:ANPlusGetDataTab()['Functions']['OnNPCPhysicsCollide'](self, data, physobj)
@@ -362,6 +372,11 @@ function ENT:ANPlusNPCThink()
 		self:ANPlusNPCAnimSpeed()
 		self:ANPlusNPCTranslateActivity()
 		self:ANPlusDetectDanger()
+		
+		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'] != nil && self:GetBestSoundHint() then	
+			if GetConVar("ai_ignoreplayers"):GetBool() && self:GetBestSoundHint().type == 4 then return end
+			self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'](self, self:GetBestSoundHint())	
+		end
 		
 		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCThink'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCThink'](self)	

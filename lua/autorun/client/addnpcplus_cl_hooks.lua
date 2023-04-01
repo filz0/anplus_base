@@ -1,56 +1,62 @@
 hook.Add("CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", function(npc, rag)
-
-	if IsValid(npc) && IsValid(rag) && npc:IsANPlus() then
-
-		if npc:ANPlusGetDataTab()['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
-		
-		if npc:ANPlusGetDataTab()['CurBGS'] then
-		
-			for i = 1, #npc:ANPlusGetDataTab()['CurBGS'] do
-			
-				rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurBGS'][ i ] )
 	
-			end
-			
-		end
-			
-		if npc:ANPlusGetDataTab()['CurSMS'] then
+	if IsValid(npc) && IsValid(rag) && npc:IsNPC() then  
+	
+		npc.m_pCRagdollEntity = rag
+		
+		if npc:IsANPlus() then
 
-			for i = 0, #npc:ANPlusGetDataTab()['CurSMS'] do
+			if npc:ANPlusGetDataTab()['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
+			
+			if npc:ANPlusGetDataTab()['CurBGS'] then
+			
+				for i = 1, #npc:ANPlusGetDataTab()['CurBGS'] do
+				
+					rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurBGS'][ i ] )
 
-				rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurSMS'][ i + 1 ] )
+				end
 				
 			end
 				
-		end
-		
-		if npc:ANPlusGetDataTab()['CurBones'] then
-			for i = 1, #npc:ANPlusGetDataTab()['CurBones'] do		
-				local bone = rag:GetPhysicsObjectNum( i )					
-				if IsValid( bone ) then
-					bone:SetPos( npc:ANPlusGetDataTab()['CurBones'][ i ][ 1 ] )
-					bone:SetAngles( npc:ANPlusGetDataTab()['CurBones'][ i ][ 2 ] )
-					bone:EnableMotion( true )				
-				end			
+			if npc:ANPlusGetDataTab()['CurSMS'] then
+
+				for i = 0, #npc:ANPlusGetDataTab()['CurSMS'] do
+
+					rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurSMS'][ i + 1 ] )
+					
+				end
+					
 			end
+			
+			if npc:ANPlusGetDataTab()['CurBones'] then
+				for i = 1, #npc:ANPlusGetDataTab()['CurBones'] do		
+					local bone = rag:GetPhysicsObjectNum( i )					
+					if IsValid( bone ) then
+						bone:SetPos( npc:ANPlusGetDataTab()['CurBones'][ i ][ 1 ] )
+						bone:SetAngles( npc:ANPlusGetDataTab()['CurBones'][ i ][ 2 ] )
+						bone:EnableMotion( true )				
+					end			
+				end
+			end
+
+			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
+				
+				npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](npc, rag)
+			
+			end
+
 		end
 
-		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
+		if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus() then
+
+			local raggibOwner = npc:GetOwner()
+
+			if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
+				
+				raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, rag)
 			
-			npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](npc, rag)
-		
-		end
-	
-	end
-	
-	if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus() then
-	
-		local raggibOwner = npc:GetOwner()
-	
-		if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
-			
-			raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, rag)
-		
+			end
+
 		end
 	
 	end

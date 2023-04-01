@@ -1,245 +1,265 @@
 local ENT = FindMetaTable("Entity")
 
 function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
-
-	if ANPlusLoadGlobal && IsValid(self) && name && isstring( name ) then
+	
+	if ANPlusLoadGlobal && IsValid(self) then
 		
-		local dataTab = ANPlusLoadGlobal[name]
-
-		if ( dataTab ) then
-			if ( !override && dataTab['Class'] != self:GetClass() ) then 
-				return	
-			elseif ( isfunction( preCallback ) && dataTab['Class'] == self:GetClass() ) then 
-				preCallback( self )
-			elseif ( override && dataTab['Class'] != self:GetClass() ) then				
-				local newSelf = ents.Create( dataTab['Class'] )	
-				newSelf:SetPos( self:GetPos() )
-				newSelf:SetAngles( self:GetAngles() )
-				newSelf:Spawn()
-				newSelf:Activate()
-				
-				if isfunction( preCallback ) then
-					preCallback( newSelf )
-				end
-				
-				self:Remove()
-				self = newSelf
-			end
-
-			local data = table.Copy( dataTab )
-			
-			
-			local colBoundsMin, colBoundsMax = self:GetCollisionBounds()
-			local hull = self:IsNPC() && self:GetHullType()	|| "Not NPC"	
-
-			--local min2, max2 = self:GetSurroundingBounds()
-			ANPdevMsg( "Collision Bounds: Min[" .. tostring(min) .. "] Max[" .. tostring(max) .. "] | Hull: " .. tostring(hull), 1 )
-			ANPdevMsg( "SolidType: " .. self:GetSolid() .. " CollisionGroup: " .. self:GetCollisionGroup() .. " MoveCollide: " .. self:GetMoveCollide() .. " MoveType: " .. self:GetMoveType(), 1 )
-			--ANPdevMsg( "Surrounding Bounds: Min[" .. tostring(min2) .. "] Max[" .. tostring(max2), 1 )
-
-			data['CurData'] = {}
-			
-			local addTab = { ['CurName'] = data['Name'] }
-			table.Merge( data['CurData'], addTab )	
-			
-			if data['Models'] then
-				
-				local modelTab = data['Models'][ math.random( 1, #data['Models'] ) ]		
-				local CurModel = ( modelTab && util.IsValidModel( modelTab[ 1 ] ) && modelTab[ 1 ] ) || self:GetModel() || "models/weapons/shell.mdl"
-				local CurSkin = ( modelTab && modelTab['Skin'] && istable( modelTab['Skin'] ) && math.random( modelTab['Skin'][ 1 ], modelTab['Skin'][ 2 ] ) ) || modelTab['Skin'] || 0
-				local CurColor = ( modelTab && modelTab['Color'] ) || Color( 255, 255, 255, 255 )
-				--local CurMaterial = ( modelTab && modelTab['Material'] ) || ""
-				local CurMaterial = ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && math.random( modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""
-				local CurBoneEdit = ( modelTab && modelTab['BoneEdit'] ) || nil
-				local CurColBoundsMin, CurColBoundsMax = ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Max'] || colBoundsMax )
-				local CurHull = modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['HullType'] || hull
-				local CurScale, CurScaleDelta = modelTab['Scale'] && modelTab['Scale'][ 1 ] / 100 || 1, modelTab['scale'] && modelTab['scale'][ 2 ] || 0
-				
-				for i = 1, #data['Models'] do
-					if self:GetModel() != data['Models'][ i ][ 1 ] then
-						self:SetModel( CurModel )
-						--self:SetKeyValue( "model", CurModel )
+		local dataTab = ANPlusLoadGlobal[name]	
+		local cVar = GetConVar( "anplus_replacer_enabled" ):GetBool()
+		if cVar && !dataTab then
+			for _, repData in pairs( ANPlusENTReplacerData ) do				
+				if repData && !override then
+					local modelCheck = self:GetModel() && string.find( string.lower( self:GetModel() ), string.lower( repData['Model'] ) ) || repData['Model'] == "No Model" || false	
+					if repData['Replacement'] && repData['Class'] == self:GetClass() && modelCheck && tonumber( repData['Skin'] ) == self:GetSkin() && ANPlusPercentageChance( tonumber( repData['Chance'] ) ) then 					
+						name = repData['Replacement'] 
+						override = true
 					end
 				end
-				self:SetSkin( CurSkin )
-				self:SetColor( CurColor )
-				self:SetMaterial( CurMaterial )
-				self:SetBloodColor( modelTab['BloodColor'] || self:GetBloodColor() )
-				self:ANPlusEditBone( CurBoneEdit )
-				self:SetCollisionBounds( CurColBoundsMin, CurColBoundsMax )
-				if modelTab['Scale'] then self:SetModelScale( CurScale, CurScaleDelta ) end
-				--self:SetSurroundingBounds( data['SurroundingBounds'] && data['SurroundingBounds']['Min'] || min2, data['SurroundingBounds'] && data['SurroundingBounds']['Max'] || max2 )
-				--if data['SurroundingBounds'] && data['SurroundingBounds']['BoundsType'] then self:SetSurroundingBoundsType( data['SurroundingBounds']['BoundsType'] ) end
-				
-				if modelTab['PhysicsInit'] then self:PhysicsInit( modelTab['PhysicsInit'] ) end
-				self:SetMoveType( modelTab['SetMoveType'] || self:GetMoveType() )
-				self:SetMoveCollide( modelTab['SetMoveCollide'] || self:GetMoveCollide() )
-				self:SetCollisionGroup( modelTab['SetCollisionGroup'] || self:GetCollisionGroup() )
-				self:SetSolid( modelTab['SetSolid'] || self:GetSolid() )
-				
-				if self:IsNPC() then
-					self:SetHullType( CurHull )
-					self:SetHullSizeNormal()
+			end
+		end
+
+		if name && isstring( name ) then
+
+			local dataTab = ANPlusLoadGlobal[name]
+			
+			if ( dataTab ) then
+				if ( !override && dataTab['Class'] != self:GetClass() ) then 
+					return	
+				elseif ( override && dataTab['Class'] != self:GetClass() ) then				
+					local newSelf = ents.Create( dataTab['Class'] )	
+					newSelf:SetPos( self:GetPos() )
+					newSelf:SetAngles( self:GetAngles() )
+					newSelf:Spawn()
+					newSelf:Activate()
+					
+					if isfunction( preCallback ) then
+						preCallback( newSelf )
+					end
+					
+					if IsValid(self.m_pMyPlayer) then
+						--gamemode.Call( "PlayerSpawnedNPC", self.m_pMyPlayer, newSelf )
+						self.m_pMyPlayer:AddCleanup( "npcs", newSelf )
+						undo.Create( name )
+						undo.AddEntity( newSelf )
+						undo.SetPlayer( self.m_pMyPlayer )
+						undo.Finish()
+					end
+					
+					self:Remove()
+					self = newSelf
 				end
+
+				local data = table.Copy( dataTab )
 				
-				local physCheck = self:GetPhysicsObject()
-				if !IsValid(physCheck) || self:GetSolid() != SOLID_VPHYSICS then
-					self:SetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
+				local colBoundsMin, colBoundsMax = self:GetCollisionBounds()
+				local hull = self:IsNPC() && self:GetHullType()	|| "Not NPC"	
+
+				--local min2, max2 = self:GetSurroundingBounds()
+				ANPdevMsg( "Collision Bounds: Min[" .. tostring(min) .. "] Max[" .. tostring(max) .. "] | Hull: " .. tostring(hull), 1 )
+				ANPdevMsg( "SolidType: " .. self:GetSolid() .. " CollisionGroup: " .. self:GetCollisionGroup() .. " MoveCollide: " .. self:GetMoveCollide() .. " MoveType: " .. self:GetMoveType(), 1 )
+				--ANPdevMsg( "Surrounding Bounds: Min[" .. tostring(min2) .. "] Max[" .. tostring(max2), 1 )
+
+				data['CurData'] = {}
+				
+				local addTab = { ['CurName'] = data['Name'] }
+				table.Merge( data['CurData'], addTab )	
+				
+				if data['Models'] then
+					
+					local modelTab = data['Models'][ math.random( 1, #data['Models'] ) ]		
+					local CurModel = ( modelTab && util.IsValidModel( modelTab[ 1 ] ) && modelTab[ 1 ] ) || self:GetModel() || "models/weapons/shell.mdl"
+					local CurSkin = ( modelTab && modelTab['Skin'] && istable( modelTab['Skin'] ) && math.random( modelTab['Skin'][ 1 ], modelTab['Skin'][ 2 ] ) ) || modelTab['Skin'] || 0
+					local CurColor = ( modelTab && modelTab['Color'] ) || Color( 255, 255, 255, 255 )
+					local CurMaterial = ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && math.random( modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""
+					local CurBoneEdit = ( modelTab && modelTab['BoneEdit'] ) || nil
+					local CurColBoundsMin, CurColBoundsMax = ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Max'] || colBoundsMax )
+					local CurHull = modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['HullType'] || hull
+					local CurScale, CurScaleDelta = modelTab['Scale'] && modelTab['Scale'][ 1 ] / 100 || 1, modelTab['scale'] && modelTab['scale'][ 2 ] || 0
+					
+					for i = 1, #data['Models'] do
+						if self:GetModel() != data['Models'][ i ][ 1 ] then
+							self:SetModel( CurModel )
+						end
+					end
+					
+					self:SetSkin( CurSkin )
+					self:SetColor( CurColor )
+					self:SetMaterial( CurMaterial )
+					self:SetBloodColor( modelTab['BloodColor'] || self:GetBloodColor() )
+					self:ANPlusEditBone( CurBoneEdit )
+					self:SetCollisionBounds( CurColBoundsMin, CurColBoundsMax )
+					if modelTab['Scale'] then self:SetModelScale( CurScale, CurScaleDelta ) end
+					--self:SetSurroundingBounds( data['SurroundingBounds'] && data['SurroundingBounds']['Min'] || min2, data['SurroundingBounds'] && data['SurroundingBounds']['Max'] || max2 )
+					--if data['SurroundingBounds'] && data['SurroundingBounds']['BoundsType'] then self:SetSurroundingBoundsType( data['SurroundingBounds']['BoundsType'] ) end
+					
+					if modelTab['PhysicsInit'] then self:PhysicsInit( modelTab['PhysicsInit'] ) end
+					self:SetMoveType( modelTab['SetMoveType'] || self:GetMoveType() )
+					self:SetMoveCollide( modelTab['SetMoveCollide'] || self:GetMoveCollide() )
+					self:SetCollisionGroup( modelTab['SetCollisionGroup'] || self:GetCollisionGroup() )
+					self:SetSolid( modelTab['SetSolid'] || self:GetSolid() )
+					
+					if self:IsNPC() then
+						self:SetHullType( CurHull )
+						self:SetHullSizeNormal()
+					end
+					
+					local physCheck = self:GetPhysicsObject()
+					if !IsValid(physCheck) || self:GetSolid() != SOLID_VPHYSICS then
+						self:SetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
+					end
+						
+					local addTab = { ['CurModel'] = CurModel }
+					table.Merge( data['CurData'], addTab )			
+					local addTab = { ['CurSkin'] = CurSkin }
+					table.Merge( data['CurData'], addTab )		
+					local addTab = { ['CurColor'] = CurColor }
+					table.Merge( data['CurData'], addTab )			
+					local addTab = { ['CurMaterial'] = CurMaterial }
+					table.Merge( data['CurData'], addTab )
+		
+					if modelTab['BodyGroups'] then
+		
+						data['CurData']['CurBGS'] = {}			
+						local CurBGS = {}
+			
+						for i = 1, #modelTab['BodyGroups'] do
+			
+							local curBG = modelTab['BodyGroups'][ i ]
+							local curBGR = curBG && istable( curBG ) && curBG[ 1 ] && math.random( curBG[ 1 ], curBG[ 2 ] ) || curBG || self:GetBodygroup( i )					
+							self:SetBodygroup( i, curBGR )
+				
+						end
+						--
+						if table.Count( data['CurData']['CurBGS'] ) <= 0 then
+
+							for i = 1, #self:GetBodyGroups() do		
+								CurBGS[ i ] = self:GetBodygroup( i )	
+							end
+				 
+							local addTab = { ['CurBGS'] = CurBGS }
+							table.Merge( data['CurData'], addTab )
+			
+						end
+						--
+					end
+			
+					if modelTab['SubMaterials'] then
+		
+						data['CurData']['CurSMS'] = {}		
+						local CurSMS = {}
+			
+						for i = 1, #modelTab['SubMaterials'] do
+
+							local curSM = modelTab['SubMaterials'][ i ]
+							local curSMR = curSM && istable( curSM ) && curSM[ 1 ] && curSM[ math.random( 1, #curSM ) ] || curSM || self:GetMaterials()[ i ]	
+							self:SetSubMaterial( i - 1, curSMR )
+				
+						end
+						--
+						if table.Count( data['CurData']['CurSMS'] ) <= 0 then
+			
+							for i = 0, #self:GetMaterials() do			
+								CurSMS[ i + 1 ] = self:GetSubMaterial( i ) || self:GetMaterials()[ i ]	
+							end
+
+							local addTab = { ['CurSMS'] = CurSMS }
+							table.Merge( data['CurData'], addTab )
+			
+						end
+					--
+					end
+
+				end
+
+				if self:IsNPC() then		
+					if !IsValid(self:GetActiveWeapon()) && self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
+						self:Give( self:GetKeyValues()['additionalequipment'] ) 						
+					end
+					if data['ForceDefaultWeapons'] && data['DefaultWeapons'] then self:ANPlusForceDefaultWeapons( data['DefaultWeapons'] ) end
+					if data['WeaponProficiency'] then self:SetCurrentWeaponProficiency( data['WeaponProficiency'] ) end	
+					if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end
+					if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
+					--if data['LookDistance'] then self:SetMaxLookDistance( data['LookDistance'] ) end -- How tf it doesn't work for some people is beyond me. 
+					if data['LookDistance'] then self:Fire( "SetMaxLookDistance", data['LookDistance'], 0.1 ) end	
+					if data['EnableInverseKinematic'] then self:ANPlusSetIK( data['EnableInverseKinematic'] ) end	
+					--if data['AllowActivityTranslation'] && !IsValid(self:GetWeapon( "ai_translate_act" )) then self:Give( "ai_translate_act" ) end									
+					self.m_tbANPlusRelationsMem = {}				
+					self.m_fANPlusCurMemoryLast = 0
+					self.m_fANPlusCurMemoryDelay = 1
+					self.m_fANPlusDangerDetectLast = 0
+					self.m_fANPlusDangerDetectDelay = data['Functions'] && data['Functions']['DetectionDelay'] || 1
+					self.m_tbANPlusACTOther = data['ActivityOther']
+					self.m_tbANPlusACTMovement = data['ActivityMovement']	
+					self.m_fCurNPCState = self:GetNPCState()
+					self.m_tTACTData = {}
+					if data['UseANPSquadSystem'] then self:ANPlusAddToCSquad( self:ANPlusGetSquadName() ) end
+				end
+				self.m_fANPUseLast = 0
+				self:SetUseType(SIMPLE_USE)
+				self.m_tbAnimationFrames = {}
+				for _, v in pairs( self:GetSequenceList() ) do
+					local seqID = self:LookupSequence( v )
+					local seqInfo = self:GetAnimInfo( seqID )
+					self.m_tbAnimationFrames[v] = seqInfo.numframes
+				end
+				--
+				ANPdevMsg( "A table with all animations of this Entity with their frames:", 1 )
+				ANPdevMsg( self.m_tbAnimationFrames, 1 )
+				self.m_tbAnimEvents = {}
+				self.m_frameLast = -1
+				self.m_seqLast = -1		
+				
+				--ANPlusSendNotify( true, nil, "bazinga", 1, 1 )	
+				
+				local hpMul = GetConVar( "anplus_hp_mul" ):GetFloat()
+				self:SetHealth( ( data['Health'] || self:Health() ) * hpMul )				
+				self:SetMaxHealth( ( data['Health'] || self:Health() ) * hpMul )
+				
+				for _, v in pairs( data['KeyValues'] ) do
+					if _ != "targetname" then -- We don't have to do that anymore.
+						self:SetKeyValue( tostring( _ ), v )		
+					end
+				end
+			
+				self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )		
+				
+				if data['InputsAndOutputs'] then
+					for i = 1, #data['InputsAndOutputs'] do
+						local fireTab = data['InputsAndOutputs'][ i ]
+						self:Fire( fireTab[ 1 ] || "", fireTab[ 2 ] || nil, fireTab[ 3 ] || 0, fireTab[ 4 ] || NULL, fireTab[ 5 ] || NULL )	
+					end		
+				end		
+
+				self.m_fANPlusVelLast = 0
+
+				local sndTab = data['SoundModification']						
+				local addTab = { ['SoundModification'] = sndTab }
+				table.Merge( data['CurData'], addTab )
+				
+				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
+				self:ANPlusApplyDataTab( data )					
+				self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
+				self:ANPlusSetKillfeedName( data['KillfeedName'] )
+
+				if isfunction( postCallback ) then
+					postCallback( self )
 				end
 					
-				local addTab = { ['CurModel'] = CurModel }
-				table.Merge( data['CurData'], addTab )			
-				local addTab = { ['CurSkin'] = CurSkin }
-				table.Merge( data['CurData'], addTab )		
-				local addTab = { ['CurColor'] = CurColor }
-				table.Merge( data['CurData'], addTab )			
-				local addTab = { ['CurMaterial'] = CurMaterial }
-				table.Merge( data['CurData'], addTab )
-	
-				if modelTab['BodyGroups'] then
-	
-					data['CurData']['CurBGS'] = {}			
-					local CurBGS = {}
-		
-					for i = 1, #modelTab['BodyGroups'] do
-		
-						local curBG = modelTab['BodyGroups'][ i ]
-						local curBGR = curBG && istable( curBG ) && curBG[ 1 ] && math.random( curBG[ 1 ], curBG[ 2 ] ) || curBG || self:GetBodygroup( i )					
-						self:SetBodygroup( i, curBGR )
-			
-					end
-					--
-					if table.Count( data['CurData']['CurBGS'] ) <= 0 then
-		
-						--for i = 1, self:GetNumBodyGroups() do		
-						--	if !table.HasValue( CurBGS, i ) then table.insert( CurBGS, i ) end		
-						--end
+				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
+					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
+				end	
 
-						for i = 1, #self:GetBodyGroups() do		
-							CurBGS[ i ] = self:GetBodygroup( i )	
-						end
-			 
-						local addTab = { ['CurBGS'] = CurBGS }
-						table.Merge( data['CurData'], addTab )
-		
-					end
-					--
-				end
-		
-				if modelTab['SubMaterials'] then
-	
-					data['CurData']['CurSMS'] = {}		
-					local CurSMS = {}
-		
-					for i = 1, #modelTab['SubMaterials'] do
-
-						local curSM = modelTab['SubMaterials'][ i ]
-						local curSMR = curSM && istable( curSM ) && curSM[ 1 ] && curSM[ math.random( 1, #curSM ) ] || curSM || self:GetMaterials()[ i ]	
-						self:SetSubMaterial( i - 1, curSMR )
-			
-					end
-					--
-					if table.Count( data['CurData']['CurSMS'] ) <= 0 then
-		
-						for i = 0, #self:GetMaterials() do			
-							CurSMS[ i + 1 ] = self:GetSubMaterial( i ) || self:GetMaterials()[ i ]	
-						end
-
-						local addTab = { ['CurSMS'] = CurSMS }
-						table.Merge( data['CurData'], addTab )
-		
-					end
-				--
-				end
-
-			end
-
-			if self:IsNPC() then					
-				if data['WeaponProficiency'] then self:SetCurrentWeaponProficiency( data['WeaponProficiency'] ) end	
-				if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end
-				if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
-				--if data['LookDistance'] then self:SetMaxLookDistance( data['LookDistance'] ) end -- How tf it doesn't work for some people is beyond me. 
-				if data['LookDistance'] then self:Fire( "SetMaxLookDistance", data['LookDistance'], 0.1 ) end	
-				if data['EnableInverseKinematic'] then self:ANPlusSetIK( data['EnableInverseKinematic'] ) end	
-				if data['ForceDefaultWeapons'] && data['DefaultWeapons'] then self:ANPlusForceDefaultWeapons( data['DefaultWeapons'] ) end
-				if !IsValid(self:GetActiveWeapon()) && self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
-					self:Give( self:GetKeyValues()['additionalequipment'] ) 						
-				end
-				--if data['AllowActivityTranslation'] && !IsValid(self:GetWeapon( "ai_translate_act" )) then self:Give( "ai_translate_act" ) end									
-				self.m_tbANPlusRelationsMem = {}				
-				self.m_fANPlusCurMemoryLast = 0
-				self.m_fANPlusCurMemoryDelay = 1
-				self.m_fANPlusDangerDetectLast = 0
-				self.m_fANPlusDangerDetectDelay = data['Functions'] && data['Functions']['DetectionDelay'] || 1
-				--self.m_bDeathAnim = { ACT_DIESIMPLE, 0, 0, true }
-				self.m_tbANPlusACTOther = data['ActivityOther']
-				self.m_tbANPlusACTMovement = data['ActivityMovement']	
-				self.m_fCurNPCState = self:GetNPCState()
-				self.m_tTACTData = {}
-				if data['UseANPSquadSystem'] then self:ANPlusAddToCSquad( self:ANPlusGetSquadName() ) end
-			end
-			self.m_fANPUseLast = 0
-			self:SetUseType(SIMPLE_USE)
-			self.m_tbAnimationFrames = {}
-			for _, v in pairs( self:GetSequenceList() ) do
-				local seqID = self:LookupSequence( v )
-				local seqInfo = self:GetAnimInfo( seqID )
-				self.m_tbAnimationFrames[v] = seqInfo.numframes
-			end
-			--
-			ANPdevMsg( "A table with all animations of this Entity with their frames:", 1 )
-			ANPdevMsg( self.m_tbAnimationFrames, 1 )
-			self.m_tbAnimEvents = {}
-			self.m_frameLast = -1
-			self.m_seqLast = -1		
-			
-			--ANPlusSendNotify( true, nil, "bazinga", 1, 1 )	
-			
-			local hpMul = GetConVar( "anplus_hp_mul" ):GetFloat()
-			self:SetHealth( ( data['Health'] || self:Health() ) * hpMul )				
-			self:SetMaxHealth( ( data['Health'] || self:Health() ) * hpMul )
-			
-			for _, v in pairs( data['KeyValues'] ) do
-				if _ != "targetname" then -- We don't have to do that anymore.
-					self:SetKeyValue( tostring( _ ), v )		
-				end
-			end
-		
-			self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )		
-			
-			if data['InputsAndOutputs'] then
-				for i = 1, #data['InputsAndOutputs'] do
-					local fireTab = data['InputsAndOutputs'][ i ]
-					self:Fire( fireTab[ 1 ] || "", fireTab[ 2 ] || nil, fireTab[ 3 ] || 0, fireTab[ 4 ] || NULL, fireTab[ 5 ] || NULL )	
-				end		
-			end		
-
-			--self.m_fANPlusDmgDealt = data['DamageDealtScale'] || 0
-			--self.m_fANPlusDmgSelf = data['DamageSelfScale'] || 0
-			self.m_fANPlusVelLast = 0
-
-			local sndTab = data['SoundModification']						
-			local addTab = { ['SoundModification'] = sndTab }
-			table.Merge( data['CurData'], addTab )
-			
-			self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
-			self:ANPlusApplyDataTab( data )					
-			self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
-			self:ANPlusSetKillfeedName( data['KillfeedName'] )
-
-			if isfunction( postCallback ) then
-				postCallback( self )
-			end
+				hook.Add( "Think", self, self.ANPlusNPCThink )
+				self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide )
+				--self:AddCallback( "OnRestore", self.ANPlusOnRestore )
+				--hook.Add( "OnRestore", self, self.ANPlusOnRestore )
 				
-			if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
-				self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
-			end	
-
-			hook.Add( "Think", self, self.ANPlusNPCThink )
-			self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide )
-			self.ANPlusEntity = true
+				self.ANPlusEntity = true
+			end
+		
+		else
+			return false
 		end
-	
 	else 
 		return false
 	end	
@@ -652,16 +672,18 @@ end
 
 function ENT:ANPlusPlayScriptedSequence(delay)	
 	local delay = delay || 0
-	if IsValid(self:GetInternalVariable( "m_hCine" )) then self:GetInternalVariable( "m_hCine" ):Fire( "BeginSequence", "", delay ) end		
+	local ss = IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
+	if ss then ss:Fire( "BeginSequence", "", delay ) end		
 end
 
 function ENT:ANPlusCancelScriptedSequence(delay)	
 	local delay = delay || 0
-	if IsValid(self:GetInternalVariable( "m_hCine" )) then self:GetInternalVariable( "m_hCine" ):Fire( "CancelSequence", "", delay ) end		
+	local ss = IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
+	if ss then self:GetInternalVariable( "m_hCine" ):Fire( "CancelSequence", "", delay ) end		
 end
 
 function ENT:ANPlusGetScriptedSequence()	
-	return IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || false
+	return IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || false
 end
 
 /*
@@ -697,42 +719,42 @@ function ENT:ANPlusCreateScriptedSequence(seqDataTab, faceEnt, faceSpeed, callba
 	--if IsValid(self.m_pScriptedSequence) then self.m_pScriptedSequence:Remove() end
 	if !seqDataTab then return end
 	
-	local sSequence = ents.Create( "scripted_sequence" )	
-	local ssName = self:GetInternalVariable( "m_iName" ) .. "_ScriptedSequence_" .. sSequence:EntIndex()	
-	sSequence:SetName( ssName )
-	sSequence:SetKeyValue( "spawnflags", ( seqDataTab['SpawnFlags'] || 0 ) )
+	self.m_pScriptedSequence = ents.Create( "scripted_sequence" )	
+	local ssName = self:GetInternalVariable( "m_iName" ) .. "_ScriptedSequence_" .. self.m_pScriptedSequence:EntIndex()	
+	self.m_pScriptedSequence:SetName( ssName )
+	self.m_pScriptedSequence:SetKeyValue( "spawnflags", ( seqDataTab['SpawnFlags'] || 0 ) )
 		
-	sSequence:SetSaveValue( "m_hForcedTarget", self ) -- No need for new names :D
+	self.m_pScriptedSequence:SetSaveValue( "m_hForcedTarget", self ) -- No need for new names :D
 	
 	for _, v in pairs( seqDataTab['KeyValues'] ) do	
 		if seqDataTab['KeyValues'].m_flRadius && seqDataTab['KeyValues'].m_flRadius < 1 then seqDataTab['KeyValues'].m_flRadius = 1 end
-		sSequence:SetKeyValue( tostring( _ ), v )				
+		self.m_pScriptedSequence:SetKeyValue( tostring( _ ), v )				
 	end		
 	
-	sSequence:SetPos( seqDataTab['Pos'] || self:GetPos() )
-	sSequence:SetAngles( seqDataTab['Ang'] || self:GetAngles() )
-	if seqDataTab['Parent'] then sSequence:SetParent( self )	end
-	sSequence:SetOwner( self )
-	sSequence:Spawn()
-	sSequence:Activate()
-	sSequence:SetSaveValue( "m_interruptable", false )
-	sSequence.Speed = seqDataTab['PlayBackRate']
+	self.m_pScriptedSequence:SetPos( seqDataTab['Pos'] || self:GetPos() )
+	self.m_pScriptedSequence:SetAngles( seqDataTab['Ang'] || self:GetAngles() )
+	if seqDataTab['Parent'] then self.m_pScriptedSequence:SetParent( self )	end
+	self.m_pScriptedSequence:SetOwner( self )
+	self.m_pScriptedSequence:Spawn()
+	self.m_pScriptedSequence:Activate()
+	self.m_pScriptedSequence:SetSaveValue( "m_interruptable", false )
+	self.m_pScriptedSequence.Speed = seqDataTab['PlayBackRate']
 	
-	if seqDataTab['Delay'] then sSequence:Fire( "BeginSequence", "", seqDataTab['Delay'] ) end
-	--sSequence:Fire( "AddOutput", "OnEndSequence "..self:GetInternalVariable( "m_iName" ) .. sSequence:EntIndex()..":Kill", 0 )
-	self:DeleteOnRemove( sSequence )
+	if seqDataTab['Delay'] then self.m_pScriptedSequence:Fire( "BeginSequence", "", seqDataTab['Delay'] ) end
+	--self.m_pScriptedSequence:Fire( "AddOutput", "OnEndSequence "..self:GetInternalVariable( "m_iName" ) .. self.m_pScriptedSequence:EntIndex()..":Kill", 0 )
+	self:DeleteOnRemove( self.m_pScriptedSequence )
 	
-	sSequence.m_pSSLuaRun = ents.Create( "lua_run" )
-	local lrName = self:GetInternalVariable( "m_iName" ) .. "_LuaRun_" .. sSequence.m_pSSLuaRun:EntIndex()
-	sSequence.m_pSSLuaRun:SetName( lrName )
-	sSequence.m_pSSLuaRun:Spawn()
-	sSequence:DeleteOnRemove( sSequence.m_pSSLuaRun )
+	self.m_pScriptedSequence.pSSLuaRun = ents.Create( "lua_run" )
+	local lrName = self:GetInternalVariable( "m_iName" ) .. "_LuaRun_" .. self.m_pScriptedSequence.pSSLuaRun:EntIndex()
+	self.m_pScriptedSequence.pSSLuaRun:SetName( lrName )
+	self.m_pScriptedSequence.pSSLuaRun:Spawn()
+	self.m_pScriptedSequence:DeleteOnRemove( self.m_pScriptedSequence.pSSLuaRun )
 	
-	if isfunction( callback ) then sSequence.callback = callback end
-	if isfunction( postCallback ) then sSequence.postCallback = postCallback end
+	if isfunction( callback ) then self.m_pScriptedSequence.callback = callback end
+	if isfunction( postCallback ) then self.m_pScriptedSequence.postCallback = postCallback end
 	
-	sSequence:Fire( "AddOutput", "OnBeginSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnStartScriptedSequence' ):0:-1" )
-	sSequence:Fire( "AddOutput", "OnEndSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnEndScriptedSequence' ):0:-1" )
+	self.m_pScriptedSequence:Fire( "AddOutput", "OnBeginSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnStartScriptedSequence' ):0:-1" )
+	self.m_pScriptedSequence:Fire( "AddOutput", "OnEndSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnEndScriptedSequence' ):0:-1" )
 	
 	timer.Create( "ANP_SS_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
 		if !IsValid(self) || !self:IsCurrentSchedule( SCHED_AISCRIPT ) then return end
@@ -744,6 +766,38 @@ function ENT:ANPlusCreateScriptedSequence(seqDataTab, faceEnt, faceSpeed, callba
 		end
 	end)
 	
+end
+
+/*
+local abTab = {
+	['Name']				= "CoolName", -- Will set self pos if nil
+	['KeyValues'] 		= {
+		busysearchrange				= 100, -- Maximum distance between an actbusy hint and NPC for the NPC to consider it.
+		visibleonly					= 1, -- If set, an NPC will only consider actbusy hints in view when deciding which to use. Once the choice has been made it will not change, even if new hints become visible.
+		type						= 0, -- Is this Actbusy part of combat? For use with Combat Safe Zone. 0: Default (Standard) 1: Combat
+		alllowteleport				= 0, -- Allow actor to teleport?
+		seeentity					= nil, -- Optionally, if the Actor playing the ActBusy loses sight of this specified entity for an amount of time defined by Sight Entity Timeout, the specified entity will leave the ActBusy.  Note: 	Only targetnames are allowed, not classnames!
+		seeentitytimeout			= 10, -- Time in seconds to wait for an Actor to see the Sight Entity again before the entity may leave the ActBusy.
+		sightmethod					= 0, -- How to determine if the Actor sees the Sight Entity. 0: Default. LOS -and- Viewcone. 1: LOS Only. Disregard Viewcone.
+		safezone					= nil, -- Specify a brush entity to act as a safe zone if Actbusy Type is set to Combat. If any enemies are in the safe zone, the actbusy will break. To do: Will actors go back to the actbusy once enemies are dead? What if they leave the safe zone but are still alive?
+		actor						= nil, -- The targetname or classname of any NPCs that will be included in this goal. Wildcards are supported.
+		SearchType					= 1, -- What the Actor(s) to affect keyvalue targets by. 0: Entity Name 1: Classname
+		StartActive					= 1, -- Set if goal should be active immediately.
+	}
+}
+ANPlusCreateActBusy(abTab)
+*/
+
+function ANPlusCreateActBusy(abTab)	
+	local ent = ents.Create( "ai_goal_actbusy" )
+	ent:SetName( abTab['Name'] )
+	for _, v in pairs( abTab['KeyValues'] ) do	
+		ent:SetKeyValue( tostring( _ ), v )				
+	end	
+	ent:Spawn()
+	ent:Activate()
+	PrintTable( ent:GetKeyValues() )
+	return ent
 end
 
 function ENT:ANPlusGetFollowTarget()
@@ -1216,4 +1270,84 @@ function ENT:ANPlusGetEnemies()
 
 	return entsSelected
 	
+end
+
+function ENT:ANPlusGetIdealSequence()
+	if !self:GetInternalVariable( "m_nIdealSequence" ) then return nil end
+	return self:GetInternalVariable( "m_nIdealSequence" )
+end
+
+function ENT:ANPlusSetIdealSequence(seq)
+	if !self:GetInternalVariable( "m_nIdealSequence" ) then return nil end
+	seq = isstring( seq ) && self:LookupSequence( seq ) || seq
+	self:SetSaveValue( "m_nIdealSequence", seq )
+end
+
+function ENT:ANPlusGetIdealWeaponActivity()
+	if !self:GetInternalVariable( "m_IdealWeaponActivity" ) then return nil end
+	return self:GetInternalVariable( "m_IdealWeaponActivity" )
+end
+
+function ENT:ANPlusSetIdealWeaponActivity(act)
+	if !self:GetInternalVariable( "m_IdealWeaponActivity" ) then return nil end
+	self:SetSaveValue( "m_IdealWeaponActivity", act )
+end
+
+function ENT:ANPlusSetIdealTranslatedActivity(act)
+	if !self:GetInternalVariable( "m_IdealTranslatedActivity" ) then return nil end
+	self:SetSaveValue( "m_IdealTranslatedActivity", act )
+end
+
+function ENT:ANPlusGetTranslatedActivity()
+	if !self:GetInternalVariable( "m_translatedActivity" ) then return nil end
+	return self:GetInternalVariable( "m_translatedActivity" )
+end
+
+function ENT:ANPlusSetTranslatedActivity(act)
+	if !self:GetInternalVariable( "m_translatedActivity" ) then return nil end
+	self:SetSaveValue( "m_translatedActivity", act )
+end
+
+function ENT:ANPlusGetNextFlinch()
+	if !self:GetInternalVariable( "m_flNextFlinchTime" ) then return nil end
+	return self:GetInternalVariable( "m_flNextFlinchTime" )
+end
+
+function ENT:ANPlusSetNextFlinch(value)
+	if !self:GetInternalVariable( "m_flNextFlinchTime" ) then return nil end
+	self:SetSaveValue( "m_flNextFlinchTime", value )
+end
+
+function ENT:SetIdealMoveSpeed(val)
+	self:SetSaveValue( "m_flGroundSpeed", val )
+end
+
+function ENT:ANPlusClearTarget()
+	self:SetSaveValue( "m_hTargetEnt", NULL )
+end
+
+function ENT:ANPlusGetSquadName()
+	return self:GetKeyValues().squadname || false
+end
+
+function ENT:ANPlusPlayingDeathAnim()
+	return self.m_bDeathAnimPlay
+end
+
+function ENT:ANPlusPlayingAnim()
+	return self.m_bANPlusPlayingActivity
+end
+
+function ENT:ANPlusBlockSchedule(sched)
+	if self:IsCurrentSchedule( sched ) then self:TaskComplete(); self:SetCycle( 1 ); self:ClearSchedule() end
+end
+
+function ENT:ANPlusReplaceSchedule(oldSched, newSched)
+	if self:IsCurrentSchedule( oldSched ) then
+		if !newSched then
+			self:TaskComplete(); self:ClearSchedule(); self:SetCycle( 1 ) 
+		else
+			self:SetSchedule( newSched )
+		end
+	end
 end

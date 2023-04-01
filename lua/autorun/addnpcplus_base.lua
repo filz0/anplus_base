@@ -1,4 +1,4 @@
-ANPlusLoadGlobal = { ['Base']  = { ['Name'] = "ANPlus BASE" } }
+ANPlusLoadGlobal = {}
 ANPlusLoadGlobalCount = 0
 
 ANPlusDangerStuffGlobalNameOrClass = { "grenade", "missile", "rocket", "frag", "flashbang", "portal", "spore", "prop_combine_ball", "bolt" }
@@ -58,6 +58,10 @@ ANPlus = {
 						table.Merge( tab['WeaponProficiencyTab'], addTab )	
 					end
 				end
+				if tab['SpawnFlags'] then
+					local addSFs = 1024 --bit.bor( 512, 1024 )
+					tab['SpawnFlags'] = tab['SpawnFlags'] + addSFs
+				end
 			end
 			
 			tab['KeyValues'] = tab['KeyValues'] || {}
@@ -74,14 +78,14 @@ ANPlus = {
 					Health 		= tab['Health'], 
 					Category 	= tab['Category'], 
 					KeyValues 	= tab['KeyValues'], 
-					Weapons 	= tab['DefaultWeapons'] || nil, 
+					Weapons 	= tab['DefaultWeapons'] || false, 
 					SpawnFlags 	= tab['SpawnFlags'],			
 					AdminOnly 	= tab['AdminOnly'] || false,			
 					OnCeiling 	= tab['OnCeiling'] || false,			
 					OnFloor 	= tab['OnFloor'] || false,			
 					Offset 		= tab['Offset'] || 10,
-					DropToFloor = tab['DropToFloor'] || nil,
-					Rotate 		= tab['Rotate'] || nil,			
+					--DropToFloor = tab['DropToFloor'] || false,
+					Rotate 		= tab['Rotate'] || false,			
 					NoDrop 		= tab['NoDrop'] || false,	
 				})
 			elseif listType == "SpawnableEntities" then
@@ -97,7 +101,7 @@ ANPlus = {
 					OnCeiling 		= tab['OnCeiling'] || false,			
 					OnFloor 		= tab['OnFloor'] || false,			
 					NormalOffset 	= tab['Offset'] || 10,			
-					Rotate 			= tab['Rotate'] || nil,			
+					Rotate 			= tab['Rotate'] || false,			
 					NoDrop 			= tab['NoDrop'] || false,	
 					Author 			= tab['Author'] || "",	
 				})
@@ -188,6 +192,7 @@ ANPlus.AddConVar( "anplus_ff_disabled", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVA
 ANPlus.AddConVar( "anplus_force_swep_anims", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Force fixed swep animations.", 0, 1 )
 ANPlus.AddConVar( "anplus_random_placement", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "If enabled and spawned by Players, ANPCs will be placed randomy around the map.", 0, 1 )
 ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply NPC's health.", 0.1 )
+ANPlus.AddConVar( "anplus_replacer_enabled", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Enable ANPlus Replacer.", 0, 1 )
 
 local ANPlusInvalidChars = {" ","{","}","[","]","(",")","!","+","=","?",".",",","/","-","`","~"}
 function ANPlusIDCreate( name )
@@ -220,6 +225,7 @@ if (CLIENT) then
 		
 		panel:ANPlus_SecureMenuItem( panel:Button( "[NPC]: Frezee", "anplus_sleep_npcs" ), "Frezee all NPCs." )
 		panel:ANPlus_SecureMenuItem( panel:Button( "[NPC]: Unfrezee", "anplus_wake_npcs" ), "Unfrezee all NPCs." )
+		panel:ANPlus_SecureMenuItem( panel:Button( "Replacer Menu", "anplus_replacer_menu" ), "Here you can set all sorts of rules for NPC/Entity(soonTM) replacement." )
 	end
 	
 	hook.Add( "AddToolMenuTabs", "ANPlusLoad_AddToolMenuTabs", function( category, name, panel, tab )
