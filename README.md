@@ -52,3 +52,8 @@ Templates
 <a href="https://github.com/filz0/anplus_base/blob/main/lua/autorun/_template_empty.lua">Empty Template</a>
 
 <a href="https://github.com/filz0/anplus_base/blob/main/lua/autorun/template_npc.lua">Mega Odessa Code + Dummy</a>
+
+Credit
+-
+<a href="https://github.com/vercas/vON">vON by vercas</a>
+
