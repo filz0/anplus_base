@@ -1,4 +1,9 @@
+------------------------------------------------------------------------------=#
+if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
+------------------------------------------------------------------------------=#
+
 local ENT = FindMetaTable("Entity")
+local ZERO_VEC = Vector( 0, 0, 0 )
 
 function ENT:ANPlusNPCHealthRegen()
 
@@ -17,16 +22,6 @@ function ENT:ANPlusNPCHealthRegen()
 	
 	end
 	
-end
-
-function ENT:ANPlusOnRestore()
-	timer.Simple( 0, function()
-		if IsValid(self) then
-			print(self, "LOADED")
-			self:ANPlusIgnoreTillSet()	
-			self:ANPlusNPCApply( self:GetInternalVariable( "m_iName" ) )	
-		end
-	end)
 end
 
 function ENT:ANPlusPhysicsCollide(data, physobj)
@@ -413,17 +408,17 @@ function ENT:ANPlusNPCTranslateActivity()
 		local act = self:GetIdealActivity()
 		local actCur = self:GetActivity()
 		--self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act) 
-		local newAct, reset, speed = self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act) 
-		if speed != nil && newAct != nil && act != newAct then
-			self.m_tTACTData = {newAct, speed}
+		local newAct, reset, rate, speed = self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act) 
+		if newAct != nil && act != newAct then	
+			self.m_tTACTData = {newAct, rate, speed, respectGoal}
 		end
 
 		if newAct then
 			local actSeq = self:SelectWeightedSequence( newAct )
 			local seqID, seqDur = self:LookupSequence( self:GetSequenceName( actSeq ) )	
-			local bool, vel, ang = self:GetSequenceMovement(seqID)
-			vel = vel || Vector( 0 ,0 ,0 )
-			local statAct = vel:IsEqualTol( Vector( 0, 0, 0 ), 0 )
+			local bool, vel, ang = self:GetSequenceMovement( seqID )
+			vel = vel || ZERO_VEC
+			local statAct = vel:IsEqualTol( ZERO_VEC, 0 )
 			if reset then 
 				if statAct then
 					self:ResetIdealActivity( newAct )
@@ -442,7 +437,10 @@ function ENT:ANPlusNPCTranslateActivity()
 			self:SetActivity( newAct )
 			self:ANPlusSetIdealSequence( seqID )
 		end
-		if self.m_tTACTData && act == self.m_tTACTData[1] then self:SetPlaybackRate( self.m_tTACTData[2] || 1 ) end
+		if self.m_tTACTData && act == self.m_tTACTData[1] then
+			if self.m_tTACTData[ 2 ] && self.m_tTACTData[ 2 ] != 1 then self:SetPlaybackRate( self.m_tTACTData[ 2 ] ) end
+			if self.m_tTACTData[ 3 ] && self.m_tTACTData[ 3 ] != 1 then self:ANPlusOverrideMoveSpeed( self.m_tTACTData[ 3 ], 1, isbool( self.m_tTACTData[ 4 ] ) ) end
+		end
 		--self:MaintainActivity()
 	end
 end

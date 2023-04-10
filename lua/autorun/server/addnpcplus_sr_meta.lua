@@ -1,3 +1,7 @@
+------------------------------------------------------------------------------=#
+if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
+------------------------------------------------------------------------------=#
+
 local metaENT = FindMetaTable("Entity")
 
 hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
@@ -602,6 +606,10 @@ end
 
 function metaENT:ANPlusParentToBone(ent, bone, pos, ang)
 	
+	local boneid = ent:LookupBone( bone )
+
+	if !boneid then return end	
+	
 	local oldPI = self:GetSolid()
 	local oldMT = self:GetMoveType()
 	local oldS = self:GetSolid()
@@ -612,10 +620,6 @@ function metaENT:ANPlusParentToBone(ent, bone, pos, ang)
 	
 	local offsetPos = pos || Vector( 0, 0, 0 )
 	local offsetAng = ang || Angle( 0, 0, 0 )
-
-	local boneid = ent:LookupBone( bone )
-
-	if !boneid then return end	
 	
 	local matrix = ent:GetBoneMatrix( boneid )
 			
@@ -635,13 +639,26 @@ function metaENT:ANPlusParentToBone(ent, bone, pos, ang)
 
 end
 
-function metaENT:ANPlusSetToBonePosAndAng(ent, bone, pos, ang)
+function metaENT:ANPlusBoneMerge(ent)	
+	--self:SetSolid( SOLID_NONE )
+	--self:SetMoveType( MOVETYPE_NONE )
+	--self:SetNotSolid( true )
+	self:SetParent( ent )
+	self:AddEffects( EF_BONEMERGE )
+	self:SetOwner( ent )
+	ent:DeleteOnRemove( self )
+	
+	ent:DeleteOnRemove( self )
+end
 
-	local offsetPos = pos || Vector( 0, 0, 0 )
-	local offsetAng = ang || Angle( 0, 0, 0 )
+function metaENT:ANPlusSetToBonePosAndAng(ent, bone, pos, ang)
+	
 	local boneid = ent:LookupBone( bone )
 	
 	if !boneid then return end	
+	
+	local offsetPos = pos || Vector( 0, 0, 0 )
+	local offsetAng = ang || Angle( 0, 0, 0 )
 	
 	local matrix = ent:GetBoneMatrix( boneid )	
 	
@@ -654,12 +671,13 @@ function metaENT:ANPlusSetToBonePosAndAng(ent, bone, pos, ang)
 end
 
 function metaENT:ANPlusGetBonePosAndAng(bone, pos, ang)
-
-	local offsetPos = pos || Vector( 0, 0, 0 )
-	local offsetAng = ang || Angle( 0, 0, 0 )
+	
 	local boneid = self:LookupBone( bone )
 	
 	if !boneid then return end	
+	
+	local offsetPos = pos || Vector( 0, 0, 0 )
+	local offsetAng = ang || Angle( 0, 0, 0 )
 	
 	local matrix = self:GetBoneMatrix( boneid )	
 	
@@ -685,11 +703,13 @@ function ANPlusCreateSprite(model, color, scale, sfs, kvs)
 	return ent
 end
 
-function ANPlusCreateParticle(particle, startDelay, killDelay)
+function ANPlusCreateParticle(particle, startDelay, killDelay, entParent, attachment)
 	local ent = ents.Create( "sent_anp_particlebase" )
 	ent.Particle = particle
 	ent.StartDelay = startDelay || 0
 	ent.KillDelay = killDelay || 0
+	ent.Parent = entParent
+	ent.Attachment = attachment
 	ent:Spawn()
 	ent:Activate()
 	return ent
@@ -910,4 +930,44 @@ end
 function metaENT:ANPlusEmitNPCSound(hint, radius, duration, soundName, soundLevel, pitchPercent, volume, channel, soundFlags, dsp)
 	self:EmitSound( soundName, soundLevel, pitchPercent, volume, channel, soundFlags, dsp )
 	sound.EmitHint( hint, self:GetPos(), radius, duration, self )
+end
+
+function metaENT:ANPlusIsMoveSpeed( hORlORe, speed )
+	local gS = self:GetGroundSpeedVelocity():Length()
+	if hORlORe == 1 then
+		return gS >= speed
+	elseif hORlORe == 2 then
+		return gS <= speed
+	elseif hORlORe == 3 then
+		return gS == speed
+	end
+	return false
+end
+
+function metaENT:ANPlusAddGesture(act, autoKill)
+	if act == nil then return end
+	local checkACT = self:SelectWeightedSequence( act )
+	if checkACT then
+		self:RemoveGesture( act )
+		self:AddGesture( act, autoKill )
+	end
+end
+
+function metaENT:ANPlusAddGestureSequence(sequence, autoKill)
+	if sequence == nil then return end
+	sequence = isstring( sequence ) && self:LookupSequence( sequence ) || self:LookupSequence( self:GetSequenceName( sequence ) )
+	if sequence then
+		local seqACT = self:GetSequenceActivity( sequence )
+		if seqACT then self:RemoveGesture( seqACT ) end
+		self:AddGestureSequence( sequence, autoKill )
+	end
+end
+
+function metaENT:ANPlusRestartGesture(act, addIfMissing, autoKill)
+	if act == nil then return end
+	local checkACT = self:SelectWeightedSequence( act )
+	if checkACT then
+		self:RemoveGesture( act )
+		self:RestartGesture( act, addIfMissing, autoKill )
+	end
 end

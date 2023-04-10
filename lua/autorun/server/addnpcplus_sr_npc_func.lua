@@ -1,4 +1,9 @@
+------------------------------------------------------------------------------=#
+if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
+------------------------------------------------------------------------------=#
+
 local ENT = FindMetaTable("Entity")
+local ZERO_VEC = Vector( 0, 0, 0 )
 
 function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 	
@@ -449,7 +454,7 @@ function ENT:ANPlusDealMeleeDamage(dist, dmg, dmgt, viewpunch, force, full360, s
 	end
 end
 
-function ENT:ANPlusMeleeAct(target, act, speed, movementVel, rspeed, dist, full360, cooldown, callback)
+function ENT:ANPlusMeleeAct(target, act, speed, movementVel, rspeed, dist, full360, cooldown, callback, test)
 	
 	if !IsValid(self) || !IsValid(target) || self:Health() <= 0 then return end	
 	self.m_fANPMeleeLast = self.m_fANPMeleeLast || 0	
@@ -964,32 +969,42 @@ end
 
 function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, callback, postCallback)
 	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() ) then return end
-	--act = self:ANPlusTranslateSequence( act )
+	local actSeq = self:SelectWeightedSequence( act )
+	local actSeqName = self:GetSequenceName( actSeq )
+	local gestCheck = string.find( string.lower( actSeqName ), "gesture_" ) || string.find( string.lower( actSeqName ), "g_" )
+	
 	local speed = speed || 1
 	local facespeed = facespeed || 0
 	
-	self:TaskComplete()
-	self:ClearGoal()
-	self:SetCondition( 67 )
-	self:ClearCondition( 68 )
-	if movementVel && self:GetMoveType() == 3 then 
-		self.m_fIdealMoveType = self.m_fIdealMoveType || self:GetMoveType()
-		self:SetMoveType( 5 ) 
+	if gestCheck then
+		self:AddGesture( act, true )
+	else
+		self:TaskComplete()
+		self:ClearGoal()
+		self:ClearSchedule()
+		self:ClearCondition( 68 )
+		self:SetCondition( 67 )	
+		self.m_fDefCaps = self.m_fDefCaps || self:CapabilitiesGet()
+		self:CapabilitiesClear()
+		if movementVel && self:GetMoveType() == 3 then 
+			self.m_fIdealMoveType = self.m_fIdealMoveType || self:GetMoveType()
+			self:SetMoveType( 5 ) 
+		end
+		self:ResetSequenceInfo()
+		self:SetIdealActivity( act )
+		self:ResetIdealActivity( act )
+		self:SetActivity( act )
 	end
-	self:ResetSequenceInfo()
-	--self:ResetSequence( actSeq )	
-	self:SetIdealActivity( act )
-	self:ResetIdealActivity( act )
-	self:SetActivity( act )
-	--self:StartEngineTask( ai.GetTaskID( "TASK_PLAY_SCRIPT" ), act )
+	
 	self.m_bANPlusPlayingActivity = true
 	
-	local seqName = self:GetSequenceName( self:GetSequence() )
+	local seqName = self:GetSequenceName( gestCheck && actSeq || self:GetSequence() )
 	local seqID, seqDur = self:LookupSequence( seqName )	
 	local seqSpeed = self:GetSequenceGroundSpeed( seqID )
 	seqDur = seqDur / speed
+
 	self:ANPlusSetNextFlinch( seqDur )
-	
+
 	if isfunction( callback ) then
 		callback( seqID, seqDur, seqSpeed )
 	end
@@ -997,12 +1012,16 @@ function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, cal
 	timer.Create( "ANP_ACT_RESET" .. self:EntIndex(), seqDur, 1, function() 
 		if !IsValid(self) then return end			
 		self.m_bANPlusPlayingActivity = false
-		self:SetCondition( 68 )
-		self:ClearCondition( 67 )
-		if movementVel && self.m_fIdealMoveType then 
-			self:SetMoveType( self.m_fIdealMoveType )
+		
+		if !gestCheck then
+			self:ClearCondition( 67 )
+			self:SetCondition( 68 )
+			self:CapabilitiesAdd( self.m_fDefCaps || 0 )
+			if movementVel && self.m_fIdealMoveType then 
+				self:SetMoveType( self.m_fIdealMoveType )
+			end
+			self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
 		end
-		self:StartEngineTask( ai.GetTaskID( "TASK_RESET_ACTIVITY" ), 0 )
 		
 		if isfunction( postCallback ) then
 			postCallback( seqID, seqDur )
@@ -1013,17 +1032,70 @@ function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, cal
 	timer.Create( "ANP_ACT_THINK" .. self:EntIndex(), 0, 0, function() 
 		if !IsValid(self) || !self:ANPlusPlayingAnim() then return end
 		self:MaintainActivity()
-		if isbool( movementVel ) && movementVel == true then
-			local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
-			seqVel:Rotate( self:GetAngles() )
-			self:SetLocalVelocity( seqVel + Vector( 0, 0, 1 ) )
-		elseif isnumber( movementVel ) then
-			local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
-			seqVel:Rotate( self:GetAngles() )
-			self:SetLocalVelocity( seqVel * movementVel )
-		elseif isvector( movementVel ) then
-			self:SetLocalVelocity( movementVel )
+		
+		if !gestCheck then
+			local gravFix = self.m_fIdealMoveType == 3 && !self:OnGround() && Vector( 0, 0, -500 ) || ZERO_VEC
+			if isbool( movementVel ) && movementVel == true then
+				local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
+				seqVel:Rotate( self:GetAngles() )
+				self:SetLocalVelocity( seqVel + gravFix )
+			elseif isnumber( movementVel ) then
+				local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
+				seqVel:Rotate( self:GetAngles() )
+				self:SetLocalVelocity( seqVel * movementVel + gravFix )
+				self:SetVelocity( self:GetVelocity() )
+			elseif isvector( movementVel ) then
+				self:SetLocalVelocity( movementVel )
+			end
 		end
+		
+		self:SetPlaybackRate( speed ) 
+		if IsValid(faceEnt) && faceSpeed >= 0 then 
+			self:ANPlusFaceEntity( faceEnt, faceSpeed )
+		end
+	end)
+	
+end
+
+function ENT:ANPlusPlayGestureActivity(act, speed, faceEnt, faceSpeed, callback, postCallback)
+	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() ) then return end
+	--act = self:ANPlusTranslateSequence( act )
+	local speed = speed || 1
+	local facespeed = facespeed || 0
+	
+	self:ResetSequenceInfo()
+	self:SetIdealActivity( act )
+	self:ResetIdealActivity( act )
+	self:SetActivity( act )
+	
+	self.m_bANPlusPlayingActivity = true
+	
+	--local seq = self:SelectWeightedSequence( act )
+	local seqName = self:GetSequenceName( self:GetSequence() )
+	local seqID, seqDur = self:LookupSequence( seqName )	
+	local seqSpeed = self:GetSequenceGroundSpeed( seqID )
+	seqDur = seqDur / speed
+
+	self:ANPlusSetNextFlinch( seqDur )
+
+	if isfunction( callback ) then
+		callback( seqID, seqDur, seqSpeed )
+	end
+
+	timer.Create( "ANP_ACT_RESET" .. self:EntIndex(), seqDur, 1, function() 
+		if !IsValid(self) then return end			
+		self.m_bANPlusPlayingActivity = false
+
+
+		if isfunction( postCallback ) then
+			postCallback( seqID, seqDur )
+		end
+		
+	end)
+
+	timer.Create( "ANP_ACT_THINK" .. self:EntIndex(), 0, 0, function() 
+		if !IsValid(self) || !self:ANPlusPlayingAnim() then return end
+		self:MaintainActivity()
 		self:SetPlaybackRate( speed ) 
 		if IsValid(faceEnt) && faceSpeed >= 0 then 
 			self:ANPlusFaceEntity( faceEnt, faceSpeed )
@@ -1122,7 +1194,7 @@ function ENT:ANPlusPlaySequence(seq, speed, stopMoving, faceEnt, faceSpeed, call
 	end)	
 end
 
-function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, movementVel, atHPLevel, dmgMin, dmgMax, chance, interruptible, precallback, postcallback)
+function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, movementVel, atHPLevel, dmgMin, dmgMax, chance, interruptible, preCallback, postCallback)
 	local att = dmginfo:GetAttacker()
 	local inf = dmginfo:GetInflictor()
 	local dmg = dmginfo:GetDamage()
@@ -1130,8 +1202,8 @@ function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, movementVel, atHPLevel, dmgM
 	local atHPLevel = atHPLevel || 1
 	local targethp = math.Approach( self:Health(), atHPLevel, dmg ) == atHPLevel
 	if act && ( !dmgMin || ( dmgMin && dmg >= dmgMin ) ) && ( !dmgMax || ( dmgMax && dmg <= dmgMax ) ) && targethp && !self.m_bDeathAnimPlay && ANPlusPercentageChance( chance ) then
-		if isfunction( precallback ) then
-			precallback( self )
+		if isfunction( preCallback ) then
+			preCallback( self )
 		end
 		local lastDMGinfo = {
 			['att'] = att,
@@ -1148,8 +1220,8 @@ function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, movementVel, atHPLevel, dmgM
 		--self:SetNPCState( 6 )
 		self:ANPlusPlayActivity( act, speed, movementVel, nil, nil, nil, function()
 			self.m_bNPCNoDamage = false
-			if isfunction( postcallback ) then
-				postcallback( self, lastDMGinfo )
+			if isfunction( postCallback ) then
+				postCallback( self, lastDMGinfo )
 			end
 			--self:SetSchedule( SCHED_IDLE_STAND )
 			local newDMGinfo = DamageInfo()
@@ -1157,7 +1229,6 @@ function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, movementVel, atHPLevel, dmgM
 			newDMGinfo:SetInflictor( IsValid(lastDMGinfo.inf) && lastDMGinfo.inf || self )
 			newDMGinfo:SetDamage( 1 )
 			self:TakeDamageInfo( newDMGinfo )
-			--self:SetHealth( 0 )
 		end)
 		self.m_bDeathAnimPlay = true
 	end
@@ -1219,8 +1290,8 @@ function ENT:ANPlusRemoveFromCSquad(squad)
 	if ANPCustomSquads[squad] && table.HasValue( ANPCustomSquads[squad], self ) then table.RemoveByValue( ANPCustomSquads[squad], self ) end
 end			
 
-function ENT:ANPlusOverrideMoveSpeed(speed, rate)	
-	if speed != 1 && self:IsGoalActive() && self:GetPathDistanceToGoal() > 10 * speed && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() then			
+function ENT:ANPlusOverrideMoveSpeed(speed, rate, respectGoal)
+	if speed != 1 && ( !respectGoal || ( respectGoal && self:IsGoalActive() && self:GetPathDistanceToGoal() > 10 * speed ) ) && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:ANPlusIsMoveSpeed( 1, 1 ) then			
 		self:SetMoveVelocity( self:GetGroundSpeedVelocity() * speed ) 
 		local seqName = self:GetSequenceName( self:GetSequence() )
 		local seqID, seqDur = self:LookupSequence( seqName )

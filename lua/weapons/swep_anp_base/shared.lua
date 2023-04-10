@@ -87,6 +87,7 @@ SWEP.Primary.PreFireSound	= nil
 SWEP.Primary.PostFireSound	= nil
 SWEP.Primary.ReloadSound	= nil
 SWEP.Primary.DistantSound	= nil
+SWEP.Primary.AttackGesture	= nil
 
 SWEP.Primary.Damage			= 5
 SWEP.Primary.EntitySpeed	= 3000
@@ -172,13 +173,14 @@ function SWEP:ANPlusNPCFire()
 end
 
 function SWEP:PrimaryAttack()
-	
 	if !IsValid(self) || !IsValid(self:GetOwner()) || !self:CanPrimaryAttack() then return end	
 	timer.Create( "ANPlusPreFireReset"..self:EntIndex(), self.Primary.PreFireReset || self.Primary.Delay, 1, function() -- NPCs can't fire faster that 0.01 using this function?	
 		if !IsValid(self) then return end
 		if self.Primary.PostFireSound && (SERVER) then
-			if IsValid(self:GetOwner()) && self:GetOwner():IsCurrentSchedule(SCHED_RELOAD) then return end
-			self:EmitSound( self.Primary.PostFireSound ) 
+			if ( IsValid(self:GetOwner()) && !self:GetOwner():IsCurrentSchedule(SCHED_RELOAD) ) && !self.WeaponReloaded then
+				self:EmitSound( self.Primary.PostFireSound ) 
+				self:GetOwner():ClearSchedule()
+			end
 		end
 		self:ANPlusNPCPostFire()
 		self:ANPlusResetPrimaryFire()	
@@ -196,6 +198,7 @@ function SWEP:PrimaryAttack()
 	if self.Primary.FireSound && (SERVER) then self:EmitSound( self.Primary.FireSound ) end		
 	if (SERVER) && self.FireLoopSound && !self.FireLoopSound:IsPlaying() then self.FireLoopSound:Play() end
 	
+	if IsValid(self:GetOwner()) then self:GetOwner():ANPlusRestartGesture( self.Primary.AttackGesture || self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1], true, true ) end
 	self:ANPlusNPCFire()
 	self.WeaponReloaded = false
 	self:SetClip1( !self.Primary.InfiniteAmmo && self:Clip1() - self.Primary.AmmoPerShot || self:Clip1() )
@@ -358,7 +361,9 @@ function SWEP:ANPlusWeaponFireBullet(marksmanAiming, bulletcallback, callback) -
 	local muzzlePos = IsValid(enemy) && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
 	local targetPos = marksmanAiming && ( enemy:ANPlusGetHitGroupBone( 1 ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
 	local spread = self:GetOwner():IsMoving() && self.Primary.Spread * self.Primary.MoveSpreadMult || self.Primary.Spread
-	local direction = targetPos && (targetPos - muzzlePos):GetNormalized() || owner:GetAimVector()
+	local direction = targetPos && (targetPos - muzzlePos):GetNormalized() || owner:GetAimVector()	
+	--direction.x = direction.x + math.Rand( -spread, spread )
+   -- direction.y = direction.y + math.Rand( -spread, spread )
 	
 	local bullet = {}
 		bullet.Attacker = self:GetOwner()

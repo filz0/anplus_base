@@ -1,3 +1,7 @@
+------------------------------------------------------------------------------=#
+if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
+------------------------------------------------------------------------------=#
+
 local metaANG = FindMetaTable("Angle")
 local metaENT = FindMetaTable("Entity")
 local metaPLAYER = FindMetaTable("Player")
@@ -909,4 +913,8 @@ function metaENT:ANPlusHasBones(boneTab)
 	end
 	return false
 end
---
+
+function metaENT:ANPlusGetAttachmentName(attachmentId)
+	attachmentId = tonumber( attachmentId )
+	return self:GetAttachments()[ attachmentId ].name
+end

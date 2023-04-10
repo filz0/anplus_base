@@ -1,3 +1,6 @@
+------------------------------------------------------------------------------=#
+if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
+------------------------------------------------------------------------------=#
 
 util.AddNetworkString("anplus_data_tab")
 --util.AddNetworkString("anplus_gmodsave_load_from_the_menu")

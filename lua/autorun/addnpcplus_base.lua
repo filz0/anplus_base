@@ -1,3 +1,11 @@
+------------------------------------------------------------------------------=#
+AddCSLuaFile("autorun/addnpcplus_replacer.lua")
+AddCSLuaFile("autorun/addnpcplus_sh_hooks.lua")
+AddCSLuaFile("autorun/addnpcplus_sh_meta.lua")
+AddCSLuaFile("autorun/addnpcplus_sh_npc_func.lua")
+AddCSLuaFile("autorun/addnpcplus_resources.lua")
+------------------------------------------------------------------------------=#
+
 ANPlusLoadGlobal = {}
 ANPlusLoadGlobalCount = 0
 
@@ -176,6 +184,13 @@ ANPlus = {
 		if !ConVarExists( command ) then
 			CreateClientConVar( command, defaultValue, true, true, help || "", min, max )
 		end
+	end,
+	
+	AddParticle = function(fileName, particleList)
+		game.AddParticles( fileName )
+		for k, v in ipairs( particleList ) do
+			PrecacheParticleSystem( v )
+		end	
 	end,
 } 
 

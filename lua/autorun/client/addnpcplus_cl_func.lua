@@ -1,3 +1,7 @@
+------------------------------------------------------------------------------=#
+if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
+------------------------------------------------------------------------------=#
+
 local ENT = FindMetaTable("Entity")
 local scrWidth = 1920
 local scrHeight = 1080

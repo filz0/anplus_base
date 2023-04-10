@@ -1,3 +1,7 @@
+------------------------------------------------------------------------------=#
+if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
+------------------------------------------------------------------------------=#
+
 --[[////////////////////////
 ||||| Here We are checking spawned entities if they are a part of this base. If so, apply valid data table.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\

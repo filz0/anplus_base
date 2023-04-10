@@ -1,3 +1,7 @@
+------------------------------------------------------------------------------=#
+if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
+------------------------------------------------------------------------------=#
+
 local metaPanel = FindMetaTable("Panel")
 
 local scrWidth = 1920
