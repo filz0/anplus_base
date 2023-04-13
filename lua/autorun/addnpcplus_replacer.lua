@@ -178,6 +178,7 @@ if (SERVER) then
 		net.Start( "anplus_replacer_gettab_c" )
 		net.WriteTable( ANPlusENTReplacerData )
 		net.WriteTable( newNPCList )
+		--net.WriteString( game.GetMap() ) -- We do it here because of " In Multiplayer this does not return the current map in the CLIENT realm before GM:Initialize. "
 		net.Send( ply )
 	end)
 ------------------------------------------------------------------------------=#	
@@ -199,7 +200,7 @@ if (CLIENT) then
 		------------
 		local dFrame = vgui.Create( "DFrame" )
 			dFrame:SetTitle( "" )
-			dFrame:SetSize( 1400, 530 )
+			dFrame:SetSize( 1500, 530 )
 			dFrame:Center()
 			dFrame:SetVisible( true )
 			dFrame:SetDraggable( true )
@@ -221,9 +222,9 @@ if (CLIENT) then
 			draw.RoundedBox( 8, 0, 0, w, h, Color( 50, 50, 50, 200 ) )			
 		end
 		------------=#
-		local replacementG = dFrame:ANPlus_CreateTextEntry( 1087, 95, 235, 20, "ANPC Replacement Name", Color( 200, 200, 200, 255 ), "DermaDefaultBold", "This field takes ANPlus Names/IDs. It's mandatory." )
+		local replacementG = dFrame:ANPlus_CreateTextEntry( 1075, 95, 230, 20, "ANPC Replacement Name", Color( 200, 200, 200, 255 ), "DermaDefaultBold", "This field takes ANPlus Names/IDs. It's mandatory." )
 		
-		local chanceG = dFrame:ANPlus_CreateNumberWang( 1330, 95, 55, 20, 100, 1, 1, 100, "Chance for turning selected NPC into an ANPC." )
+		local chanceG = dFrame:ANPlus_CreateNumberWang( 1315, 95, 50, 20, 100, 1, 1, 100, "Chance for turning selected NPC into an ANPC." )
 		function chanceG:OnCursorEntered()
 			ANPlusUISound( "ANP.UI.Hover" )
 		end
@@ -232,7 +233,7 @@ if (CLIENT) then
 			ANPlusUISound( "ANP.UI.Slider" )
 		end
 		
-		local skinG = dFrame:ANPlus_CreateNumberWang( 1032, 95, 45, 20, 0, 1, 0, 20, "Skin Rule. NPC'll be only replaced if it has a selected skin value. NPCs that have no skins usually return 0." )
+		local skinG = dFrame:ANPlus_CreateNumberWang( 1025, 95, 40, 20, 0, 1, 0, 20, "Skin Rule. NPC'll be only replaced if it has a selected skin value. NPCs that have no skins usually return 0." )
 		function skinG:OnCursorEntered()
 			ANPlusUISound( "ANP.UI.Hover" )
 		end
@@ -240,12 +241,26 @@ if (CLIENT) then
 			ANPlusUISound( "ANP.UI.Slider" )
 		end
 		
-		local modelG = dFrame:ANPlus_CreateTextEntry( 740, 95, 285, 20, "Model", Color( 200, 200, 200, 255 ), "DermaDefaultBold", "Model Rule. Only NPCs with the selected model will be replaced." )
+		local modelG = dFrame:ANPlus_CreateTextEntry( 735, 95, 280, 20, "Model", Color( 200, 200, 200, 255 ), "DermaDefaultBold", "Model Rule. Only NPCs with the selected model will be replaced." )
 		
-		local classG = dFrame:ANPlus_CreateTextEntry( 615, 95, 115, 20, "Class", Color( 200, 200, 200, 255 ), "DermaDefaultBold", "Class Rule. It's mandatory." )
+		local classG = dFrame:ANPlus_CreateTextEntry( 615, 95, 110, 20, "Class", Color( 200, 200, 200, 255 ), "DermaDefaultBold", "Class Rule. It's mandatory." )
+		
+		local mapG = dFrame:ANPlus_CreateTextEntry( 1375, 95, 110, 20, "Map Name", Color( 200, 200, 200, 255 ), "DermaDefaultBold", "Set at which map this rule should apply." )
+		
+		local mapList = dFrame:ANPlus_ComboBox( 1375, 65, 110, 20, "All Maps", Color( 200, 200, 200, 255 ), "DermaDefaultBold", "List of all the maps. ALL. OF. THEM." )
+		
+		mapList:AddChoice( "-Current Map-", game.GetMap() )
+		
+		for _, v in ipairs( ANPlusGetAllMaps() ) do
+			v = string.Replace( v, ".bsp", "" )
+			mapList:AddChoice( v )
+		end
+		mapList.OnSelect = function( self, index, value, data )
+			mapG:SetText( data || value )
+		end
 		
 		------------=#
-		local dListANPCReplacement = dFrame:ANPlus_CreateListView( 610, 137, 780, 383, false, true, { {"NPC Class", 80}, {"Model", 250}, {"Skin", 10}, {"Replacement", 200}, {"Chance", 20} }, "Rule Table. It represents conditions at which chosen NPCs will be replaced with ANPCs.", "RULESET LIST" )		
+		local dListANPCReplacement = dFrame:ANPlus_CreateListView( 610, 137, 880, 383, false, true, { {"NPC Class", 80}, {"Model", 250}, {"Skin", 10}, {"Replacement", 200}, {"Chance", 20}, {"Map", 80} }, "Rule Table. It represents conditions at which chosen NPCs will be replaced with ANPCs.", "RULESET LIST" )		
 		
 		function dListANPCReplacement:OnCursorEntered()
 			ANPlusUISound( "ANP.UI.Hover" )
@@ -257,22 +272,25 @@ if (CLIENT) then
 			local ski = line:GetValue( 3 ) -- Skin 
 			local rep = line:GetValue( 4 ) -- Replacement 
 			local cha = line:GetValue( 5 ) -- Chance
+			local map = line:GetValue( 6 ) -- Map
 			
 			classG:SetText( cla )
 			modelG:SetText( mod )
 			skinG:SetValue( ski )
 			replacementG:SetText( rep )
 			chanceG:SetValue( cha )
+			mapG:SetText( map )
 			
 		end
 		function dListANPCReplacement:OnRowRightClick(lineID, line)
-			self:RemoveLine( lineID )
+			self:RemoveLine( lineID )		
+			self:ClearSelection()
 			ANPlusUISound( "ANP.UI.Text" )	
 		end
 
 		for _, v in pairs( ANPlusENTReplacerData ) do 
 			if v then
-				dListANPCReplacement:AddLine( v['Class'], tostring( v['Model'] ), v['Skin'], v['Replacement'], v['Chance'] )
+				dListANPCReplacement:AddLine( v['Class'], tostring( v['Model'] ), v['Skin'], v['Replacement'], v['Chance'], v['Map'] )
 			end
 		end
 		------------=#		
@@ -314,7 +332,7 @@ if (CLIENT) then
 			end
 		end
 		------------=#
-		local add = dFrame:ANPlus_CreateButton( 610, 65, 780, 20, 8, Color( 200, 200, 200, 255 ), "Add Rule", Color ( 100, 100, 100, 255 ), "Add created ruleset." )
+		local add = dFrame:ANPlus_CreateButton( 610, 65, 760, 20, 8, Color( 200, 200, 200, 255 ), "Add Rule", Color ( 100, 100, 100, 255 ), "Add created ruleset." )
 		function add:OnCursorEntered()
 			function add:Paint(w, h)
 				draw.RoundedBox( 8, 3, 3, w - 6, h - 6, Color( 150, 150, 150, 255 ) )
@@ -330,10 +348,11 @@ if (CLIENT) then
 			local error = nil
 			--local id = idG:GetValue()
 			local cla = classG:GetText()
-			local mod = modelG:GetText() || "No Model"
+			local mod = modelG:GetText() != nil && modelG:GetText() != "" && modelG:GetText() || "No Model"
 			local ski = skinG:GetValue()
 			local rep = replacementG:GetText()
 			local cha = chanceG:GetValue()
+			local map = mapG:GetText() != nil && mapG:GetText() != "" && mapG:GetText() || "No Map"
 			
 			if cla == nil || cla == "" || cla == "Class" then classG:ANPlusHighlightTextColor( Color( 255, 0, 0, 255 ), 1, Color( 200, 200, 200, 255 ) ); error = true end			
 			if rep == nil || rep == "" || rep == "ANPC Replacement Name" then replacementG:ANPlusHighlightTextColor( Color( 255, 0, 0, 255 ), 1, Color( 200, 200, 200, 255 ) ); error = true end
@@ -341,13 +360,14 @@ if (CLIENT) then
 			if error then ANPlusUISound( "ANP.UI.Error" ) return end
 			
 			if mod == "Model" then mod = "No Model" end
+			if map == "Map Name" then map = "No Map" end
 			
-			dListANPCReplacement:AddLine( cla, mod, ski, rep, cha )
+			dListANPCReplacement:AddLine( cla, mod, ski, rep, cha, map )
 			ANPlusUISound( "ANP.UI.Click" )
 		end
 		------------=#
 
-		local apply = dFrame:ANPlus_CreateButton( 610, 35, 780, 20, 8, Color( 200, 200, 200, 255 ), "Save Changes", Color ( 100, 100, 100, 255 ), "Save rules to a confing file." )
+		local apply = dFrame:ANPlus_CreateButton( 610, 35, 880, 20, 8, Color( 200, 200, 200, 255 ), "Save Changes", Color ( 100, 100, 100, 255 ), "Save rules to a confing file." )
 		function apply:OnCursorEntered()
 			function apply:Paint(w, h)
 				draw.RoundedBox( 8, 3, 3, w - 6, h - 6, Color( 150, 150, 150, 255 ) )
@@ -360,16 +380,32 @@ if (CLIENT) then
 			end
 		end
 		function apply:DoClick()
-				ANPlusENTReplacerData = {}
-			for k, line in ipairs( dListANPCReplacement:GetLines() ) do
+			ANPlusENTReplacerData = {}
+			--[[
+			for k, line in ipairs( dListANPCReplacement:GetLines() ) do -- It breaks when line gets removed. Why?
 				local cla = line:GetValue( 1 ) -- Class
 				local mod = line:GetValue( 2 ) -- Model 
 				local ski = line:GetValue( 3 ) -- Skin 
 				local rep = line:GetValue( 4 ) -- Replacement 
 				local cha = line:GetValue( 5 ) -- Chance
-				ANPlusENTReplacerData[ k ] = { ['Class'] = cla, ['Model'] = mod, ['Skin'] = ski, ['Replacement'] = rep, ['Chance'] = cha }
+				local map = line:GetValue( 6 ) -- Map
+				ANPlusENTReplacerData[ k ] = { ['Class'] = cla, ['Model'] = mod, ['Skin'] = ski, ['Replacement'] = rep, ['Chance'] = cha, ['Map'] = map }
 			end
-					
+			]]--
+
+			for i = 1, #dListANPCReplacement:GetLines() do
+				local line = dListANPCReplacement:GetLines()[ i ]			
+				if line then				
+					local cla = line:GetValue( 1 ) -- Class
+					local mod = line:GetValue( 2 ) -- Model 
+					local ski = line:GetValue( 3 ) -- Skin 
+					local rep = line:GetValue( 4 ) -- Replacement 
+					local cha = line:GetValue( 5 ) -- Chance
+					local map = line:GetValue( 6 ) -- Map
+					ANPlusENTReplacerData[ i ] = { ['Class'] = cla, ['Model'] = mod, ['Skin'] = ski, ['Replacement'] = rep, ['Chance'] = cha, ['Map'] = map }					
+				end			
+			end
+			
 			net.Start( "anplus_replacer_savetab" )
 			net.WriteTable( ANPlusENTReplacerData )
 			net.SendToServer()
@@ -378,7 +414,7 @@ if (CLIENT) then
 		end
 		------------=#
 		local cVar = GetConVar( "anplus_replacer_enabled" )
-		local checkbox = dFrame:ANPlus_CreateCheckBoxLabel( 1070, 5, "Enable Replacer", Color( 200, 200, 200, 255 ), cVar:GetBool(), "Enable the ANPlus Replacer." )
+		local checkbox = dFrame:ANPlus_CreateCheckBoxLabel( 1170, 5, "Enable Replacer", Color( 200, 200, 200, 255 ), cVar:GetBool(), "Enable the ANPlus Replacer." )
 		function checkbox:OnCursorEntered()
 			ANPlusUISound( "ANP.UI.Hover" )
 		end
@@ -387,7 +423,7 @@ if (CLIENT) then
 			ANPlusUISound( "ANP.UI.Slider" )
 		end
 		------------=#
-		local close = dFrame:ANPlus_CreateButton( 1340, 5, 50, 20, 8, Color( 200, 200, 200, 255 ), "Close", Color ( 100, 100, 100, 255 ), "Close the menu." )
+		local close = dFrame:ANPlus_CreateButton( 1440, 5, 50, 20, 8, Color( 200, 200, 200, 255 ), "Close", Color ( 100, 100, 100, 255 ), "Close the menu." )
 		function close:OnCursorEntered()
 			function close:Paint(w, h)
 				draw.RoundedBox( 8, 3, 3, w - 6, h - 6, Color( 150, 150, 150, 255 ) )
@@ -409,7 +445,7 @@ if (CLIENT) then
 		"\n Simply select (left click) a line to automaticly fill respected replacement rules."..
 		"\n You can remove lines/rulesets from the RULESET list simply right-click them."..
 		"\n Remember to save all the changes!"
-		local help = dFrame:ANPlus_CreateButton( 1200, 5, 130, 20, 8, Color( 200, 200, 200, 255 ), "Hover For Help", Color ( 100, 100, 100, 255 ), helptext )
+		local help = dFrame:ANPlus_CreateButton( 1300, 5, 130, 20, 8, Color( 200, 200, 200, 255 ), "Hover For Help", Color ( 100, 100, 100, 255 ), helptext )
 		function help:OnCursorEntered()
 			ANPlusUISound( "ANP.UI.Hover" )
 		end

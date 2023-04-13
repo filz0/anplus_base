@@ -918,3 +918,8 @@ function metaENT:ANPlusGetAttachmentName(attachmentId)
 	attachmentId = tonumber( attachmentId )
 	return self:GetAttachments()[ attachmentId ].name
 end
+
+function ANPlusGetAllMaps()
+	local maps, mapDirs = file.Find( "maps/*.bsp", "GAME", "nameasc" )
+	return maps, mapDirs
+end

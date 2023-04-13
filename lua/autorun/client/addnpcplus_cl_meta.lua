@@ -157,6 +157,21 @@ function metaPanel:ANPlus_CreateImage(x, y, w, h, image, color, keepAspect, tool
 	return panel
 end
 
+function metaPanel:ANPlus_ComboBox(x, y, w, h, deftext, txtcolor, font, tooltp)
+	local panel = vgui.Create( "DComboBox", self ) 
+	if x && y then panel:SetPos( x, y ) end
+	if isnumber( w ) && isnumber( h ) then
+		panel:SetSize( w, h ) 
+	elseif isbool( w ) && isbool( h ) && w == true && h == true then 
+		panel:SizeToContents()
+	end
+	panel:SetFont( font )
+	panel:SetTooltip( tooltp )
+	panel:SetTextColor( txtcolor )
+	panel:SetValue( deftext )
+	return panel
+end
+
 function metaPanel:ANPlus_AdjustPos(x, y)
 	local pX, pY = self:GetPos()
 	self:SetPos( pX + x, pY + y )

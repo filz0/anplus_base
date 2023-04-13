@@ -368,8 +368,8 @@ function ENT:ANPlusNPCThink()
 		self:ANPlusNPCTranslateActivity()
 		self:ANPlusDetectDanger()
 		
-		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'] != nil && self:GetBestSoundHint() then	
-			if GetConVar("ai_ignoreplayers"):GetBool() && self:GetBestSoundHint().type == 4 then return end
+		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'] != nil && self:GetBestSoundHint() != nil then	
+			if ( GetConVar("ai_ignoreplayers"):GetBool() && self:GetBestSoundHint().type == 4 ) then return end
 			self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'](self, self:GetBestSoundHint())	
 		end
 		
@@ -419,6 +419,7 @@ function ENT:ANPlusNPCTranslateActivity()
 			local bool, vel, ang = self:GetSequenceMovement( seqID )
 			vel = vel || ZERO_VEC
 			local statAct = vel:IsEqualTol( ZERO_VEC, 0 )
+
 			if reset then 
 				if statAct then
 					self:ResetIdealActivity( newAct )
@@ -482,7 +483,8 @@ end
 function ENT:ANPlusForceDefaultWeapons(weaponData)
 	if !IsValid(self:GetActiveWeapon()) || !table.HasValue( weaponData, self:GetActiveWeapon():GetClass() ) then	
 		if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():Remove() end
-		self:Give( weaponData[ math.random( 1, #weaponData ) ] || "None" )			
+		local rngWep = weaponData[ math.random( 1, #weaponData ) ]
+		if rngWep then self:Give( rngWep ) end
 	end		
 end
 

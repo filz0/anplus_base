@@ -15,7 +15,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 			for _, repData in pairs( ANPlusENTReplacerData ) do				
 				if repData && !override then
 					local modelCheck = self:GetModel() && string.find( string.lower( self:GetModel() ), string.lower( repData['Model'] ) ) || repData['Model'] == "No Model" || false	
-					if repData['Replacement'] && repData['Class'] == self:GetClass() && modelCheck && tonumber( repData['Skin'] ) == self:GetSkin() && ANPlusPercentageChance( tonumber( repData['Chance'] ) ) then 					
+					local mapCheck = repData['Map'] == "No Map" || game.GetMap() == repData['Map'] || false	
+					if repData['Replacement'] && repData['Class'] == self:GetClass() && modelCheck && tonumber( repData['Skin'] ) == self:GetSkin() && mapCheck && ANPlusPercentageChance( tonumber( repData['Chance'] ) ) then 					
 						name = repData['Replacement'] 
 						override = true
 					end
