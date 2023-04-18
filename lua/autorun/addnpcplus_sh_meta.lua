@@ -3,8 +3,10 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
 local metaANG = FindMetaTable("Angle")
+local metaVEC = FindMetaTable("Vector")
 local metaENT = FindMetaTable("Entity")
 local metaPLAYER = FindMetaTable("Player")
+--
 
 --[[////////////////////////
 ||||| Clamps the given angle...
@@ -922,4 +924,167 @@ end
 function ANPlusGetAllMaps()
 	local maps, mapDirs = file.Find( "maps/*.bsp", "GAME", "nameasc" )
 	return maps, mapDirs
+end
+
+function metaENT:ANPlusHasEntLOS(ent) -- Big credit to the Captain Applesauce for this piece of work https://steamcommunity.com/profiles/76561198070248149
+
+	if !IsValid(self) then return end
+	
+	local currENT = self
+
+	if ( ( !IsValid(currENT) ) || ( ( !currENT:IsPlayer() ) && ( !currENT:IsNPC() ) ) ) then
+	
+		return false
+		
+	end
+
+	local posOffset = ent:GetAngles():Up() * ent:BoundingRadius()
+
+	local traceBlocked = false
+
+	local exclusions = { ent }
+
+	if ( currENT && IsValid(currENT) ) then
+	
+		table.insert( exclusions, currENT )
+		
+	end
+
+		local tr = util.TraceLine(
+		{
+			start     = currENT:EyePos(),
+			endpos     = ent:GetPos() + posOffset,
+			filter     = exclusions,
+			mask     = MASK_OPAQUE
+		})
+	
+		traceBlocked = tr.Hit
+
+	return ( !traceBlocked )
+
+end
+
+function metaENT:ANPlusVisibleInFOV(ent, fovmul, npcfov) -- Big credit to the Captain Applesauce for this piece of work https://steamcommunity.com/profiles/76561198070248149
+
+	if !IsValid(self) then return end
+	
+	local function crossDist( vec1, vec2 )
+	
+		return math.sqrt( vec1:LengthSqr() * vec2:LengthSqr() - vec1:Dot( vec2 )^2 )
+		
+	end
+
+	local function arctan2( y, x )
+	
+		if ( ( x != 0 ) || ( y != 0 ) ) then
+		
+			if ( math.abs( x ) >= math.abs( y ) ) then
+			
+				if ( x >= 0 ) then
+				
+					return math.atan( y / x )
+					
+				elseif ( y >= 0 ) then
+				
+					return math.atan( y / x ) + math.pi
+					
+				else
+				
+					return math.atan( y / x ) - math.pi
+					
+				end
+				
+			elseif ( y >= 0 ) then
+			
+				return math.pi / 2 - math.atan( x / y )
+				
+			else
+			
+				return -math.pi / 2 - math.atan( x / y )
+				
+			end
+			
+		else
+		
+			return 0.0
+			
+		end
+		
+	end
+
+	local currENT = self
+
+	if ( ( !currENT:IsValid() ) || ( ( !currENT:IsPlayer() ) && ( !currENT:IsNPC() ) ) ) then
+	
+		return false
+		
+	end
+	
+		if self:ANPlusHasEntLOS( ent ) then
+		
+			local posOffset = ent:GetAngles():Up() * ent:BoundingRadius()
+		
+			if currENT:IsPlayer() && currENT:ANPlusAlive() then
+				
+				local disp = ent:GetPos() + posOffset - currENT:EyePos()
+					
+				local radius = ent:BoundingRadius()
+				
+				if ( ( disp:LengthSqr() > ( radius^2 ) ) && ( disp:LengthSqr() > 0 ) ) then
+					
+					local fov = currENT:GetFOV() * ( fovmul || 1.5 )
+
+				
+					local distSqr = disp:LengthSqr()
+					local aimVec = currENT:GetEyeTraceNoCursor().Normal
+					
+					local dir = disp:GetNormalized()
+					local viewRadius = arctan2( radius / math.sqrt( distSqr ), math.sqrt( 1 - radius^2 / distSqr ) ) * 180 / math.pi
+					local viewOffset = arctan2( crossDist( dir, aimVec ), dir:Dot( aimVec ) ) * 180 / math.pi
+					
+					if ( viewOffset <= ( fov / 2 + viewRadius ) ) then
+						
+						return true
+							
+					end
+						
+				else
+					
+					return true
+						
+				end
+				
+			elseif currENT:IsNPC() && currENT:ANPlusAlive() then
+			
+				local disp = ent:GetPos() + posOffset - currENT:EyePos()
+				
+				local radius = ent:BoundingRadius()
+			
+				if ( ( disp:LengthSqr() > ( radius^2 ) ) && ( disp:LengthSqr() > 0 ) ) then
+				
+					local fov = npcfov || 90
+					local distSqr = disp:LengthSqr()
+					local aimVec = currENT:GetAimVector()
+					local dir = disp:GetNormalized()
+					local viewRadius = arctan2( radius / math.sqrt( distSqr ), math.sqrt( 1 - radius^2 / distSqr ) ) * 180 / math.pi
+					local viewOffset = arctan2( crossDist( dir, aimVec ), dir:Dot( aimVec) ) * 180 / math.pi
+				
+					if ( viewOffset <= ( fov / 2 + viewRadius ) ) then
+					
+						return true
+						
+					end
+					
+				else
+				
+					return true
+					
+				end
+				
+			end
+			
+		end
+
+	return false
+
 end

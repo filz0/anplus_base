@@ -326,49 +326,6 @@ function ENT:ANPlusUpdateWeaponProficency( wep )
 	end
 end
 
-function ENT:ANPlusDealDamage(target, dmginfo, cooldown, callback)
-	
-	if !IsValid(self) || !dmginfo then return end
-	
-	self.m_fANPDealtDamageLast = self.m_fANPDealtDamageLast || 0
-
-	if cooldown && CurTime() - self.m_fANPDealtDamageLast < cooldown then return end
-		
-	if target:IsPlayer() && target:InVehicle() && IsValid(target:GetVehicle()) then
-		target:GetVehicle():TakeDamageInfo( dmginfo )
-	else
-		target:TakeDamageInfo( dmginfo )
-	end
-	
-	if isfunction( callback ) then
-		callback(self, dmginfo)
-	end
-		
-	self.m_fANPDealtDamageLast = CurTime()
-
-end
-
-function ENT:ANPlusDealBlastDamage(target, dmginfo, pos, radius, cooldown, callback) -- Kinda stupid.
-	
-	if !IsValid(self) || !dmginfo then return end
-	
-	self.anpdamage_DMGBlastLast = self.anpdamage_DMGBlastLast || 0
-
-	if cooldown && CurTime() - self.anpdamage_DMGBlastLast < cooldown then return end
-		
-	util.BlastDamageInfo( dmginfo, pos, radius )
-	local stuffIHit = ents.FindInSphere( pos, radius )
-		
-	for _, victim in pairs( stuffIHit ) do			
-		if IsValid(victim) && self:Visible( victim ) && isfunction( callback ) then
-			callback( self, victim, dmginfo )
-		end			
-	end
-		
-	self.anpdamage_DMGBlastLast = CurTime()
-
-end
-
 ANPlusNoMeleeWithThese = {
 	['melee'] = true,
 	['melee2'] = true,
@@ -455,7 +412,7 @@ function ENT:ANPlusDealMeleeDamage(dist, dmg, dmgt, viewpunch, force, full360, s
 	end
 end
 
-function ENT:ANPlusMeleeAct(target, act, speed, movementVel, rspeed, dist, full360, cooldown, callback, test)
+function ENT:ANPlusMeleeAct(target, act, speed, movementVel, rspeed, dist, full360, cooldown, callback)
 	
 	if !IsValid(self) || !IsValid(target) || self:Health() <= 0 then return end	
 	self.m_fANPMeleeLast = self.m_fANPMeleeLast || 0	
@@ -1058,53 +1015,6 @@ function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, cal
 	
 end
 
-function ENT:ANPlusPlayGestureActivity(act, speed, faceEnt, faceSpeed, callback, postCallback)
-	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() ) then return end
-	--act = self:ANPlusTranslateSequence( act )
-	local speed = speed || 1
-	local facespeed = facespeed || 0
-	
-	self:ResetSequenceInfo()
-	self:SetIdealActivity( act )
-	self:ResetIdealActivity( act )
-	self:SetActivity( act )
-	
-	self.m_bANPlusPlayingActivity = true
-	
-	--local seq = self:SelectWeightedSequence( act )
-	local seqName = self:GetSequenceName( self:GetSequence() )
-	local seqID, seqDur = self:LookupSequence( seqName )	
-	local seqSpeed = self:GetSequenceGroundSpeed( seqID )
-	seqDur = seqDur / speed
-
-	self:ANPlusSetNextFlinch( seqDur )
-
-	if isfunction( callback ) then
-		callback( seqID, seqDur, seqSpeed )
-	end
-
-	timer.Create( "ANP_ACT_RESET" .. self:EntIndex(), seqDur, 1, function() 
-		if !IsValid(self) then return end			
-		self.m_bANPlusPlayingActivity = false
-
-
-		if isfunction( postCallback ) then
-			postCallback( seqID, seqDur )
-		end
-		
-	end)
-
-	timer.Create( "ANP_ACT_THINK" .. self:EntIndex(), 0, 0, function() 
-		if !IsValid(self) || !self:ANPlusPlayingAnim() then return end
-		self:MaintainActivity()
-		self:SetPlaybackRate( speed ) 
-		if IsValid(faceEnt) && faceSpeed >= 0 then 
-			self:ANPlusFaceEntity( faceEnt, faceSpeed )
-		end
-	end)
-	
-end
-
 function ENT:ANPlusPlayScene(scene, speed, stopMoving, faceEnt, faceSpeed, callback, postCallback)
 	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() ) then return end
 	local speed = speed || 1
@@ -1422,4 +1332,8 @@ function ENT:ANPlusReplaceSchedule(oldSched, newSched)
 			self:SetSchedule( newSched )
 		end
 	end
+end
+
+function ENT:ANPlusGetLastPosition()
+	return self:GetInternalVariable( "m_vecLastPosition" )
 end

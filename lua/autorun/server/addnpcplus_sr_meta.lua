@@ -282,168 +282,6 @@ local effTab = {} -- Template (remove things that you ain't gonna use)
 metaENT:ANPlusClientEffect( effTab )
 */
 
-function metaENT:ANPlusHasEntLOS(ent) -- Big credit to the Captain Applesauce for this piece of work https://steamcommunity.com/profiles/76561198070248149
-
-	if !IsValid(self) then return end
-	
-	local currENT = self
-
-	if ( ( !IsValid(currENT) ) || ( ( !currENT:IsPlayer() ) && ( !currENT:IsNPC() ) ) ) then
-	
-		return false
-		
-	end
-
-	local posOffset = ent:GetAngles():Up() * ent:BoundingRadius()
-
-	local traceBlocked = false
-
-	local exclusions = { ent }
-
-	if ( currENT && IsValid(currENT) ) then
-	
-		table.insert( exclusions, currENT )
-		
-	end
-
-		local tr = util.TraceLine(
-		{
-			start     = currENT:EyePos(),
-			endpos     = ent:GetPos() + posOffset,
-			filter     = exclusions,
-			mask     = MASK_OPAQUE
-		})
-	
-		traceBlocked = tr.Hit
-
-	return ( !traceBlocked )
-
-end
-
-function metaENT:ANPlusVisibleInFOV(ent, fovmul, npcfov) -- Big credit to the Captain Applesauce for this piece of work https://steamcommunity.com/profiles/76561198070248149
-
-	if !IsValid(self) then return end
-	
-	local function crossDist( vec1, vec2 )
-	
-		return math.sqrt( vec1:LengthSqr() * vec2:LengthSqr() - vec1:Dot( vec2 )^2 )
-		
-	end
-
-	local function arctan2( y, x )
-	
-		if ( ( x != 0 ) || ( y != 0 ) ) then
-		
-			if ( math.abs( x ) >= math.abs( y ) ) then
-			
-				if ( x >= 0 ) then
-				
-					return math.atan( y / x )
-					
-				elseif ( y >= 0 ) then
-				
-					return math.atan( y / x ) + math.pi
-					
-				else
-				
-					return math.atan( y / x ) - math.pi
-					
-				end
-				
-			elseif ( y >= 0 ) then
-			
-				return math.pi / 2 - math.atan( x / y )
-				
-			else
-			
-				return -math.pi / 2 - math.atan( x / y )
-				
-			end
-			
-		else
-		
-			return 0.0
-			
-		end
-		
-	end
-
-	local currENT = self
-
-	if ( ( !currENT:IsValid() ) || ( ( !currENT:IsPlayer() ) && ( !currENT:IsNPC() ) ) ) then
-	
-		return false
-		
-	end
-	
-		if self:ANPlusHasEntLOS( ent ) then
-		
-			local posOffset = ent:GetAngles():Up() * ent:BoundingRadius()
-		
-			if currENT:IsPlayer() && currENT:ANPlusAlive() then
-				
-				local disp = ent:GetPos() + posOffset - currENT:EyePos()
-					
-				local radius = ent:BoundingRadius()
-				
-				if ( ( disp:LengthSqr() > ( radius^2 ) ) && ( disp:LengthSqr() > 0 ) ) then
-					
-					local fov = currENT:GetFOV() * ( fovmul || 1.5 )
-
-				
-					local distSqr = disp:LengthSqr()
-					local aimVec = currENT:GetEyeTraceNoCursor().Normal
-					
-					local dir = disp:GetNormalized()
-					local viewRadius = arctan2( radius / math.sqrt( distSqr ), math.sqrt( 1 - radius^2 / distSqr ) ) * 180 / math.pi
-					local viewOffset = arctan2( crossDist( dir, aimVec ), dir:Dot( aimVec ) ) * 180 / math.pi
-					
-					if ( viewOffset <= ( fov / 2 + viewRadius ) ) then
-						
-						return true
-							
-					end
-						
-				else
-					
-					return true
-						
-				end
-				
-			elseif currENT:IsNPC() && currENT:ANPlusAlive() then
-			
-				local disp = ent:GetPos() + posOffset - currENT:EyePos()
-				
-				local radius = ent:BoundingRadius()
-			
-				if ( ( disp:LengthSqr() > ( radius^2 ) ) && ( disp:LengthSqr() > 0 ) ) then
-				
-					local fov = npcfov || 90
-					local distSqr = disp:LengthSqr()
-					local aimVec = currENT:GetAimVector()
-					local dir = disp:GetNormalized()
-					local viewRadius = arctan2( radius / math.sqrt( distSqr ), math.sqrt( 1 - radius^2 / distSqr ) ) * 180 / math.pi
-					local viewOffset = arctan2( crossDist( dir, aimVec ), dir:Dot( aimVec) ) * 180 / math.pi
-				
-					if ( viewOffset <= ( fov / 2 + viewRadius ) ) then
-					
-						return true
-						
-					end
-					
-				else
-				
-					return true
-					
-				end
-				
-			end
-			
-		end
-
-	return false
-
-end
 --[[
 function ANPlusPlayerKillFeed( ply, inf, npc ) -- Yoink https://github.com/Facepunch/garrysmod/tree/451b4ff5d1aea7b9b06a8024ef706c248a79647e/garrysmod/gamemodes/base/gamemode
 
@@ -687,6 +525,32 @@ function metaENT:ANPlusGetBonePosAndAng(bone, pos, ang)
 	return newPos, newAng
 end
 
+function metaENT:ANPlusSetParentAttachment(ent, att)	
+	if !att then return end
+	
+	att = isstring( att ) && att || ent:ANPlusGetAttachmentName( att )
+
+	self:SetPos( ent:GetPos() )
+	self:SetParent( ent )
+	self:Fire( "SetParentAttachment", att, 0 )
+end
+
+function metaENT:ANPlusGetAttachmentPosAndAng(att, pos, ang)
+	
+	att = isstring( att ) && att || ent:ANPlusGetAttachmentName( att )
+	
+	if !att then return end	
+	
+	local attID = self:LookupAttachment( att )
+	local attTab = self:GetAttachment( attID )
+	
+	local offsetPos = pos || Vector( 0, 0, 0 )
+	local offsetAng = ang || Angle( 0, 0, 0 )
+
+	local newPos, newAng = LocalToWorld( offsetPos, offsetAng, attTab.Pos, attTab.Ang )		
+	return newPos, newAng
+end
+
 function ANPlusCreateSprite(model, color, scale, sfs, kvs)
 	ent = ents.Create( "env_sprite" )
 	ent:SetKeyValue( "model", model ) 
@@ -791,6 +655,39 @@ function ANPlusCreateLaser(texture, spawnEnd, color, width, sfs, kvs)
 	ent:Activate()
 	
 	return ent, ent.m_pLaserTarget
+end
+
+function ANPlusCreateLaserSENT(laserMat, laserWidth, laserMatStart, laserMatEnd, laserFPS, laserColor, startDotMat, startDotWidth, startDotHeight, startDotColor, endDotMat, endDotWidth, endDotHeight, endDotColor, dist, laserHitDelay, entFilter, ignoreWorld, killTime, hitCallBack)
+	ent = ents.Create( "sent_anp_laser_proto" )
+
+	ent.m_sLaserMat = laserMat
+	ent.m_fLaserWidth = laserWidth
+	ent.m_fLaserMatStart = laserMatStart
+	ent.m_fLaserMatEnd = laserMatEnd
+	ent.m_fLaserFPS = laserFPS
+	ent.m_sLaserColor = laserColor
+	
+	ent.m_sStartDotMat = startDotMat
+	ent.m_fStartDotWidth = startDotWidth
+	ent.m_fStartDotHeight = startDotHeight
+	ent.m_sStartDotColor = startDotColor
+		
+	ent.m_sEndDotMat = endDotMat
+	ent.m_fEndDotWidth = endDotWidth
+	ent.m_fEndDotHeight = endDotHeight
+	ent.m_sEndDotColor = endDotColor
+	
+	ent.m_fDistance = dist
+	ent.m_fNextThink = laserHitDelay
+	ent.m_tEntFilter = entFilter
+	ent.m_fIgnoreWorld = ignoreWorld
+	ent.m_fKillDelay = killTime
+	ent.m_funHitCallBack = hitCallBack
+	
+	ent:Spawn()
+	ent:Activate()
+	
+	return ent
 end
 --[[
 function ANPlusCreateLaser(texture, spawnEnd, color, width, sfs, kvs)
@@ -970,4 +867,47 @@ function metaENT:ANPlusRestartGesture(act, addIfMissing, autoKill)
 		self:RemoveGesture( act )
 		self:RestartGesture( act, addIfMissing, autoKill )
 	end
+end
+
+function metaENT:ANPlusDealDamage(target, dmginfo, cooldown, callback)
+	
+	if !IsValid(self) || !dmginfo then return end
+	
+	self.m_fANPDealtDamageLast = self.m_fANPDealtDamageLast || 0
+
+	if cooldown && CurTime() - self.m_fANPDealtDamageLast < cooldown then return end
+		
+	if target:IsPlayer() && target:InVehicle() && IsValid(target:GetVehicle()) then
+		target:GetVehicle():TakeDamageInfo( dmginfo )
+	else
+		target:TakeDamageInfo( dmginfo )
+	end
+	
+	if isfunction( callback ) then
+		callback(self, dmginfo)
+	end
+		
+	self.m_fANPDealtDamageLast = CurTime()
+
+end
+
+function metaENT:ANPlusDealBlastDamage(target, dmginfo, pos, radius, cooldown, callback) -- Kinda stupid.
+	
+	if !IsValid(self) || !dmginfo then return end
+	
+	self.anpdamage_DMGBlastLast = self.anpdamage_DMGBlastLast || 0
+
+	if cooldown && CurTime() - self.anpdamage_DMGBlastLast < cooldown then return end
+		
+	util.BlastDamageInfo( dmginfo, pos, radius )
+	local stuffIHit = ents.FindInSphere( pos, radius )
+		
+	for _, victim in pairs( stuffIHit ) do			
+		if IsValid(victim) && self:Visible( victim ) && isfunction( callback ) then
+			callback( self, victim, dmginfo )
+		end			
+	end
+		
+	self.anpdamage_DMGBlastLast = CurTime()
+
 end

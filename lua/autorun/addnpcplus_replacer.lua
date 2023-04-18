@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------=#
 if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
-
+  
 if (SERVER) then
 	util.AddNetworkString("anplus_replacer_savetab") 
 	util.AddNetworkString("anplus_replacer_gettab_s") 
@@ -146,9 +146,12 @@ if (SERVER) then
 		--['VortigauntUriah'] = "models/vortigaunt_doctor.mdl",
 		--['VortigauntSlave'] = "models/vortigaunt_slave.mdl",
 	}
+------------------------------------------------------------------------------=#
+	if !file.Exists( dir, "DATA" ) then file.CreateDir( dir ) end
+	if !file.Exists( dir_presets, "DATA" ) then file.Write( dir_presets ) end 
 ------------------------------------------------------------------------------=#	
 	local function LoadData()		
-		if file.Exists( dir_presets, "DATA" ) then
+		if file.Exists( dir_presets, "DATA" ) then 
 			ANPlusENTReplacerData = von.deserialize( file.Read( dir_presets, "DATA" ) ) or {}
 		end
 	end
