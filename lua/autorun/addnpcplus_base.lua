@@ -255,6 +255,40 @@ if (CLIENT) then
 	
 end
 
+properties.Add( "anplus_editmenu", {
+	MenuLabel = "ANP Edit Menu", -- Name to display on the context menu
+	Order = 60000, -- The order to display this property relative to other properties
+	MenuIcon = "vgui/anp_ico.png", -- The icon to display next to the property
+
+	Filter = function( self, ent, ply ) -- A function that determines whether an entity is valid for this property
+		if ( !IsValid( ent ) ) then return false end
+		if ( ent:IsPlayer() ) then return false end
+		if ( !ent:IsANPlus( true ) ) then return false end
+		if ( !ent:ANPlusGetDataTab()['Functions'] || ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'] == nil ) then return false end
+		if ( !gamemode.Call( "CanProperty", ply, "anplus_editmenu", ent ) ) then return false end
+		
+		return true
+	end,
+	Action = function( self, ent ) -- The action to perform upon using the property ( Clientside )
+
+		self:MsgStart()
+			net.WriteEntity( ent )
+		self:MsgEnd()
+		
+		ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- CLIENT
+
+	end,
+	Receive = function( self, length, ply ) -- The action to perform upon using the property ( Serverside )
+		local ent = net.ReadEntity()
+
+		if ( !properties.CanBeTargeted( ent, ply ) ) then return end
+		if ( !self:Filter( ent, ply ) ) then return end
+		
+		ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- SERVER
+		
+	end 
+} )
+
 
 
 

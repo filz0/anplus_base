@@ -153,6 +153,7 @@ function metaENT:ANPlusSetKillfeedName(name)
 	if self:ANPlusGetDataTab() then
 		self:ANPlusGetDataTab()['KillfeedName'] = name
 		if !name then return end
+		
 		net.Start( "anplus_add_fakename_language" )
 		net.WriteString( name )
 		net.Broadcast()
@@ -605,6 +606,20 @@ function ANPlusCreateSpotlight(color, width, length, sfs, kvs)
 	return ent
 end
 
+function metaENT:ANPlusRemoveSpotlight()
+	if !IsValid(self) then return end
+	self:Fire( "KillHierarchy" ) -- Never use anything else to remove "beam_spotlight"!
+end
+
+function metaENT:ANPlusToggleSpotlight(bool)
+	if !IsValid(self) then return end
+	if bool then
+		self:Fire( "LightOn" )
+	elseif !bool then
+		self:Fire( "LightOff")
+	end
+end
+
 function ANPlusCreateSporeExplosion(spawnRate, startDisabled)
 	startDisabled = startDisabled || false
 	local ent = ents.Create( "env_sporeexplosion" )
@@ -618,11 +633,6 @@ function metaENT:ANPlusNPCGetImprovedAiming(pos, target, aimpos)
 	local targetPos = ( aimpos || target:BodyTarget( newPos ) || target:WorldSpaceCenter() || target:GetPos() )
 	local dir = targetPos && ( targetPos - newPos ):GetNormalized() || self:GetAimVector()
 	return newPos, dir
-end
-
-function metaENT:ANPlusRemoveSpotlight()
-	if !IsValid(self) then return end
-	self:Fire("KillHierarchy") -- Never use anything else to remove "beam_spotlight"!
 end
 
 function ANPlusCreateLaser(texture, spawnEnd, color, width, sfs, kvs)
@@ -839,6 +849,13 @@ function metaENT:ANPlusIsMoveSpeed( hORlORe, speed )
 		return gS == speed
 	end
 	return false
+end
+
+function metaENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame and animation event ID
+	if(!self.m_tbAnimationFrames[seq]) then return end
+	self.m_tbAnimEvents[seq] = self.m_tbAnimEvents[seq] || {}
+	self.m_tbAnimEvents[seq][frame] = self.m_tbAnimEvents[seq][frame] || {}
+	table.insert(self.m_tbAnimEvents[seq][frame],ev)
 end
 
 function metaENT:ANPlusAddGesture(act, autoKill)

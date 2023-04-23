@@ -22,6 +22,14 @@ function metaANG:ANPlusClamp()
 	while self.r > 360 do self.r = self.r -360 end
 end
 
+function metaANG:ANPlusIsEqualTol(ang)
+	local angToVal1 = self.p + self.y + self.r
+	local angToVal2 = ang.p + ang.y + ang.r
+	angToVal1 = math.Round( angToVal1, 0 )
+	angToVal2 = math.Round( angToVal2, 0 )
+	return angToVal1 == angToVal2
+end
+
 --[[////////////////////////
 ||||| Can be used to display dev messages in the console (tables too) at set developer command levels.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\

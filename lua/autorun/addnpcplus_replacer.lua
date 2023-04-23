@@ -1,14 +1,18 @@
 ------------------------------------------------------------------------------=#
 if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
-  
+
+ANPlusENTReplacerData = {}
+
 if (SERVER) then
+	
 	util.AddNetworkString("anplus_replacer_savetab") 
 	util.AddNetworkString("anplus_replacer_gettab_s") 
 	util.AddNetworkString("anplus_replacer_gettab_c") 
 	local von = include( "von/von_1_3_4.lua" )	
 	local dir = "anplus_replacer"
 	local dir_presets = dir.."/anplus_replacer_data.txt"
+	
 	local customNPCList = {
 		------------=#
 		['Citizen Male'] = {
@@ -138,7 +142,6 @@ if (SERVER) then
 		},
 		------------=#
 	}
-	ANPlusENTReplacerData = {}
 	ANPlusENTReplacerFix = {
 		['Rebel'] 			= "models/Humans/Group03/",
 		['Refugee'] 		= "models/Humans/Group02/",

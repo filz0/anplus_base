@@ -6,8 +6,8 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ||||| Here We are checking spawned entities if they are a part of this base. If so, apply valid data table.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
-	timer.Simple( 0, function()		
-
+	timer.Simple( 0, function() if !IsValid(ent) then return end ent:SetNWString( "ANPlusNWName", ent:GetInternalVariable( "m_iName" ) ) end )	
+	timer.Simple( 0.1, function()		
 		if !IsValid(ent) then return end				
 		if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
 			local npc = ent:GetOwner()		
@@ -15,7 +15,6 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 				npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'](npc, ent)		
 			end				
 		end
-		
 		if ( SERVER ) then
 			for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
 				local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
@@ -23,13 +22,12 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 					table.insert( ANPlusDangerStuffGlobal, ent )
 				end			
 			end
-			
-			--if !ent:IsANPlus(true) then 	
-				ent:ANPlusIgnoreTillSet()	
-				ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
-			--end
-			ent.m_pMyPlayer = nil
+			ent:ANPlusIgnoreTillSet()
 		end		
+
+		ent:ANPlusNPCApply( ent:GetNWString( "ANPlusNWName" ) )		
+		ent.m_pMyPlayer = nil	
+		
 	end)	
 end)
 

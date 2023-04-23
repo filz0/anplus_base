@@ -416,7 +416,7 @@ if (SERVER) then
 		end
 		]]--
 		
-		if !self:GetNWBool( "ANP_INV_ACTIVE" ) || ( self.PrepTimeLast && self.PrepTimeLast > CurTime() ) then return end
+		if !self:GetNWBool( "ANP_INV_ACTIVE" ) || ( self.PrepTimeLast && self.PrepTimeLast >= CurTime() ) then return end
 
 		if tonumber( self:GetNWFloat( "ANP_INV_PLY_LIFES" ) ) <= 0 && tonumber( self.SettingTab['PlayerLifes'] ) >= 1 then
 			self:FailWave()

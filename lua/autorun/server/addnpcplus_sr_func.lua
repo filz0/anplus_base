@@ -289,18 +289,6 @@ function ENT:ANPlusNPCWeaponSwitch()
 
 end
 
-function ENT:ANPlusApplyDataTab( tab )	
-	self['ANPlusData'] = tab
-	self:ANPlusStoreEntityModifier( tab['CurData'] ) -- Adv. Duplicator 2 Support
-	timer.Simple(0.1, function() -- God I hate networking....
-		if !IsValid(self) then return end
-		net.Start( "anplus_data_tab" )
-		net.WriteEntity( self )
-		net.WriteTable( self['ANPlusData']['CurData'] )
-		net.Broadcast()
-	end)
-end
-
 --[[
 function ENT:ANPlusApplyDataTab( tab )	
 	if !self.ANPlusData then self.ANPlusData = {}; self.ANPlusData[''..self.ANPlusIDName..self:EntIndex()..''] = tab end
@@ -350,35 +338,6 @@ function ENT:ANPlusHandleAnimationEvent(seq, ev)
 	if self:IsANPlus(true) && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCHandleAnimationEvent'] != nil then
 		self:ANPlusGetDataTab()['Functions']['OnNPCHandleAnimationEvent'](self, seq, ev)	
 	end
-end
-
-function ENT:ANPlusNPCThink()
-
-	if !IsValid(self) || !self:ANPlusAlive() then	
-		
-		return false			
-	elseif ( self:IsANPlus() && !GetConVar("ai_disabled"):GetBool() ) || !self:IsNPC() && self:IsANPlus(true) then
-			
-		self:ANPlusNPCRelations()					
-		self:ANPlusNPCHealthRegen()					
-		self:ANPlusNPCWeaponSwitch()			
-		self:ANPlusNPCStateChange()
-		self:ANPlusAnimationEventInternal()
-		self:ANPlusNPCAnimSpeed()
-		self:ANPlusNPCTranslateActivity()
-		self:ANPlusDetectDanger()
-		
-		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'] != nil && self:GetBestSoundHint() != nil then	
-			if ( GetConVar("ai_ignoreplayers"):GetBool() && self:GetBestSoundHint().type == 4 ) then return end
-			self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'](self, self:GetBestSoundHint())	
-		end
-		
-		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCThink'] != nil then
-			self:ANPlusGetDataTab()['Functions']['OnNPCThink'](self)	
-		end
-		
-	end
-
 end
 
 function ENT:ANPlusDetectDanger()
