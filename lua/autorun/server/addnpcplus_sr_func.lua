@@ -296,7 +296,7 @@ function ENT:ANPlusApplyDataTab( tab )
 		if !IsValid(self) then return end
 		net.Start("anplus_data_tab")
 		net.WriteEntity( self )
-		net.WriteTable( self.ANPlusData[''..self.ANPlusIDName..self:EntIndex()..'']['CurData'] )
+		net.WriteTable( self.ANPlusData[''..self.ANPlusIDName..self:EntIndex()..''] )
 		net.Broadcast()
 	end)
 end

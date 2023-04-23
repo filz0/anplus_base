@@ -113,28 +113,28 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 		
 		if npc:IsANPlus() then
 		
-			if npc:ANPlusGetDataTab()['CurData'] then
+			if npc:ANPlusGetDataTab() then
 			
-				if npc:ANPlusGetDataTab()['CurData']['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurData']['CurFakeModel']['VisualTab'] ) end
+				if npc:ANPlusGetDataTab()['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
 				
-				if npc:ANPlusGetDataTab()['CurData']['CurBGS'] then			
-					for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBGS'] do
-						rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurData']['CurBGS'][ i ] )		
+				if npc:ANPlusGetDataTab()['CurBGS'] then			
+					for i = 1, #npc:ANPlusGetDataTab()['CurBGS'] do
+						rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurBGS'][ i ] )		
 					end				
 				end
 					
-				if npc:ANPlusGetDataTab()['CurData']['CurSMS'] then
-					for i = 0, #npc:ANPlusGetDataTab()['CurData']['CurSMS'] do
-						rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurData']['CurSMS'][ i + 1 ] )					
+				if npc:ANPlusGetDataTab()['CurSMS'] then
+					for i = 0, #npc:ANPlusGetDataTab()['CurSMS'] do
+						rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurSMS'][ i + 1 ] )					
 					end					
 				end
 				
-				if npc:ANPlusGetDataTab()['CurData']['CurBones'] then
-					for i = 1, #npc:ANPlusGetDataTab()['CurData']['CurBones'] do		
+				if npc:ANPlusGetDataTab()['CurBones'] then
+					for i = 1, #npc:ANPlusGetDataTab()['CurBones'] do		
 						local bone = rag:GetPhysicsObjectNum( i )					
 						if IsValid( bone ) then
-							bone:SetPos( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 1 ] )
-							bone:SetAngles( npc:ANPlusGetDataTab()['CurData']['CurBones'][ i ][ 2 ] )
+							bone:SetPos( npc:ANPlusGetDataTab()['CurBones'][ i ][ 1 ] )
+							bone:SetAngles( npc:ANPlusGetDataTab()['CurBones'][ i ][ 2 ] )
 							bone:EnableMotion( true )				
 						end			
 					end
@@ -165,7 +165,7 @@ end)
 hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 	if IsValid(npc) then
 		if npc:IsANPlus() then
-			if npc:ANPlusGetDataTab()['CurData'] && npc:ANPlusGetDataTab()['CurData']['CurModel'] then
+			if npc:ANPlusGetDataTab() && npc:ANPlusGetDataTab()['CurModel'] then
 				
 				local CurBGS = {}				
 				for i = 1, #npc:GetBodyGroups() do		
@@ -173,7 +173,7 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 				end
 					
 				local addTab = { ['CurBGS'] = CurBGS }
-				table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+				table.Merge( npc:ANPlusGetDataTab(), addTab )
 				
 				local CurSMS = {}			
 				for i = 0, #npc:GetMaterials() do		
@@ -181,7 +181,7 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 				end
 					
 				local addTab = { ['CurSMS'] = CurSMS }
-				table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+				table.Merge( npc:ANPlusGetDataTab(), addTab )
 				
 				local CurBones = {}			
 				for i = 0, npc:GetBoneCount() do
@@ -199,16 +199,16 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 				end
 				
 				local addTab = { ['CurBones'] = CurBones }
-				table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+				table.Merge( npc:ANPlusGetDataTab(), addTab )
 				
 				if npc:ANPlusFakeModel() then
 					local addTab = { ['CurFakeModel'] = { ['Model'] = npc:ANPlusFakeModel() && npc:ANPlusFakeModel():GetModel() || "", ['VisualTab'] = npc:ANPlusGetVisual() } }			
-					table.Merge( npc:ANPlusGetDataTab()['CurData'], addTab )
+					table.Merge( npc:ANPlusGetDataTab(), addTab )
 				end
 				
 				npc:ANPlusApplyDataTab( npc:ANPlusGetDataTab() )
 				
-				npc:SetModel( npc:ANPlusGetDataTab()['CurData']['CurModel'] )
+				npc:SetModel( npc:ANPlusGetDataTab()['CurModel'] )
 				
 			end
 			

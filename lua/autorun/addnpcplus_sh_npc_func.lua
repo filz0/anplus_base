@@ -15,6 +15,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				if repData && !override then
 					local modelCheck = self:GetModel() && string.find( string.lower( self:GetModel() ), string.lower( repData['Model'] ) ) || repData['Model'] == "No Model" || false	
 					local mapCheck = repData['Map'] == "No Map" || game.GetMap() == repData['Map'] || false	
+					print("KKKK" .. tostring(repData['Class']) .. "KKKK")
+					--print(repData['Replacement'] , repData['Class'] == self:GetClass() , modelCheck , tonumber( repData['Skin'] ) == self:GetSkin() , mapCheck , ANPlusPercentageChance( tonumber( repData['Chance'] ) ))
 					if repData['Replacement'] && repData['Class'] == self:GetClass() && modelCheck && tonumber( repData['Skin'] ) == self:GetSkin() && mapCheck && ANPlusPercentageChance( tonumber( repData['Chance'] ) ) then 					
 						name = repData['Replacement'] 
 						override = true
@@ -68,7 +70,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end
 				--ANPdevMsg( "Surrounding Bounds: Min[" .. tostring(min2) .. "] Max[" .. tostring(max2), 1 )
 
-				--data['CurData'] = {}
+				--data = {}
 				
 				local addTab = { ['CurName'] = data['Name'] }
 				table.Merge( data, addTab )	
@@ -462,7 +464,7 @@ function ENT:ANPlusFakeModel(model, visualTab)
 			
 			if self:IsNPC() then
 				local addTab = { ['CurFakeModel'] = { ['Model'] = model, ['VisualTab'] = self.m_pFakeModel:ANPlusGetVisual() } }
-				table.Merge( self:ANPlusGetDataTab()['CurData'], addTab )			
+				table.Merge( self:ANPlusGetDataTab(), addTab )			
 				self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
 			end
 			
@@ -472,7 +474,7 @@ function ENT:ANPlusFakeModel(model, visualTab)
 			if visualTab then self.m_pFakeModel:ANPlusCopyVisualFrom( visualTab ) end
 			if self:IsNPC() then
 				local addTab = { ['CurFakeModel'] = { ['Model'] = model, ['VisualTab'] = self.m_pFakeModel:ANPlusGetVisual() } }
-				table.Merge( self:ANPlusGetDataTab()['CurData'], addTab )			
+				table.Merge( self:ANPlusGetDataTab(), addTab )			
 				self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
 			end
 		end

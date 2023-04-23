@@ -7,7 +7,7 @@ function ENT:ANPlusApplyDataTab( tab )
 	--	if !IsValid(self) then return end
 	--	net.Start( "anplus_data_tab" )
 	--	net.WriteEntity( self )
-	--	net.WriteTable( self['ANPlusData']['CurData'] )
+	--	net.WriteTable( self['ANPlusData'] )
 	--	net.Broadcast()
 	--end)
 end

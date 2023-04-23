@@ -882,7 +882,7 @@ function metaENT:ANPlusCopyVisualFrom(entORtab)
 		end		
 		
 		local addTab = { ['CurBGS'] = CurBGS }
-		table.Merge( self:ANPlusGetDataTab()['CurData'], addTab )	
+		table.Merge( self:ANPlusGetDataTab(), addTab )	
 		
 		local CurSMS = {}			
 		for i = 0, #self:GetMaterials() do		
@@ -890,7 +890,7 @@ function metaENT:ANPlusCopyVisualFrom(entORtab)
 		end	
 		
 		local addTab = { ['CurSMS'] = CurSMS }
-		table.Merge( self:ANPlusGetDataTab()['CurData'], addTab )
+		table.Merge( self:ANPlusGetDataTab(), addTab )
 		
 		self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
 	end	
