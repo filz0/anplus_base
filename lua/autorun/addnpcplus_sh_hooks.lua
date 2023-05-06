@@ -10,14 +10,13 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 		if !IsValid(ent) then return end 
 
 		if (SERVER) then
-			ent.ANPlusID = ent:GetInternalVariable( "m_iName" )
 			net.Start("anplus_net_entity")
 			net.WriteEntity( ent )
-			net.WriteString( ent.ANPlusID )
+			net.WriteString( ent:GetInternalVariable( "m_iName" ) )
 			net.Broadcast()
 		end
 		
-		timer.Simple( 0.1, function()		
+		timer.Simple( 0, function()		
 			if !IsValid(ent) then return end	
 			
 			if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
@@ -35,11 +34,9 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 					end			
 				end
 				ent:ANPlusIgnoreTillSet()
-			end		
-			
-			ent:ANPlusNPCApply( ent.ANPlusID )		
-			ent.m_pMyPlayer = nil	
-			
+				ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
+				ent.m_pMyPlayer = nil	
+			end	
 		end )	
 	end )	
 end)

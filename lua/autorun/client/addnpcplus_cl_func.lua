@@ -94,7 +94,7 @@ net.Receive("anplus_net_entity", function()
 	local ent = net.ReadEntity()
 	local id = net.ReadString()
 	if ent then
-		ent.ANPlusID = id
+		ent:ANPlusNPCApply( id )	
 	end
 end)
 

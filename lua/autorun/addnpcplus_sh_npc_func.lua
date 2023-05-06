@@ -85,9 +85,10 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					local CurColBoundsMin, CurColBoundsMax = ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Max'] || colBoundsMax )
 					local CurHull = modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['HullType'] || hull
 					local CurScale, CurScaleDelta = modelTab['Scale'] && modelTab['Scale'][ 1 ] / 100 || 1, modelTab['scale'] && modelTab['scale'][ 2 ] || 0
-					
+
 					for i = 1, #data['Models'] do
 						if self:GetModel() != data['Models'][ i ][ 1 ] then
+							
 							self:SetModel( CurModel )
 						end
 					end
@@ -116,12 +117,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						
 						local physCheck = self:GetPhysicsObject()
 						if !IsValid(physCheck) || self:GetSolid() != SOLID_VPHYSICS then
-							--self:ResetSequenceInfo()
-							self:SetCycle(1)
+							self:SetCycle( 0 )
 							self:ResetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
-							--self:SetIdealActivity( ACT_IDLE )
-							--self:ResetIdealActivity( ACT_IDLE )
-							--self:SetActivity( -1 )
 						end
 					end
 					
