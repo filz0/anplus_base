@@ -88,6 +88,7 @@ local ENTTab = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
+			if (CLIENT) then return end
 			self:SetSaveValue( "m_iMaxJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
 			self:SetSaveValue( "m_iJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
 			self.m_sBatteryModel = "models/items/battery.mdl"
@@ -216,7 +217,7 @@ local ENTTab = {
 ANPlus.AddNPC( ENTTab, "SpawnableEntities" )
 
 local NPCTab = {
------------------------------------------------------------------ Category at which you'll be able to find your NPC.
+----------------------------------------------------------------- Category at which you'll be able to find your NPC. 
 	['Category'] 			= "[ANP] Dev",
 ----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
 	['Name'] 				= "[ANP] Test Dummy",               
@@ -239,6 +240,7 @@ local NPCTab = {
 				['Max']				= Vector( 13, 13, 72 ),  -- Maxs of collision bounds. For a human sized NPC (npc_citizen or npc_combine_s for an example).
 				['HullType']		= 0,					-- Hull type. https://wiki.facepunch.com/gmod/Enums/HULL           
 			},
+			['PhysicsInit'] = false,
 		},
 		---   
 	},
@@ -267,7 +269,7 @@ local NPCTab = {
 ----------------------------------------------------------------- Default weapons for your NPC.
 	['DefaultWeapons'] 			= {},
 ----------------------------------------------------------------- Set if your NPC should be allowed to spawn only with default weapons.	
-	['ForceDefaultWeapons']		= false, 
+	['ForceDefaultWeapons']		= true, 
 ----------------------------------------------------------------- If a weapon from the ['DefaultWeapons'] is not valid, a weapon from this table will be issued instead (mind the order and make sure that amount of vaules in both tables are equal).
 	['ReplacementWeapons'] 		= nil, 
 ----------------------------------------------------------------- Set a distance at which your NPC will be able to spot enemies.	
@@ -324,7 +326,8 @@ local NPCTab = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
-		
+			self:SetNoDraw( false )
+			if (CLIENT) then return end
 			self:ANPMuteSound( true )   
 			
 		end,	
@@ -332,7 +335,8 @@ local NPCTab = {
 		['OnNPCUse'] = function(self, activator, caller, type)		
 		end,		
 		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
-		['OnNPCThink'] = function(self)     	
+		['OnNPCThink'] = function(self)     
+			if (CLIENT) then return end
 			self:StopMoving()
 		end,		
 		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like combine throwing a grenade).
@@ -623,7 +627,7 @@ local NPCTab = {
 		
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
-		
+			if (CLIENT) then return end
 			if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():SetClip1( 9999 ) end
 			
 			self.anp_HealLast = 0
@@ -965,7 +969,7 @@ local NPCTab = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
-		
+			if (CLIENT) then return end
 			if IsValid(self:GetActiveWeapon()) then self:GetActiveWeapon():SetClip1( 9999 ) end
 			
 			--self:Ignite( 9999, 0 )

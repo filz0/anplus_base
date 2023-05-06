@@ -13,6 +13,7 @@ ANPlusDangerStuffGlobalNameOrClass = { "grenade", "missile", "rocket", "frag", "
 ANPlusDangerStuffGlobal = {}
 ANPCustomSquads = { base_squad = {} }
 ANPToolMenuGlobal = {}
+ANPRemoveFromSpawnList = {}
 
 ANPDefaultGMODWeapons = {
 ['weapon_pistol'] 		= true,
@@ -166,14 +167,13 @@ ANPlus = {
 	
 	--[[////////////////////////
 	||||| Wanted to make a ANPC but model/s comes with its own NPC/s? Use this function to get rid of it/them.
-	
+	--]]
 	RemoveFromSpawnList = function(name)	
-		local dataTab = list.GetForEdit( "NPC" )[name]
-		if dataTab then
-			table.Empty( dataTab )
+		if !ANPRemoveFromSpawnList[ name ] then
+			table.insert( ANPRemoveFromSpawnList, name )
 		end
 	end,
-	--]]
+
 	AddConVar = function(command, defaultValue, flags, help, min, max)
 		if !ConVarExists( command ) then
 			CreateConVar( command, defaultValue, flags || FCVAR_NONE, help || "", min, max )
@@ -181,7 +181,7 @@ ANPlus = {
 	end,
 	
 	AddClientConVar = function(command, defaultValue, help, min, max)
-		if !ConVarExists( command ) then
+		if !ConVarExists( command ) && (CLIENT) then
 			CreateClientConVar( command, defaultValue, true, true, help || "", min, max )
 		end
 	end,
@@ -208,7 +208,9 @@ ANPlus.AddConVar( "anplus_force_swep_anims", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE +
 ANPlus.AddConVar( "anplus_random_placement", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "If enabled and spawned by Players, ANPCs will be placed randomy around the map.", 0, 1 )
 ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply NPC's health.", 0.1 )
 ANPlus.AddConVar( "anplus_replacer_enabled", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Enable ANPlus Replacer.", 0, 1 )
-
+ANPlus.AddClientConVar( "anplus_swep_muzzlelight", 1, "Enable light effect used by the muzzle effects from this base.", 0, 1 )
+ANPlus.AddClientConVar( "anplus_swep_shell_smoke", 1, "Allow smoke effect to be emitted from fired bullet casings.", 0, 1 )
+ 
 local ANPlusInvalidChars = {" ","{","}","[","]","(",")","!","+","=","?",".",",","/","-","`","~"}
 function ANPlusIDCreate( name )
 	for i = 1, #ANPlusInvalidChars do
@@ -229,8 +231,10 @@ if (CLIENT) then
 		image:Dock( TOP )
 		
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Disable Anti-FriendlyFire", "anplus_ff_disabled" ), "Disable Anti-FriendlyFire feature built-in to the base." )
-		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Random Placement", "anplus_random_placement" ), "If enabled, ANPCs spawned by the Players will be placed randomly if possible." )
+		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Random Placement", "anplus_random_placement" ), "If enabled, ANPCs spawned by the Players will be placed randomly if possible." )		
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Health Multiplier", "anplus_hp_mul", 1, 10, 2 ), "Multiply health values of ANPCs." )
+		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Muzzle Light Effect", "anplus_swep_muzzlelight" ), "If enabled, muzzle effects from this base will emit light." )
+		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Casing/Shell Smoke", "anplus_swep_shell_smoke" ), "If enabled, spent casings/shells from this base will generate smoke particle effect." )
 	end
 	local function ANPlusMenuDefault_Functions(panel)
 		panel:ClearControls()	
@@ -249,7 +253,7 @@ if (CLIENT) then
 		spawnmenu.AddToolMenuOption( "ANPlus", "[BASE]", "anplus_mainfunctions", "Functions", nil, nil, ANPlusMenuDefault_Functions )
 		for i = 1, #ANPToolMenuGlobal do
 			local toolData = ANPToolMenuGlobal[ i ]
-			if toolData then spawnmenu.AddToolMenuOption( "ANPlus", toolData['Category'], ANPlusIDCreate( toolData['Name'] ), toolData['Name'], nil, nil, toolData['Panel'], toolData['Table'] || nil ) end
+			if toolData then spawnmenu.AddToolMenuOption( "ANPlus", toolData['Category'], ANPlusIDCreate( toolData['Category'] ) .. "_menu", toolData['Name'], nil, nil, toolData['Panel'], toolData['Table'] || nil ) end
 		end		
 	end)
 	

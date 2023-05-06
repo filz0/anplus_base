@@ -198,3 +198,67 @@ function metaPanel:ANPlus_SecureMenuItem(callback, help, deniedMsg)
 		if help then self:ControlHelp( help ) end
 	end
 end
+
+function metaPanel:ANPlus_MenuItem(callback, help)
+	if isfunction( callback ) then callback() end
+	if help then self:ControlHelp( help ) end
+end
+
+render.ANPlusDrawSpriteParallax = function(pos, widthMin, heightMin, widthMax, heightMax, dist, color )
+	local ply = LocalPlayer()	
+	local dSqr, d = ANPlusGetRangeVector( ply:GetPos(), pos )		
+	local w = math.Remap( d, 1, dist, widthMin, widthMax )
+	w = math.Round( w, 1 )
+	w = math.Clamp( w, widthMin, widthMax )
+	local h = math.Remap( d, 1, dist, heightMin, heightMax )
+	h = math.Round( h, 1 )
+	h = math.Clamp( h, heightMin, heightMax )
+	render.DrawSprite( pos, w, h, color )
+end
+
+render.ANPlusDrawBeamTrail = function(ent, attachmentID, color, width, startSize, endSize, length, spacing, stretch )
+	if attachmentID then
+		attTab = ent:GetAttachment( attachmentID )
+		pos = attTab.Pos
+	else
+		pos = ent:GetPos()
+		attachmentID = -1
+	end
+	
+	ent['m_vOldPos_att'..attachmentID] = !ent['m_vOldPos_att'..attachmentID] && pos || Lerp( FrameTime() * 2, ent['m_vOldPos_att'..attachmentID], pos )
+
+	local boxSize = 2
+	local static = pos:WithinAABox( ent['m_vOldPos_att'..attachmentID] - Vector( boxSize, boxSize, boxSize ), ent['m_vOldPos_att'..attachmentID] + Vector( boxSize, boxSize, boxSize ) )
+	
+	if not static then
+		
+		local gScale = 2 + ( -1 * game.GetTimeScale() )
+		
+		if spacing == 0 || ( ent['m_fLastAdd_att'..attachmentID] || 0 ) < CurTime() then
+			table.insert( ent['m_tPoints_att'..attachmentID], pos )
+			ent['m_fLastAdd_att'..attachmentID] = CurTime() + ( spacing / 1000 )
+			
+		end
+		
+		local count = #ent['m_tPoints_att'..attachmentID]
+		
+		if spacing > 0 then
+			length = math.ceil( math.abs( length - spacing ) )
+		end
+
+		render.StartBeam( count )
+			for i, point in pairs( ent['m_tPoints_att'..attachmentID] ) do
+				local width = ( i / ( length / startSize ) ) 
+				local coord = ( 1 / count ) * ( i - 1 )
+
+				render.AddBeam( i == count && pos || point, width + endSize, stretch && coord || width, color )
+			end
+		render.EndBeam()
+
+		if count >= length then
+			table.remove( ent['m_tPoints_att'..attachmentID], 1 )
+		end
+	else
+		ent['m_tPoints_att'..attachmentID] = {}
+	end
+end

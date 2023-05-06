@@ -2,14 +2,18 @@ local ENT = FindMetaTable("Entity")
 
 function ENT:ANPlusApplyDataTab( tab )	
 	self['ANPlusData'] = tab
-	if (SERVER) then self:ANPlusStoreEntityModifier( tab ) end -- Adv. Duplicator 2 Support
-	--timer.Simple(0.1, function() -- God I hate networking....
-	--	if !IsValid(self) then return end
-	--	net.Start( "anplus_data_tab" )
-	--	net.WriteEntity( self )
-	--	net.WriteTable( self['ANPlusData'] )
-	--	net.Broadcast()
-	--end)
+	if (SERVER) then 
+		self:ANPlusStoreEntityModifier( tab )
+		--timer.Simple( 0.1, function()
+			if !IsValid(self) then return end
+			local tabNoFunc = table.Copy( tab )
+			tabNoFunc['Functions'] = {}
+			net.Start( "anplus_data_tab" )
+			net.WriteEntity( self )
+			net.WriteTable( tabNoFunc )
+			net.Broadcast()
+		--end )
+	end
 end
 
 function ENT:ANPlusNPCThink()
@@ -28,6 +32,7 @@ function ENT:ANPlusNPCThink()
 			self:ANPlusNPCAnimSpeed()
 			self:ANPlusNPCTranslateActivity()
 			self:ANPlusDetectDanger()
+			self:ANPlusDoingSchedule()
 			
 			if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'] != nil && self:GetBestSoundHint() then	
 				if ( !GetConVar("ai_ignoreplayers"):GetBool() && self:GetBestSoundHint().type == 4 ) || ( GetConVar("ai_ignoreplayers"):GetBool() && self:GetBestSoundHint().type != 4 ) then

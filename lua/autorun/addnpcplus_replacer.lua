@@ -180,7 +180,6 @@ if (SERVER) then
 		end
 
 		table.Merge( newNPCList, customNPCList )
-		
 		net.Start( "anplus_replacer_gettab_c" )
 		net.WriteTable( ANPlusENTReplacerData )
 		net.WriteTable( newNPCList )

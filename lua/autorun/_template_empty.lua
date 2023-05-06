@@ -26,7 +26,7 @@ example:
 ANPlus.AddNPCWeapon( "sh_npcweapons_weaponlist", "[NPCW] Sparbine M6D", "swep_ai_sp_magnum", nil, nil )
 ]]--
 
-local NPCTab = {
+ANPlus.AddNPC( {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
 	['Category'] 				= "My ANP",
 ----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
@@ -236,7 +236,7 @@ local NPCTab = {
 	['Functions'] = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
-		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
+		['OnNPCSpawn'] = function(self, ply) -- ply is valid only when PlayerSpawnedNPC gets called. -- ( CLIENT & SERVER )
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
@@ -245,7 +245,7 @@ local NPCTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
-		['OnNPCThink'] = function(self)     	
+		['OnNPCThink'] = function(self) -- ( CLIENT & SERVER )    	
 		end,
 		
 		------------------------------------------------------------ OnNPCFollow - It is called whenever NPC follows/unfollows something. Follow/unfollow can be determined by the "state" value.
@@ -256,8 +256,12 @@ local NPCTab = {
 		['OnNPCLoad'] = function(ply, self, dataTab)	
 		end,
 		
-		------------------------------------------------------------ OnNPCStateChange - This function runs onece, every time NPC's state changes.
+		------------------------------------------------------------ OnNPCStateChange - This function runs once, every time NPC's state changes.
 		['OnNPCStateChange'] = function(self, newState, oldState)
+		end,
+		
+		------------------------------------------------------------ OnNPCDoingSchedule - This function runs once, every time NPC's starts a new schedule.
+		['OnNPCDoingSchedule'] = function(self, newSchedule, oldSchedule)
 		end,
 		
 		------------------------------------------------------------ OnNPCDetectDanger - It is called whenever NPC gets near anything from the ANPlusDangerStuffGlobal table.
@@ -283,7 +287,7 @@ local NPCTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like the Combine Soldier throwing a grenade).
-		['OnNPCCreateEntity'] = function(self, ent)	-- SHARED ( CLIENT & SERVER )					
+		['OnNPCCreateEntity'] = function(self, ent)	-- ( CLIENT & SERVER )					
 		end,
 		
 		------------------------------------------------------------ OnNPCPhysicsCollide - Called when the entity collides with anything. The move type and solid type must be VPHYSICS for the hook to be called.
@@ -295,7 +299,7 @@ local NPCTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCFireBullets - This function runs when NPC fires a bullet (best used with turrets). https://wiki.facepunch.com/gmod/GM:EntityFireBullets
-		['OnNPCFireBullets'] = function(self, weapon, data) -- SHARED ( CLIENT & SERVER )		
+		['OnNPCFireBullets'] = function(self, weapon, data) -- ( CLIENT & SERVER )		
 			return true
 		end,
 		
@@ -308,7 +312,7 @@ local NPCTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCKeyValue - This function runs whenever keyvalues/inputs/outpust run, are called or whatever.
-		['OnNPCKeyValue'] = function(self, key, value) -- SHARED ( CLIENT & SERVER )	
+		['OnNPCKeyValue'] = function(self, key, value) -- ( CLIENT & SERVER )	
 		end,
 		
 		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.
@@ -361,7 +365,7 @@ local NPCTab = {
 		
 		------------------------------------------------------------ OnNPCHearSound - This function runs whenever NPC hears any sounds (no scripted sequences and affected by ['HearDistance']).
 		['HearDistance']   = 200, 
-		['OnNPCHearSound'] = function(self, ent, dist, data) -- SHARED ( CLIENT & SERVER )
+		['OnNPCHearSound'] = function(self, ent, dist, data) -- ( CLIENT & SERVER )
 		end,
 		
 		------------------------------------------------------------ OnNPCSoundHint - Called whenever NPC gets a new SoundHint. https://wiki.facepunch.com/gmod/Structures/SoundHintData
@@ -369,11 +373,23 @@ local NPCTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCEmitSound - This function runs whenever NPC emits any sounds (no scripted sequences).
-		['OnNPCEmitSound'] = function(self, data) -- SHARED ( CLIENT & SERVER )
+		['OnNPCEmitSound'] = function(self, data) -- ( CLIENT & SERVER )
 		end,
 		
 		------------------------------------------------------------ OnRagdollCreated - This function runs when the ragdoll of our NPC gets created.
-		['OnNPCRagdollCreated'] = function(self, ragdoll)	-- SHARED ( CLIENT & SERVER )	
+		['OnNPCRagdollCreated'] = function(self, ragdoll)	-- ( CLIENT & SERVER )	
+		end,
+		
+		------------------------------------------------------------ OnNPCRenderOverride - This function runs when NPC is drawn.
+		['OnNPCRenderOverride'] = function(self, flags)	-- ( CLIENT )	
+		end,
+		
+		------------------------------------------------------------ OnNPCPreDrawEffects - Similar to OnNPCPreDrawEffects but way better for drawing things like sprites and beams.
+		['OnNPCPreDrawEffects'] = function(self) -- ( CLIENT )	
+		end,
+		
+		------------------------------------------------------------ OnNPCPostDrawEffects - Similar to OnNPCPostDrawEffects but way better for drawing things like sprites and beams.
+		['OnNPCPostDrawEffects'] = function(self) -- ( CLIENT )	
 		end,
 		
 		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
@@ -382,12 +398,9 @@ local NPCTab = {
 		
 		},
 	
-	}  
- 
------------------------------------------------------------------ This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
-ANPlus.AddNPC( NPCTab ) 
+} ) 
 
-local ENTTab = {
+ANPlus.AddNPC( {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
 	['Category'] 				= "My ANP",
 ----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
@@ -536,7 +549,7 @@ local ENTTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like the Combine Soldier throwing a grenade).
-		['OnNPCCreateEntity'] = function(self, ent)	-- SHARED ( CLIENT & SERVER )					
+		['OnNPCCreateEntity'] = function(self, ent)	-- ( CLIENT & SERVER )					
 		end,
 		
 		------------------------------------------------------------ OnNPCPhysicsCollide - Called when the entity collides with anything. The move type and solid type must be VPHYSICS for the hook to be called.
@@ -544,12 +557,12 @@ local ENTTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCFireBullets - This function runs when NPC fires a bullet (best used with turrets). https://wiki.facepunch.com/gmod/GM:EntityFireBullets
-		['OnNPCFireBullets'] = function(self, weapon, data) -- SHARED ( CLIENT & SERVER )		
+		['OnNPCFireBullets'] = function(self, weapon, data) -- ( CLIENT & SERVER )		
 			return true
 		end,
 		
 		------------------------------------------------------------ OnNPCKeyValue - This function runs whenever keyvalues/inputs/outpust run, are called or whatever.
-		['OnNPCKeyValue'] = function(self, key, value) -- SHARED ( CLIENT & SERVER )	
+		['OnNPCKeyValue'] = function(self, key, value) -- ( CLIENT & SERVER )	
 		end,
 		
 		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.
@@ -593,7 +606,11 @@ local ENTTab = {
 		end,
 		
 		------------------------------------------------------------ OnNPCEmitSound - This function runs whenever NPC emits any sounds (no scripted sequences).
-		['OnNPCEmitSound'] = function(self, data) -- SHARED ( CLIENT & SERVER )
+		['OnNPCEmitSound'] = function(self, data) -- ( CLIENT & SERVER )
+		end,
+		
+		------------------------------------------------------------ OnNPCRenderOverride - This function runs when NPC is drawn.
+		['OnNPCRenderOverride'] = function(self, flags)	-- ( CLIENT )	
 		end,
 		
 		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
@@ -602,9 +619,6 @@ local ENTTab = {
 		
 		},
 	
-	}   
- 
------------------------------------------------------------------ This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
-ANPlus.AddNPC( ENTTab, "SpawnableEntities" )
+}, "SpawnableEntities" )
 
 */

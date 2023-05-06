@@ -90,17 +90,22 @@ net.Receive("anplus_client_effect", function()
 
 end)
 
+net.Receive("anplus_net_entity", function()
+	local ent = net.ReadEntity()
+	local id = net.ReadString()
+	if ent then
+		ent.ANPlusID = id
+	end
+end)
+
 net.Receive("anplus_data_tab", function()
 
-	local npc = net.ReadEntity()
+	local ent = net.ReadEntity()
 	local tab = net.ReadTable()
 	
-	local dataTab = ANPlusLoadGlobal[tab['CurName']]
-	if dataTab then		
-		local addTab = { ['Functions'] = dataTab['Functions'] }
-		table.Merge( tab, addTab )
-	end		
-	npc['ANPlusData'] = tab
+	if ent && ent['ANPlusData'] && tab then
+		table.Merge( ent['ANPlusData'], tab )
+	end
 end)
 
 --[[
@@ -173,3 +178,15 @@ net.Receive("anplus_screenmsg_ply", function()
 	local text = net.ReadString() || ""	
 	ANPlusScreenMsg( nil, x, y, size, dur, text, font, color)
 end)
+
+function ENT:ANPlusNPCPreDrawEffects()
+	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCPreDrawEffects'] != nil then
+		self:ANPlusGetDataTab()['Functions']['OnNPCPreDrawEffects'](self)
+	end
+end
+
+function ENT:ANPlusNPCPostDrawEffects()
+	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCPostDrawEffects'] != nil then
+		self:ANPlusGetDataTab()['Functions']['OnNPCPostDrawEffects'](self)
+	end
+end

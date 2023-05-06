@@ -3,7 +3,7 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
 util.AddNetworkString("anplus_data_tab")
---util.AddNetworkString("anplus_gmodsave_load_from_the_menu")
+util.AddNetworkString("anplus_net_name")
 util.AddNetworkString("anplus_fix_bones")
 util.AddNetworkString("anplus_set_ik")
 util.AddNetworkString("anplus_holo_eff")
@@ -15,6 +15,7 @@ util.AddNetworkString("anplus_screenmsg_ply")
 util.AddNetworkString("anplus_add_fakename_language")
 util.AddNetworkString("anplus_notify")
 util.AddNetworkString("anplus_paint_decal")
+util.AddNetworkString("anplus_net_entity")
 
 net.Receive("anplus_gmodsave_load_from_the_menu", function(len, ply)	
 	--ANPlusNPCPreApply()	

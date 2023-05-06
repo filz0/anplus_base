@@ -34,9 +34,10 @@ function ENT:ANPlusSetIK(bool)
 	
 end
 
-function ENT:ANPlusUpdateWeaponProficency( wep )
-	if IsValid(self) && IsValid(wep) && self:IsANPlus() && self:ANPlusGetDataTab()['WeaponProficiencyTab'] then
-		local wepTab = self:ANPlusGetDataTab()['WeaponProficiencyTab'][ wep:GetClass() ] || self:ANPlusGetDataTab()['WeaponProficiencyTab'][ wep:GetHoldType() != "" && wep:GetHoldType() ] || self:ANPlusGetDataTab()['WeaponProficiencyTab'][ "Default" ]
+function ENT:ANPlusUpdateWeaponProficency( wep, dataTab )
+	dataTab = self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['WeaponProficiencyTab'] || dataTab
+	if IsValid(self) && IsValid(wep) && dataTab then
+		local wepTab = dataTab[ wep:GetClass() ] || dataTab[ wep:GetHoldType() != "" && wep:GetHoldType() ] || dataTab['Default']
 		if wepTab then
 			if wepTab['Proficiency'] then self:SetCurrentWeaponProficiency( wepTab['Proficiency'] ) end
 			if wep:GetInternalVariable( "m_fMaxRange1" ) && wepTab['PrimaryMaxRange'] then wep:SetSaveValue( "m_fMaxRange1", wepTab['PrimaryMaxRange'] ) end
@@ -480,7 +481,6 @@ function ANPlusCreateActBusy(abTab)
 	end	
 	ent:Spawn()
 	ent:Activate()
-	PrintTable( ent:GetKeyValues() )
 	return ent
 end
 
@@ -1027,6 +1027,14 @@ end
 
 function ENT:ANPlusClearTarget()
 	self:SetSaveValue( "m_hTargetEnt", NULL )
+end
+
+function ENT:ANPlusIsNPCCrouching()
+	local actName = self:GetSequenceActivityName( self:GetSequence() )
+	local check1 = string.find( actName:lower(), "_crouch" )
+	local check2 = string.find( actName:lower(), "_low" )
+	if check1 || check2 then return true end
+	return false
 end
 
 function ENT:ANPlusGetSquadName()

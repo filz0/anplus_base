@@ -362,6 +362,16 @@ function ENT:ANPlusNPCStateChange()
 	end
 end
 
+function ENT:ANPlusDoingSchedule()
+	if self.m_fCurSchedule && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCDoingSchedule'] != nil then		
+		local newSchedule = self:GetCurrentSchedule()
+		if self.m_fCurSchedule != newSchedule then
+			self:ANPlusGetDataTab()['Functions']['OnNPCDoingSchedule'](self, newSchedule, self.m_fCurSchedule)	
+		end
+		self.m_fCurSchedule = newSchedule		
+	end
+end
+
 function ENT:ANPlusNPCTranslateActivity()
 	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'] != nil then
 		local act = self:GetIdealActivity()

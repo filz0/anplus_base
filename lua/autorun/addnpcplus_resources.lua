@@ -104,3 +104,34 @@ sound.Add( {
 	pitch = 100, 
 	sound = "anp/fx/flashlight1.wav"
 } )
+
+ANPlus.AddParticle( "particles/grenade_fx.pcf", {
+	"grenade_explosion_01",
+	"grenade_explosion_01b",
+	"grenade_explosion_01c",
+	"grenade_explosion_01d",
+	"grenade_explosion_01e",
+	"grenade_explosion_01f",
+	"grenade_explosion_01g",
+	"grenade_explosion_01h",
+} )
+
+ANPlus.AddParticle( "particles/devtest.pcf", {
+	"test_beam",
+	"test_collision",
+	"test_lighting",
+	"test_orientation",
+	"test_trails",
+	"weapon_explosion_grenade",
+	"weapon_muzzle_flash_assaultrifle",
+	"weapon_muzzle_flash_assaultrifle_glow",
+	"weapon_muzzle_flash_assaultrifle_main",
+	"weapon_muzzle_flash_assaultrifle_vent",
+	"weapon_muzzle_flash_smoke_small2",
+	"weapon_muzzle_smoke",
+	"weapon_muzzle_smoke_b",
+	"weapon_muzzle_smoke_b Version #2",
+	"weapon_muzzle_smoke_long",
+	"weapon_muzzle_smoke_long_b",
+	"weapon_shove",
+} )

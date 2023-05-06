@@ -66,19 +66,63 @@ SWEP.FlashlightTab = {
 }
 ]]--
 -- SWEP NPC Settings
-SWEP.NPCRestMin				= 1
-SWEP.NPCRestMax				= 2
-SWEP.NPCBurstMin			= 4
-SWEP.NPCBurstMax			= 8
-
-SWEP.NPCWeaponMaxRange		= nil
-SWEP.NPCWeaponMinRange		= nil
-
-SWEP.NPCWepProfSpreadAt0 	= 40 -- Angle of a bullet spread based on NPCs weapon proficiency where 0 is poor && 4 is Soldier 76's ult in Overwatch. Spread is added on top of that.
-SWEP.NPCWepProfSpreadAt1 	= 30
-SWEP.NPCWepProfSpreadAt2 	= 20
-SWEP.NPCWepProfSpreadAt3 	= 10
-SWEP.NPCWepProfSpreadAt4 	= 0
+SWEP.NPCWeaponProficiencyTab = {
+	[WEAPON_PROFICIENCY_POOR] 		= {
+		['Spread']			= 0.1,
+		['SpreadMoveMult']	= 1.1,
+		['RangeMin']		= nil,
+		['RangeMax']		= nil,
+		['BurstRestMin']	= 0.8,
+		['BurstRestMax']	= 1.2,
+		['BurstMin']		= 1,
+		['BurstMax']		= 3,
+		['HeadshotChance']	= 5,
+	},
+	[WEAPON_PROFICIENCY_AVERAGE] 	= {
+		['Spread']			= 0.06,
+		['SpreadMoveMult']	= 1.1,
+		['RangeMin']		= nil,
+		['RangeMax']		= nil,
+		['BurstRestMin']	= 0.5,
+		['BurstRestMax']	= 0.8,
+		['BurstMin']		= 2,
+		['BurstMax']		= 4,
+		['HeadshotChance']	= 20,
+	},
+	[WEAPON_PROFICIENCY_GOOD] 		= {
+		['Spread']			= 0.04,
+		['SpreadMoveMult']	= 1.1,
+		['RangeMin']		= nil,
+		['RangeMax']		= nil,
+		['BurstRestMin']	= 0.3,
+		['BurstRestMax']	= 0.6,
+		['BurstMin']		= 4,
+		['BurstMax']		= 6,
+		['HeadshotChance']	= 40,
+	},
+	[WEAPON_PROFICIENCY_VERY_GOOD] 	= {
+		['Spread']			= 0.02,
+		['SpreadMoveMult']	= 1.1,
+		['RangeMin']		= nil,
+		['RangeMax']		= nil,
+		['BurstRestMin']	= 0.2,
+		['BurstRestMax']	= 0.3,
+		['BurstMin']		= 6,
+		['BurstMax']		= 8,
+		['HeadshotChance']	= 60,
+	},
+	[WEAPON_PROFICIENCY_PERFECT] 	= {
+		['Spread']			= 0.01,
+		['SpreadMoveMult']	= 1.1,
+		['RangeMin']		= nil,
+		['RangeMax']		= nil,
+		['BurstRestMin']	= 0.1,
+		['BurstRestMax']	= 0.1,
+		['BurstMin']		= 6,
+		['BurstMax']		= 10,
+		['HeadshotChance']	= 80,
+	},
+}
 
 -- SWEP Settings
 SWEP.Primary.FireSound		= nil
@@ -92,8 +136,6 @@ SWEP.Primary.AttackGesture	= nil
 SWEP.Primary.Damage			= 5
 SWEP.Primary.EntitySpeed	= 3000
 SWEP.Primary.NumShots		= 1
-SWEP.Primary.Spread			= 0
-SWEP.Primary.MoveSpreadMult	= 2 -- Movement spread multiplier.
 SWEP.Primary.Delay			= 0.05
 SWEP.Primary.PreFireDelay	= 0
 SWEP.Primary.PreFireReset	= 0.1
@@ -108,13 +150,22 @@ SWEP.Primary.AmmoType		= "AR2"
 SWEP.Primary.DefaultClip	= 10
 
 -- Don't touch
-SWEP.WeaponReloaded = false
-SWEP.CurBurstCount = 1
-SWEP.CurRestCalc = 0
-SWEP.CurBurstCalc = 0
-SWEP.PreFireLast = 0
-SWEP.PFDSoundPlayed = false
+SWEP.m_bWeaponReady = false
+SWEP.m_bClipReloaded = false
+SWEP.m_fCurBurstCount = 1
+SWEP.m_fCurRestCalc = 0
+SWEP.m_fCurBurstCalc = 0
+SWEP.m_fPreFireLast = 0
+SWEP.m_bPFDSoundPlayed = false
 SWEP.NPCFireRate = SWEP.Primary.Delay
+SWEP.m_fProfScale = 1
+SWEP.m_fHChance = 50
+SWEP.m_fPrimarySpread = 0.02
+SWEP.m_fPrimarySpreadMMult = 1.1
+SWEP.NPCRestMin	= 1
+SWEP.NPCRestMax	= 2
+SWEP.NPCBurstMin = 4
+SWEP.NPCBurstMax = 8
 
 -- Hooks
 function SWEP:ANPlusInitialize()
@@ -136,10 +187,11 @@ function SWEP:Initialize()
 	
 	if (SERVER) then	
 		if self.FlashlightTab && self.FlashlightTab['SpotlightAttachment'] then self:ANPlusWeaponFlashlight() end
-		self:SetSaveValue( "m_fMaxRange1", self.NPCWeaponMaxRange || self:GetInternalVariable( "m_fMaxRange1" ) )
-		self:SetSaveValue( "m_fMinRange1", self.NPCWeaponMinRange || self:GetInternalVariable( "m_fMinRange1" ) )
 		if self.Primary.FireLoopSound then self.FireLoopSound = CreateSound( self, self.Primary.FireLoopSound ); self.FireLoopSound:Stop() end
-		self:GenerateBurst()		
+		self:GenerateBurst()	
+	elseif (CLIENT) then
+		hook.Add( "PreDrawEffects", self, self.ANPlusPreDrawEffects )
+		hook.Add( "PostDrawEffects", self, self.ANPlusPostDrawEffects )
 	end
 
 end
@@ -158,7 +210,7 @@ function SWEP:TranslateActivity(act)
 end
 ]]--
 function SWEP:ANPlusResetPrimaryFire()
-	self.PFDSoundPlayed = false	
+	self.m_bPFDSoundPlayed = false	
 	if self.Primary.PreFireSound then self:StopSound( self.Primary.PreFireSound ) end
 	if self.FireLoopSound then self.FireLoopSound:Stop() end
 end
@@ -174,10 +226,10 @@ end
 
 function SWEP:PrimaryAttack()
 	if !IsValid(self) || !IsValid(self:GetOwner()) || !self:CanPrimaryAttack() then return end	
-	timer.Create( "ANPlusPreFireReset"..self:EntIndex(), self.Primary.PreFireReset || self.Primary.Delay, 1, function() -- NPCs can't fire faster that 0.01 using this function?	
+	timer.Create( "ANPlusPreFireReset" .. self:EntIndex(), self.Primary.PreFireReset || self.Primary.Delay, 1, function() -- NPCs can't fire faster that 0.01 using this function?	
 		if !IsValid(self) then return end
 		if self.Primary.PostFireSound && (SERVER) then
-			if ( IsValid(self:GetOwner()) && !self:GetOwner():IsCurrentSchedule(SCHED_RELOAD) ) && !self.WeaponReloaded then
+			if ( IsValid(self:GetOwner()) && !self:GetOwner():IsCurrentSchedule(SCHED_RELOAD) ) && !self.m_bClipReloaded then
 				self:EmitSound( self.Primary.PostFireSound ) 
 				self:GetOwner():ClearSchedule()
 			end
@@ -185,24 +237,27 @@ function SWEP:PrimaryAttack()
 		self:ANPlusNPCPostFire()
 		self:ANPlusResetPrimaryFire()	
 	end)
-	if self.Primary.PreFireDelay > 0 && !self.PFDSoundPlayed then
+	if self.Primary.PreFireDelay && self.Primary.PreFireDelay > 0 && !self.m_bPFDSoundPlayed then
 		--self:SetNextPrimaryFire( CurTime() + self.Primary.PreFireDelay )
 		if self.Primary.PreFireSound && (SERVER) then self:EmitSound( self.Primary.PreFireSound ) end
 		self:ANPlusNPCPreFire()
-		self.PFDSoundPlayed = true
-		self.PreFireLast = CurTime() + self.Primary.PreFireDelay
+		self.m_bPFDSoundPlayed = true
+		self.m_fPreFireLast = CurTime() + self.Primary.PreFireDelay
 		return 
 	end
-	if self.PreFireLast > CurTime() then return end
+	if self.m_fPreFireLast > CurTime() then return end
 	if self.Primary.DSound && (SERVER) then sound.Play( self.Primary.DSound, self:GetPos() ) end
 	if self.Primary.FireSound && (SERVER) then self:EmitSound( self.Primary.FireSound ) end		
 	if (SERVER) && self.FireLoopSound && !self.FireLoopSound:IsPlaying() then self.FireLoopSound:Play() end
 	
 	if IsValid(self:GetOwner()) then self:GetOwner():ANPlusRestartGesture( self.Primary.AttackGesture || self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1], true, true ) end
-	self:ANPlusNPCFire()
-	self.WeaponReloaded = false
-	self:SetClip1( !self.Primary.InfiniteAmmo && self:Clip1() - self.Primary.AmmoPerShot || self:Clip1() )
-	self.CurBurstCount = self.NPCBurstMax > 0 && self.NPCRestMax > 0 && self.CurBurstCount - 1 || 1
+	self:ANPlusRemoveMuzzleSmoke()
+	local hShot = ANPlusPercentageChance( self.m_fHChance )
+	
+	self:ANPlusNPCFire(hShot)
+	self.m_bClipReloaded = false
+	timer.Simple( self.Primary.Delay, function() if !IsValid(self) || !IsValid(self:GetOwner()) then return end	self:SetClip1( !self.Primary.InfiniteAmmo && self:Clip1() - self.Primary.AmmoPerShot || self:Clip1() ) end ) -- Making sure that fire animation will play on last bullet.
+	self.m_fCurBurstCount = self.NPCBurstMax > 0 && self.NPCRestMax > 0 && self.m_fCurBurstCount - 1 || 1
 	self:SetNextPrimaryFire( CurTime() + self.Primary.Delay )
 
 end
@@ -234,12 +289,12 @@ local angCheck = {
 
 function SWEP:CanPrimaryAttack()	
 	
-	if !IsValid(self:GetOwner()) || !IsValid(self:GetOwner():GetEnemy()) then return false end
+	if !IsValid(self:GetOwner()) || !IsValid(self:GetOwner():GetEnemy()) || !self.m_bWeaponReady then return false end
 	
 	local owner = self:GetOwner()
 	local enemy = owner:GetEnemy()
 	
-	if CurTime() < self:GetNextPrimaryFire() || !self:ANPlusCanPrimaryFire() || ( ( self:Clip1() <= 0 || ( self:Clip1() - self.Primary.AmmoPerShot ) < 0 ) && !self.Primary.InfiniteAmmo ) || self.CurBurstCount <= 0 then	
+	if CurTime() < self:GetNextPrimaryFire() || !self:ANPlusCanPrimaryFire() || ( ( self:Clip1() <= 0 || ( self:Clip1() - self.Primary.AmmoPerShot ) < 0 ) && !self.Primary.InfiniteAmmo ) || self.m_fCurBurstCount <= 0 then	
 		return false
 	end	
 
@@ -279,31 +334,45 @@ function SWEP:ANPlusWeaponHitEffect( effect, tr, scale )
 	end
 end
 
-function SWEP:ANPlusWeaponShootEffect(att, flags, bone, effect, smokeeffect, smokeafterfiredelay)	
-	local boneid = self:LookupBone( bone || "" )
-	local fx = EffectData()
-	fx:SetEntity( self )
-	fx:SetAttachment( att || -1 )
-	fx:SetFlags( flags || 0 )
-	fx:SetColor( boneid || -1 )
-	util.Effect( effect, fx )	
+function SWEP:ANPlusWeaponShootEffect(att, flags, scale, effect, muzzleSmokeDelay, muzzleSmokeDur)	-- dataVal for default hl2 muzzle = scale. For ANP muzzles = boneID (instead of the attachment).
 	
-	if smokeeffect then util.Effect( smokeeffect, fx ) end	
-	if smokeafterfiredelay then	
-		timer.Create( "ANPlusSmokeEffectTimer"..self:EntIndex(), smokeafterfiredelay, 1, function()			
-			if !IsValid(self) then return end			
-			ParticleEffectAttach( "weapon_muzzle_smoke_b", 4, self, att )  		
-		end)		
+	if effect then
+		local attTab = self:GetAttachment( att )
+		local fx = EffectData()
+		fx:SetEntity( self )
+		fx:SetAttachment( att || -1 )
+		fx:SetFlags( flags || -1 )
+		fx:SetScale( scale || 1 )
+		util.Effect( effect, fx )	
+	end
+	
+	if muzzleSmokeDelay && !IsValid(self.m_pMuzzleSmoke) then
+		muzzleSmokeDelay = muzzleSmokeDelay == -1 && ( self.Primary.PreFireReset || self.Primary.Delay * 2 + self:GetNPCCurRestTime() ) || muzzleSmokeDelay
+		muzzleSmokeDur = muzzleSmokeDur || 1
+		timer.Create( "ANPlusSmokeEffectTimer" .. self:EntIndex(), muzzleSmokeDelay, 1, function()			
+			if !IsValid(self) || IsValid(self.m_pMuzzleSmoke) then return end			
+			--ParticleEffectAttach( "weapon_muzzle_smoke_b", 4, self, att )  	
+			self.m_pMuzzleSmoke = ANPlusCreateParticle( "weapon_muzzle_smoke_b", nil, muzzleSmokeDur, self, att )
+		end )		
 	end	
 end
 
-function SWEP:ANPlusWeaponFireEntity(entity, entPreCallback, entPostCallback, callback)
+function SWEP:ANPlusRemoveMuzzleSmoke()
+	if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
+end
+
+function SWEP:ANPlusWeaponFireEntity(entity, hShotChan, entPreCallback, entPostCallback, callback)
 	
 	local att = self:GetAttachment( self.MuzzleAttachment )
+	local owner = self:GetOwner()
+    local enemy = owner:GetEnemy()
 	local projectiles = {}	
-	local spread = self:GetOwner():IsMoving() && self.Primary.Spread * self.Primary.MoveSpreadMult || self.Primary.Spread
-
-	local shootAngle = self:GetOwner():GetAimVector():Angle()
+	spread = owner:IsMoving() && self.m_fPrimarySpread * self.m_fPrimarySpreadMMult || self.m_fPrimarySpread
+	local muzzlePos = IsValid(enemy) && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
+	local targetPos = ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	local shootAngle = targetPos && ( ( targetPos - muzzlePos ):GetNormalized() ):Angle() || owner:GetAimVector():Angle()
+	
+	--local shootAngle = owner:GetAimVector():Angle()
     shootAngle.p = shootAngle.p + math.Rand( -spread, spread )
     shootAngle.y = shootAngle.y + math.Rand( -spread, spread )
 	
@@ -312,7 +381,7 @@ function SWEP:ANPlusWeaponFireEntity(entity, entPreCallback, entPostCallback, ca
 		local ent = ents.Create( entity )	
 		ent:SetPos( att.Pos )
 		ent:SetAngles( shootAngle )
-		ent:SetOwner( self:GetOwner() )
+		ent:SetOwner( owner )
 		if isfunction( entPreCallback ) then			
 			ent.m_cPreSpawnCB = entPreCallback
 			ent:m_cPreSpawnCB( ent )			
@@ -344,8 +413,8 @@ function SWEP:ANPlusWeaponFireEntity(entity, entPreCallback, entPostCallback, ca
 	
 	if isfunction( callback ) then
 		
-		local origin = self:GetOwner():GetShootPos()
-		local vector = self:GetOwner():GetAimVector()
+		local origin = owner:GetShootPos()
+		local vector = owner:GetAimVector()
 		
 		callback( origin, vector, att )
 			
@@ -353,17 +422,14 @@ function SWEP:ANPlusWeaponFireEntity(entity, entPreCallback, entPostCallback, ca
 	
 end
 
-function SWEP:ANPlusWeaponFireBullet(marksmanAiming, bulletcallback, callback) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
-	
+function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
 	local att = self:GetAttachment( self.MuzzleAttachment )
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
 	local muzzlePos = IsValid(enemy) && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
-	local targetPos = marksmanAiming && ( enemy:ANPlusGetHitGroupBone( 1 ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
-	local spread = self:GetOwner():IsMoving() && self.Primary.Spread * self.Primary.MoveSpreadMult || self.Primary.Spread
-	local direction = targetPos && (targetPos - muzzlePos):GetNormalized() || owner:GetAimVector()	
-	--direction.x = direction.x + math.Rand( -spread, spread )
-   -- direction.y = direction.y + math.Rand( -spread, spread )
+	local targetPos = ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	spread = self:GetOwner():IsMoving() && self.m_fPrimarySpread * self.m_fPrimarySpreadMMult || self.m_fPrimarySpread	
+	local direction = targetPos && ( targetPos - muzzlePos ):GetNormalized() || owner:GetAimVector()
 	
 	local bullet = {}
 		bullet.Attacker = self:GetOwner()
@@ -432,17 +498,17 @@ function SWEP:ANPlusReload()
 end
 
 function SWEP:Reload()
-	
-	if self:Clip1() >= self:GetMaxClip1() || self.Primary.InfiniteAmmo || self.WeaponReloaded then return end
+
+	if self:Clip1() >= self:GetMaxClip1() || self.Primary.InfiniteAmmo || self.m_bClipReloaded then return end
 	
 	self:ANPlusResetPrimaryFire()
-	
+	self:GenerateBurst()
 	self:ANPlusReload()	
-		
+
 	if self.Primary.PostFireSound && (SERVER) then self:StopSound( self.Primary.PostFireSound ) end
 	if self.Primary.ReloadSound && (SERVER) then self:EmitSound( self.Primary.ReloadSound ) end
 
-	self.WeaponReloaded = true
+	self.m_bClipReloaded = true
 end
 
 function SWEP:ANPlusThink()
@@ -452,7 +518,7 @@ function SWEP:ThinkServer()
 	
 	if (CLIENT) || !IsValid(self) then return end
 	if !IsValid(self:GetOwner()) || self:GetOwner():GetActiveWeapon() != self then return end
-	
+
 	self:ANPlusThink()
 	
 	local owner = self:GetOwner()
@@ -466,8 +532,8 @@ function SWEP:ThinkServer()
 				self:ANPlusWeaponFlashlightToggle( false )
 			end
 		end
-		
-		local OwnerACT = owner:GetActivity()		
+
+		local OwnerACT = owner:GetActivity()	
 		if self.LastOwnerACT != OwnerACT && self.BlackListACTs[ OwnerACT ] && !self.BlackListACTs[ self.LastOwnerACT ] then
 			self:Reload()
 		end		
@@ -487,18 +553,18 @@ function SWEP:ANPlusNPCTriggerPull( shootPos, shootDir )
 end
 
 function SWEP:NPCShoot_Primary( shootPos, shootDir )
-	
+
 	if !self:ANPlusCanPrimaryFire() then return end
 	
 	local owner = self:GetOwner()
 	
 	self:ANPlusNPCTriggerPull( shootPos, shootDir )
 	
-	if self.CurBurstCount <= 0 then 
+	if self.m_fCurBurstCount <= 0 then 
 	
-		timer.Create( "ANPlusCancelFire"..self:EntIndex(), self:GetNPCCurRestTime(), 1, function() -- NPCs can't fire faster that 0.01 using this function?	
+		timer.Create( "ANPlusCancelFire" .. self:EntIndex(), self:GetNPCCurRestTime(), 1, function() -- NPCs can't fire faster that 0.01 using this function?	
 			if !IsValid(self) || !IsValid(self:GetOwner()) then return end	
-			timer.Remove( "ANPlusFire"..self:EntIndex() )
+			timer.Remove( "ANPlusFire" .. self:EntIndex() )
 			self:GenerateBurst() -- Prepare new current burst count for our new burst.
 		end)	
 		
@@ -506,56 +572,66 @@ function SWEP:NPCShoot_Primary( shootPos, shootDir )
 		
 	end
 	
-	timer.Create( "ANPlusFire"..self:EntIndex(), 0, 0, function()
+	timer.Create( "ANPlusFire" .. self:EntIndex(), 0, 0, function()
 		if !IsValid(self) || !IsValid(owner) || !self:CanPrimaryAttack() then		
 			return false 
 		end --!self.AllowedSchedules[ self:GetOwner():GetCurrentSchedule() ] then return false end		
+
 		self:PrimaryAttack()
 	end)
 end
 
 function SWEP:GenerateBurst() -- Cuz I can't get the current burst count && rest time, I have to calculate it myself... >:(	
-	self.CurRestCalc = math.Rand( self.NPCRestMin, self.NPCRestMax )
-	self.CurBurstCalc = self.NPCBurstMax > 0 && math.random( self.NPCBurstMin, self.NPCBurstMax ) || 1 -- Let's check if our max burst count is higher than 0. If not, screw the burst mechanic && just go brrrrrr.
-	self.CurBurstCount = self.CurBurstCalc
+	self.m_fCurRestCalc = math.Round( math.Rand( self.NPCRestMin, self.NPCRestMax ), 2 )
+	self.m_fCurBurstCalc = self.NPCBurstMax > 0 && math.random( self.NPCBurstMin, self.NPCBurstMax ) || 1 -- Let's check if our max burst count is higher than 0. If not, screw the burst mechanic && just go brrrrrr.
+	self.m_fCurBurstCount = self.m_fCurBurstCalc
 end
 
 function SWEP:GetNPCRestTimes()		
-	return self.CurRestCalc, self.CurRestCalc
+	return self.m_fCurRestCalc, self.m_fCurRestCalc
 end
 
-function SWEP:GetNPCCurRestTime()		
-	return self.CurRestCalc	
+function SWEP:GetNPCCurRestTime()	
+	return self.m_fCurRestCalc	
 end
 
 function SWEP:GetNPCBurstSettings() -- Maybe read from it?
-	return self.CurBurstCalc, self.CurBurstCalc, 0--self.NPCFireRate
+	return self.m_fCurBurstCalc, self.m_fCurBurstCalc, 0--self.NPCFireRate
 end
 
 function SWEP:GetNPCCurBurst() -- Maybe read from it?	
-	return self.CurBurstCalc
+	return self.m_fCurBurstCalc
 end
 
 function SWEP:GetCapabilities()
-	return bit.bor(CAP_WEAPON_RANGE_ATTACK1,CAP_INNATE_RANGE_ATTACK1)
+	return bit.bor( CAP_WEAPON_RANGE_ATTACK1, CAP_INNATE_RANGE_ATTACK1 )
 end
 
 function SWEP:GetNPCBulletSpread( wp )
 
 	-- Handles the bullet spread based on the given proficiency (wp)
 	-- return value is in degrees
-	--print(wp)
-	if wp == 0 then
-		return self.NPCWepProfSpreadAt0
-	elseif wp == 1 then
-		return self.NPCWepProfSpreadAt1
-	elseif wp == 2 then
-		return self.NPCWepProfSpreadAt2
-	elseif wp == 3 then
-		return self.NPCWepProfSpreadAt3
-	elseif wp == 4 then
-		return self.NPCWepProfSpreadAt4
-	end
+	local profNPC = self.NPCWeaponProficiencyTab[ wp ]
+	self.m_fPrimarySpread 		= profNPC['Spread']
+	self.m_fPrimarySpreadMMult  = profNPC['SpreadMoveMult']
+	self.NPCRestMin				= profNPC['BurstRestMin']
+	self.NPCRestMax				= profNPC['BurstRestMax']
+	self.NPCBurstMin			= profNPC['BurstMin']
+	self.NPCBurstMax			= profNPC['BurstMax']
+	self.m_fHChance				= profNPC['HeadshotChance']
+
+	self:SetSaveValue( "m_fMinRange1", profNPC['RangeMin'] || self:GetInternalVariable( "m_fMinRange1" ) )
+	self:SetSaveValue( "m_fMaxRange1", profNPC['RangeMax'] || self:GetInternalVariable( "m_fMaxRange1" ) )
+	
+	local defDeg = 10
+	local spread = self.m_fPrimarySpread * defDeg
+	
+	if !self.m_bWeaponReady then
+		self:GenerateBurst()
+		self.m_bWeaponReady = true
+	end	
+
+	return spread
 		
 end
 
@@ -647,7 +723,7 @@ function SWEP:OnDrop()
 	elseif self.DropOnDeath && isnumber(self.DropOnDeath) then
 		SafeRemoveEntityDelayed( self, self.DropOnDeath )
 	end
-	
+	self.m_bWeaponReady = false
 	timer.Create( "ANPlusRemoveOnDrop" .. self:EntIndex(), 10, 1, function()
 		if !IsValid(self) then return end
 		if IsValid(self) && !IsValid(self:GetOwner()) then self:Remove() end
@@ -670,7 +746,13 @@ function SWEP:OnRemove()
 end
 
 if (CLIENT) then
-
+	
+	function SWEP:ANPlusPreDrawEffects()
+	end
+	
+	function SWEP:ANPlusPostDrawEffects()
+	end
+	
 	function SWEP:ANPlusDrawWorldModel()
 		return true
 	end

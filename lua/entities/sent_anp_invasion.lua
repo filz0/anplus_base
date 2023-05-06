@@ -456,7 +456,7 @@ local function GetNPCInShape(self, npc, npcData)
 	
 	if npc:IsNPC() && !IsValid(npc:GetActiveWeapon()) && npcData['Weapons'] && !npcData['CustomWeapon'] then 
 		local wep = npcData['Weapons'][ math.random( 1, #npcData['Weapons'] ) ]
-		npc:Give( wep )
+		if wep then npc:Give( wep ) end
 	elseif !IsValid(npc:GetActiveWeapon()) && npcData['CustomWeapon'] then
 		npc:Give( npcData['CustomWeapon']['Class'] )
 	end
@@ -503,7 +503,7 @@ end
 		local npcData = self.NPCForCurWave[ math.random( 1, #self.NPCForCurWave ) ]
 		local spRand = self.NPCSpawnPoints[ math.random( 1, #self.NPCSpawnPoints ) ]
 		local spoint = IsValid(spRand) && spRand || self		
-		local npc = ents.Create( npcData['Class'] )	
+		local npc = ents.Create( tostring( npcData['Class'] ) )	
 		npc:SetName( npcData['Name'] )
 		npc:SetPos( spoint:GetPos() + Vector( 0, 0, 10 ) )
 		npc:SetAngles( Angle( 0, spoint:GetAngles().y, 0 ) )

@@ -15,7 +15,6 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				if repData && !override then
 					local modelCheck = self:GetModel() && string.find( string.lower( self:GetModel() ), string.lower( repData['Model'] ) ) || repData['Model'] == "No Model" || false	
 					local mapCheck = repData['Map'] == "No Map" || game.GetMap() == repData['Map'] || false	
-					print("KKKK" .. tostring(repData['Class']) .. "KKKK")
 					--print(repData['Replacement'] , repData['Class'] == self:GetClass() , modelCheck , tonumber( repData['Skin'] ) == self:GetSkin() , mapCheck , ANPlusPercentageChance( tonumber( repData['Chance'] ) ))
 					if repData['Replacement'] && repData['Class'] == self:GetClass() && modelCheck && tonumber( repData['Skin'] ) == self:GetSkin() && mapCheck && ANPlusPercentageChance( tonumber( repData['Chance'] ) ) then 					
 						name = repData['Replacement'] 
@@ -117,7 +116,12 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						
 						local physCheck = self:GetPhysicsObject()
 						if !IsValid(physCheck) || self:GetSolid() != SOLID_VPHYSICS then
-							self:SetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
+							--self:ResetSequenceInfo()
+							self:SetCycle(1)
+							self:ResetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
+							--self:SetIdealActivity( ACT_IDLE )
+							--self:ResetIdealActivity( ACT_IDLE )
+							--self:SetActivity( -1 )
 						end
 					end
 					
@@ -190,7 +194,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 							self:Give( self:GetKeyValues()['additionalequipment'] ) 						
 						end
 						if data['ForceDefaultWeapons'] && data['DefaultWeapons'] then self:ANPlusForceDefaultWeapons( data['DefaultWeapons'] ) end
-						if data['WeaponProficiency'] then self:SetCurrentWeaponProficiency( data['WeaponProficiency'] ) end	
+						self:ANPlusUpdateWeaponProficency( self:GetActiveWeapon(), data['WeaponProficiencyTab'] )
 						if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end
 						if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
 						if data['LookDistance'] then self:SetMaxLookDistance( data['LookDistance'] ) end -- How tf it doesn't work for some people is beyond me. 
@@ -205,6 +209,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self.m_tbANPlusACTOther = data['ActivityOther']
 						self.m_tbANPlusACTMovement = data['ActivityMovement']	
 						self.m_fCurNPCState = self:GetNPCState()
+						self.m_fCurSchedule = self:GetCurrentSchedule()
 						self.m_tTACTData = {}
 						if data['UseANPSquadSystem'] then self:ANPlusAddToCSquad( self:ANPlusGetSquadName() ) end
 					end
@@ -251,7 +256,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				
 				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
 				self:ANPlusApplyDataTab( data )					
-				--self:ANPlusUpdateWeaponProficency( self:IsNPC() && self:GetActiveWeapon() ) 
+				
 				if (SERVER) then self:ANPlusSetKillfeedName( data['KillfeedName'] ) end
 				
 				if isfunction( postCallback ) then
@@ -263,9 +268,22 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end	
 				
 				hook.Add( "Think", self, self.ANPlusNPCThink )
-				if (SERVER) then self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) end
-				--self:AddCallback( "OnRestore", self.ANPlusOnRestore )
-				--hook.Add( "OnRestore", self, self.ANPlusOnRestore )
+				if (SERVER) then
+					self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) 
+				end				
+				if (CLIENT) then
+					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCRenderOverride'] != nil then
+						self.RenderOverride = function(flags)
+							self:ANPlusGetDataTab()['Functions']['OnNPCRenderOverride'](self, flags)	
+						end
+					end
+					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCPreDrawEffects'] != nil then
+						hook.Add( "PreDrawEffects", self, self.ANPlusNPCPreDrawEffects )
+					end
+					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCPostDrawEffects'] != nil then
+						hook.Add( "PostDrawEffects", self, self.ANPlusNPCPostDrawEffects )
+					end
+				end
 				
 				self.ANPlusEntity = true
 			end

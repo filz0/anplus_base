@@ -21,6 +21,8 @@ EFFECT.Sounds[7] = { Pitch = 70, Wavs = { "player/pl_shell1.wav", "player/pl_she
 EFFECT.Sounds[8] = { Pitch = 70, Wavs = { "anp/fx/ar2_shell1.wav", "anp/fx/ar2_shell2.wav", "anp/fx/ar2_shell3.wav", "anp/fx/ar2_shell4.wav", "anp/fx/ar2_shell5.wav", "anp/fx/ar2_shell6.wav", "anp/fx/ar2_shell7.wav", "anp/fx/ar2_shell8.wav", "anp/fx/ar2_shell9.wav", "anp/fx/ar2_shell10.wav" } }
 EFFECT.Sounds[9] = { Pitch = 70, Wavs = { "anp/fx/ar2_shell1.wav", "anp/fx/ar2_shell2.wav", "anp/fx/ar2_shell3.wav", "anp/fx/ar2_shell4.wav", "anp/fx/ar2_shell5.wav", "anp/fx/ar2_shell6.wav", "anp/fx/ar2_shell7.wav", "anp/fx/ar2_shell8.wav", "anp/fx/ar2_shell9.wav", "anp/fx/ar2_shell10.wav" } }
 
+local cVar = GetConVar( "anplus_swep_shell_smoke" )
+
 function EFFECT:Init( data )
 	
 	if not ( data:GetEntity() ):IsValid() then 
@@ -66,6 +68,8 @@ function EFFECT:Init( data )
 	end
 	
 	self.Entity:SetAngles( ang )
+	
+	if cVar:GetBool() then ParticleEffectAttach( "weapon_muzzle_smoke_b", 1, self.Entity, -1 ) end
 	
 	self.HitSound = table.Random( self.Sounds[ bullettype ].Wavs )
 	self.HitPitch = self.Sounds[ bullettype ].Pitch + math.random(-10,10)

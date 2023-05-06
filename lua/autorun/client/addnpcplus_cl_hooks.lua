@@ -103,3 +103,26 @@ hook.Add( "HUDPaint", "ANPlusLoad_TestDummyDMGStuff", function()
 	end
 	
 end)
+
+hook.Add( "PopulateNPCs", "ANPlusLoad_PopulateNPCs", function(pnlContent, tree, node)
+	local npcData = list.GetForEdit( "NPC" )
+	for i = 1, #ANPRemoveFromSpawnList do
+		local npcToRemove = ANPRemoveFromSpawnList[ i ]
+		if npcData[ npcToRemove ] then
+			print("REMOVED NPC", npcData[ npcToRemove ])
+			npcData[ npcToRemove ] = nil
+			--npcToRemove = nil
+		end
+	end
+end)
+
+hook.Add( "PopulateEntities", "ANPlusLoad_PopulateEntities", function(pnlContent, tree, node)
+	local entData = list.GetForEdit( "SpawnableEntities" )
+	for i = 1, #ANPRemoveFromSpawnList do
+		local entToRemove = ANPRemoveFromSpawnList[ i ]
+		if entData[ entToRemove ] then
+			entData[ entToRemove ] = nil
+			--entToRemove = nil
+		end
+	end
+end)
