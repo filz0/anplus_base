@@ -1,0 +1,29 @@
+"Refract"
+{
+ 	"$model" 1
+ 	"$refractamount" "1"
+	"$scale" "[1 1]"
+	"$bumpframe" "0"
+	"$translucent" "1"
+	"$nofog" "1"
+
+
+	"Refract_dx90"
+	{
+	 	"$normalmap" "effects/anp/bulletripple_normal"
+		"$forcerefract" 1
+ 		//"$bluramount" "3"
+	}
+
+	"Refract_dx80"
+	{
+	 	"$dudvmap" "effects/anp/bulletripple_dudv"
+		"$forcerefract" 1
+	}
+
+	"UnlitGeneric_dx6"
+	{
+		"$basetexture" "effects/grenadeeffect" 
+	}
+
+}
