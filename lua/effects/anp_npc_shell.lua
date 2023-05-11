@@ -69,7 +69,7 @@ function EFFECT:Init( data )
 	
 	self.Entity:SetAngles( ang )
 	
-	if cVar:GetBool() then ParticleEffectAttach( "weapon_muzzle_smoke_b", 1, self.Entity, -1 ) end
+	if cVar:GetBool() then ParticleEffectAttach( "weapon_muzzle_smoke", 1, self.Entity, -1 ) end
 	
 	self.HitSound = table.Random( self.Sounds[ bullettype ].Wavs )
 	self.HitPitch = self.Sounds[ bullettype ].Pitch + math.random(-10,10)
