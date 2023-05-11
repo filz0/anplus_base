@@ -775,8 +775,8 @@ function SWEP:SetupWeaponHoldTypeForAI( htype )
 
 		if cVar then
 
-            self.ActivityTranslateAI[ACT_IDLE]							= ACT_IDLE_SHOTGUN
-			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= ACT_IDLE_SHOTGUN
+            self.ActivityTranslateAI[ACT_IDLE]							= ACT_IDLE_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= ACT_IDLE_SMG1
 			self.ActivityTranslateAI[ACT_IDLE_STIMULATED]				= ACT_IDLE_ANGRY_SHOTGUN
 			self.ActivityTranslateAI[ACT_IDLE_AGITATED]					= ACT_IDLE_ANGRY_SHOTGUN
 			self.ActivityTranslateAI[ACT_IDLE_STEALTH]					= ACT_IDLE_ANGRY_SHOTGUN
@@ -833,8 +833,8 @@ function SWEP:SetupWeaponHoldTypeForAI( htype )
 
 		elseif class == "npc_combine_s" then
 
-			self.ActivityTranslateAI[ACT_IDLE]							= ACT_IDLE_SHOTGUN
-			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= ACT_IDLE_SHOTGUN
+			self.ActivityTranslateAI[ACT_IDLE]							= ACT_IDLE_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= ACT_IDLE_SMG1
 			self.ActivityTranslateAI[ACT_IDLE_STIMULATED]				= ACT_IDLE_ANGRY_SHOTGUN
 			self.ActivityTranslateAI[ACT_IDLE_AGITATED]					= ACT_IDLE_ANGRY_SHOTGUN
 			self.ActivityTranslateAI[ACT_IDLE_STEALTH]					= ACT_IDLE_ANGRY_SHOTGUN
@@ -891,8 +891,8 @@ function SWEP:SetupWeaponHoldTypeForAI( htype )
 
 		elseif class == "npc_citizen" || class == "npc_alyx" || class == "npc_monk" then
 
-			self.ActivityTranslateAI[ACT_IDLE]							= ACT_IDLE_SHOTGUN
-			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= ACT_IDLE_SHOTGUN
+			self.ActivityTranslateAI[ACT_IDLE]							= ACT_IDLE_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= ACT_IDLE_SMG1
 			self.ActivityTranslateAI[ACT_IDLE_STIMULATED]				= ACT_IDLE_ANGRY_SHOTGUN
 			self.ActivityTranslateAI[ACT_IDLE_AGITATED]					= ACT_IDLE_ANGRY_SHOTGUN
 			self.ActivityTranslateAI[ACT_IDLE_STEALTH]					= ACT_IDLE_ANGRY_SHOTGUN
@@ -949,7 +949,7 @@ function SWEP:SetupWeaponHoldTypeForAI( htype )
 
 		elseif class == "npc_barney" then
 
-			self.ActivityTranslateAI[ACT_IDLE]							= ACT_IDLE__SMG1
+			self.ActivityTranslateAI[ACT_IDLE]							= ACT_IDLE_SMG1
 			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= ACT_IDLE_SMG1
 			self.ActivityTranslateAI[ACT_IDLE_STIMULATED]				= ACT_IDLE_ANGRY_SMG1
 			self.ActivityTranslateAI[ACT_IDLE_AGITATED]					= ACT_IDLE_ANGRY_SMG1

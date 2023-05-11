@@ -105,6 +105,20 @@ sound.Add( {
 	sound = "anp/fx/flashlight1.wav"
 } )
 
+local bulletModels = {
+	"models/anp/bullets/bt_9mm.mdl",
+	"models/anp/bullets/bt_357.mdl",
+	"models/anp/bullets/bt_762.mdl",
+	"models/anp/bullets/bt_h9mm.mdl",
+	"models/anp/bullets/bt_h357.mdl",
+	"models/anp/bullets/bt_h762.mdl",
+	"models/anp/bullets/w_pellet.mdl",
+}
+
+for i = 1, #bulletModels do
+	util.PrecacheModel( bulletModels[ i ] )
+end
+
 ANPlus.AddParticle( "particles/grenade_fx.pcf", {
 	"grenade_explosion_01",
 	"grenade_explosion_01b",

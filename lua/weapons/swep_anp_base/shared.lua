@@ -143,6 +143,43 @@ SWEP.Primary.ClipSize		= 30
 SWEP.Primary.InfiniteAmmo	= false
 SWEP.Primary.Tracer			= 1
 SWEP.Primary.TracerName		= "ToolTracer"
+--[[
+SWEP.ANPTracerSettingTab			= { -- anp_tracer
+	['TracerMat']				= nil,
+	['TracerLength']			= nil,
+	['TracerSpeedMul']			= nil,
+	['TracerScale']				= nil,
+	['TracerColor']				= nil,
+	
+	['TrailMat']				= nil,
+	['TrailScale']				= nil,
+	['TrailDelay']				= nil,
+	['TrailDuration']			= nil,
+	['TrailColor']				= nil,
+}
+--------------------------OR-------------------------------------------OR
+SWEP.ANPTracerSettingTab			= { -- anp_tracer_3d
+	['BulletModel']				= nil, -- 1 to 7 or model string.
+	['BulletMat']				= nil,
+	['BulletColor']				= nil,
+	['BulletScale']				= nil,
+	['BulletOffsetPos']			= nil,
+	['BulletOffsetAng']			= nil,
+	['BulletParticle']			= nil, if set, tracer won't be created.
+	['BulletSpeedMul']			= 1.1,
+	
+	['TracerMat']				= nil,
+	['TracerLength']			= 10,	
+	['TracerScale']				= 1,
+	['TracerColor']				= nil,
+	
+	['TrailMat']				= nil,
+	['TrailScale']				= 3,
+	['TrailDelay']				= nil,
+	['TrailDuration']			= 1,
+	['TrailColor']				= nil,
+}
+]]--
 SWEP.Primary.Force			= 5
 SWEP.Primary.AmmoPerShot	= 1
 SWEP.Primary.Automatic		= true
@@ -432,17 +469,17 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback) -- bul
 	local direction = targetPos && ( targetPos - muzzlePos ):GetNormalized() || owner:GetAimVector()
 	
 	local bullet = {}
-		bullet.Attacker = self:GetOwner()
-		bullet.Num = self.Primary.NumShots
-		bullet.Src = muzzlePos
-		bullet.Dir = direction
-		bullet.Tracer = self.Primary.Tracer
-		bullet.TracerName = self.Primary.TracerName
-		bullet.Spread = Vector( spread, spread, 0 )
-		bullet.Damage = self.Primary.Damage
-		bullet.Force = self.Primary.Force
-		bullet.AmmoType = self.Primary.AmmoType 
-		bullet.Callback = bulletcallback || nil
+		bullet.Attacker 	= self:GetOwner()
+		bullet.Num 			= self.Primary.NumShots
+		bullet.Src 			= muzzlePos
+		bullet.Dir 			= direction
+		bullet.Tracer 		= self.Primary.Tracer
+		bullet.TracerName 	= self.Primary.TracerName
+		bullet.Spread 		= Vector( spread, spread, 0 )
+		bullet.Damage 		= self.Primary.Damage
+		bullet.Force 		= self.Primary.Force
+		bullet.AmmoType 	= self.Primary.AmmoType 
+		bullet.Callback 	= bulletcallback || nil
 
 	self:FireBullets( bullet )
 	
@@ -612,27 +649,27 @@ function SWEP:GetNPCBulletSpread( wp )
 	-- Handles the bullet spread based on the given proficiency (wp)
 	-- return value is in degrees
 	local profNPC = self.NPCWeaponProficiencyTab[ wp ]
-	self.m_fPrimarySpread 		= profNPC['Spread']
-	self.m_fPrimarySpreadMMult  = profNPC['SpreadMoveMult']
-	self.NPCRestMin				= profNPC['BurstRestMin']
-	self.NPCRestMax				= profNPC['BurstRestMax']
-	self.NPCBurstMin			= profNPC['BurstMin']
-	self.NPCBurstMax			= profNPC['BurstMax']
-	self.m_fHChance				= profNPC['HeadshotChance']
+	if profNPC then
+		self.m_fPrimarySpread 		= profNPC['Spread']
+		self.m_fPrimarySpreadMMult  = profNPC['SpreadMoveMult']
+		self.NPCRestMin				= profNPC['BurstRestMin']
+		self.NPCRestMax				= profNPC['BurstRestMax']
+		self.NPCBurstMin			= profNPC['BurstMin']
+		self.NPCBurstMax			= profNPC['BurstMax']
+		self.m_fHChance				= profNPC['HeadshotChance']
 
-	self:SetSaveValue( "m_fMinRange1", profNPC['RangeMin'] || self:GetInternalVariable( "m_fMinRange1" ) )
-	self:SetSaveValue( "m_fMaxRange1", profNPC['RangeMax'] || self:GetInternalVariable( "m_fMaxRange1" ) )
+		self:SetSaveValue( "m_fMinRange1", profNPC['RangeMin'] || self:GetInternalVariable( "m_fMinRange1" ) )
+		self:SetSaveValue( "m_fMaxRange1", profNPC['RangeMax'] || self:GetInternalVariable( "m_fMaxRange1" ) )
 	
-	local defDeg = 10
-	local spread = self.m_fPrimarySpread * defDeg
-	
-	if !self.m_bWeaponReady then
-		self:GenerateBurst()
-		self.m_bWeaponReady = true
-	end	
+		local defDeg = 10
+		local spread = self.m_fPrimarySpread * defDeg
+		if !self.m_bWeaponReady then
+			self:GenerateBurst()
+			self.m_bWeaponReady = true
+		end	
 
 	return spread
-		
+	end	
 end
 
 function SWEP:ANPlusGetWeaponCustomPosition(owner)

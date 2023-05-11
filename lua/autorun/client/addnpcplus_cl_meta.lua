@@ -216,12 +216,17 @@ render.ANPlusDrawSpriteParallax = function(pos, widthMin, heightMin, widthMax, h
 	render.DrawSprite( pos, w, h, color )
 end
 
-render.ANPlusDrawBeamTrail = function(ent, attachmentID, color, width, startSize, endSize, length, spacing, stretch )
-	if attachmentID then
-		attTab = ent:GetAttachment( attachmentID )
-		pos = attTab.Pos
+render.ANPlusDrawBeamTrail = function(ent, attachmentID, offsetVec, color, width, startSize, endSize, length, spacing, stretch )
+
+	offsetVec = offsetVec || Vector( 0, 0, 0 )
+	spacing = spacing || 0
+	local pos, ang = nil, nil
+	
+	if attachmentID && attachmentID != -1 then		
+		local attTab = ent:GetAttachment( attachmentID )
+		pos, ang = LocalToWorld( offsetVec, Angle( 0, 0, 0 ), attTab.Pos, attTab.Ang )
 	else
-		pos = ent:GetPos()
+		pos, ang = LocalToWorld( offsetVec, Angle( 0, 0, 0 ), ent:GetPos(), ent:GetAngles() )
 		attachmentID = -1
 	end
 	

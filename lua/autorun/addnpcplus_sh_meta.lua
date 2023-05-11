@@ -114,7 +114,7 @@ function metaENT:ANPlusValidAnglesNormal(pos, full360)
 	local pitch = math.Round( math.NormalizeAngle( sAng.p - aimDir.p ) * 1000 ) / 1000	
 	local yaw = math.Round( math.NormalizeAngle( sAng.y - aimDir.y ) * 1000 ) / 1000	
 	local roll = math.Round( math.NormalizeAngle( sAng.r - aimDir.r ) * 1000 ) / 1000	
-	local validAng = ( ( ( pitch <= ( full360.Pitch[ 1 ] ) && pitch >= 0 ) || ( pitch <= 0 && pitch >= ( full360.Pitch[ 2 ] ) ) ) && ( ( yaw <= ( full360.Yaw[ 1 ] ) && yaw >= 0 ) || ( yaw <= 0 && yaw >= ( full360.Yaw[ 2 ] ) ) ) && ( ( roll <= ( full360.Roll[ 1 ] ) && roll >= 0 ) || ( roll <= 0 && roll >= ( full360.Roll[ 2 ] ) ) ) )
+	local validAng = ( ( ( pitch <= ( full360.Pitch[ 1 ] ) && pitch >= full360.Pitch[ 2 ] ) ) && ( ( yaw <= ( full360.Yaw[ 1 ] ) && yaw >= ( full360.Yaw[ 2 ] ) ) ) && ( ( roll <= ( full360.Roll[ 1 ] ) && roll >= full360.Roll[ 2 ] ) ) )
 	ANPdevMsg( "ValidAnglesNormal: "..pitch.." "..yaw.." "..roll.." "..tostring(validAng), 2 )
 	return validAng
 end
