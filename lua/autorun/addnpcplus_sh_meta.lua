@@ -1096,3 +1096,138 @@ function metaENT:ANPlusVisibleInFOV(ent, fovmul, npcfov) -- Big credit to the Ca
 	return false
 
 end
+
+--[[
+self.ANPlusDoorKickVL = {
+	sound = {{"npc/combine_soldier/vo/on1.wav","npc/combine_soldier/vo/on2.wav"},"npc/combine_soldier/vo/team.wav",{"npc/combine_soldier/vo/fixsightlinesmovein.wav","npc/combine_soldier/vo/flash.wav","npc/combine_soldier/vo/flush.wav","npc/combine_soldier/vo/movein.wav"},{"npc/combine_soldier/vo/off1.wav","npc/combine_soldier/vo/off2.wav","npc/combine_soldier/vo/off3.wav"}},
+	duration = {0,0,0,0},
+	channel = CHAN_AUTO,
+	volume = VOL_NORM,
+	level = 75,
+	pitch = 100
+}
+]]--
+function metaENT:ANPlusEmitSoundSentence(stable, stopdead, callback)
+	
+	stopdead = stopdead || false
+	
+	if !IsValid(self) || stable == nil || !istable(stable) || ( !self:ANPlusAlive() && stopdead ) then return end
+	
+	if #stable.sound == 1 then 
+		
+		if istable(stable.sound[1]) then
+	
+			local snd = stable.sound[1]
+			self:EmitSound( snd[math.random(#snd)], stable.level, stable.pitch, stable.volume, stable.channel )
+			
+		else
+		
+			self:EmitSound(self:EmitSound(snd[1],stable.level,stable.pitch,stable.volume,stable.channel),stable.level,stable.pitch,stable.volume,stable.channel)
+			
+		end
+
+		return 
+		
+	end
+	
+	self:ANPlusStopSoundSentence( true )
+	
+	local ANPlus_ASS_CurAudio = 1
+	local ANPlus_ASS_SoundLast = 0
+	local ANPlus_ASS_SoundDelay = 0
+	
+	local timerName = "ANPEmitSoundSentenceTimer" .. self:EntIndex()
+	
+	timer.Remove( timerName )
+	
+	timer.Create( timerName, 0.01, 0, function()
+	
+		if !IsValid(self) || stable == nil || ( !self:ANPlusAlive() && stopdead ) || ( ANPlus_ASS_CurAudio > #stable.sound ) then
+		
+			timer.Remove(timerName)
+			ANPlus_ASS_CurSound = 1
+			
+			if isfunction(callback) then			
+				callback()				
+			end
+			
+		return end
+	
+		if CurTime() - ANPlus_ASS_SoundLast >= ANPlus_ASS_SoundDelay then
+			
+			if ANPlus_ASS_CurAudio <= #stable.sound then
+				
+				local curAudio = stable.sound[ANPlus_ASS_CurAudio]
+				local curRand = math.random( #curAudio )
+				local dur = nil
+				local snd = nil
+				local sndtab = nil
+				
+				if istable(curAudio) then
+					
+					sndtab = curAudio[curRand]
+	
+				end
+
+				if istable(curAudio) then
+					
+					if istable( sndtab ) && isnumber( sndtab[ 2 ] ) then
+						dur = ANPlusSoundDuration( sndtab[ 1 ] ) + sndtab[ 2 ]
+					elseif isnumber( curAudio[ 2 ] ) then
+						dur = ANPlusSoundDuration(sndtab) + curAudio[ 2 ]
+					else
+						dur = ANPlusSoundDuration(sndtab)
+					end
+					
+				else
+				
+					dur = ANPlusSoundDuration(curAudio)
+					
+				end
+				
+				ANPlus_ASS_SoundDelay = dur
+				
+				if istable(curAudio) then
+					
+					if istable( sndtab ) then
+						snd = sndtab[ 1 ]
+					else
+						snd = sndtab
+					end
+					
+				else
+				
+					snd = curAudio
+					
+				end
+				
+				self.m_sASSCurSentence = snd
+				self:EmitSound( snd, stable.level, stable.pitch, stable.volume, stable.channel )
+				
+				ANPlus_ASS_CurAudio = ANPlus_ASS_CurAudio + 1
+				ANPlus_ASS_SoundLast = CurTime()
+				
+			end
+			
+		end
+		
+	end)
+	
+end
+
+function metaENT:ANPlusStopSoundSentence(fullstop)
+
+	if timer.Exists( "ANPEmitSoundSentenceTimer" .. self:EntIndex() ) then 
+	
+		timer.Remove( "ANPEmitSoundSentenceTimer" .. self:EntIndex() ) 
+		
+		if fullstop == true && self.m_sASSCurSentence != nil then
+		
+			self:StopSound( self.m_sASSCurSentence )
+			self.m_sASSCurSentence = nil
+			
+		end
+		
+	end
+	
+end

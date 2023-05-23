@@ -8,9 +8,9 @@ function EFFECT:Init(data)
 	
 	if !IsValid(self.Entity) then return end
 	
+	local attTab 	= self.Attachment > 0 && self.Entity:GetAttachment( self.Attachment )
 	local Pos, Ang 	= self.Entity:GetBonePosition( self.BoneID )	
-	self.Position 	= self:GetTracerShootPos( Pos, self.Entity, self.Attachment )	
-	local attTab 	= self.Attachment > -1 && self.Entity:GetAttachment( self.Attachment )
+	self.Position 	= attTab && attTab.Pos || Pos
 	self.Angle 		= attTab && attTab.Ang || Ang
 	self.Forward 	= self.Angle:Forward()
 	self.Right 		= self.Angle:Right()

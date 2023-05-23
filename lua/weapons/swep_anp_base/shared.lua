@@ -32,10 +32,10 @@ if ( SERVER ) then
 	AddCSLuaFile( "shared.lua" )	
 end
 
-SWEP.Author					= "FiLzO"
-SWEP.PrintName				= "ANP SWEP BASE"
-SWEP.WorldModel				= "models/weapons/w_irifle.mdl"
-SWEP.WorldModelCustomiseTab	= nil
+SWEP.Author							= "FiLzO"
+SWEP.PrintName						= "ANP SWEP BASE"
+SWEP.WorldModel						= "models/weapons/w_irifle.mdl"
+SWEP.WorldModelCustomiseTab			= nil
 --[[
 {
 	['Scale'] 	= 1, -- Or a bone edit table to customize the weapon.
@@ -44,16 +44,17 @@ SWEP.WorldModelCustomiseTab	= nil
 	['Pos'] 	= Vector( 0, 0, 0 ),
 }
 --]]
-SWEP.WorldModelDraw			= true
-SWEP.WorldModelDrawShadow	= true
+SWEP.WorldModelDraw					= true
+SWEP.WorldModelDrawShadow			= true
 
-SWEP.HoldType				= "ar2"
-SWEP.Weight					= 30
-SWEP.DropOnDeath			= true
-SWEP.PickableByNPCs			= true
-SWEP.EventDisable			= {}
+SWEP.HoldType						= "ar2"
+SWEP.ActivityTranslateAIOverride	= nil
+SWEP.Weight							= 30
+SWEP.DropOnDeath					= true
+SWEP.PickableByNPCs					= true
+SWEP.EventDisable					= {}
 
-SWEP.FlashlightTab 			= false
+SWEP.FlashlightTab 					= false
 --[[
 SWEP.FlashlightTab = {
 	['SmartMode'] 			= true, -- If true, flashlight will only activate if owner is in combat or alerted and deactivate if idle. If false, flashlight will activate on spawn.
@@ -66,7 +67,7 @@ SWEP.FlashlightTab = {
 }
 ]]--
 -- SWEP NPC Settings
-SWEP.NPCWeaponProficiencyTab = {
+SWEP.NPCWeaponProficiencyTab 	= {
 	[WEAPON_PROFICIENCY_POOR] 		= {
 		['Spread']			= 0.1,
 		['SpreadMoveMult']	= 1.1,
@@ -125,41 +126,27 @@ SWEP.NPCWeaponProficiencyTab = {
 }
 
 -- SWEP Settings
-SWEP.Primary.FireSound		= nil
-SWEP.Primary.FireLoopSound	= nil
-SWEP.Primary.PreFireSound	= nil
-SWEP.Primary.PostFireSound	= nil
-SWEP.Primary.ReloadSound	= nil
-SWEP.Primary.DistantSound	= nil
-SWEP.Primary.AttackGesture	= nil
+SWEP.Primary.FireSound				= nil
+SWEP.Primary.FireLoopSound			= nil
+SWEP.Primary.PreFireSound			= nil
+SWEP.Primary.PostFireSound			= nil
+SWEP.Primary.ReloadSound			= nil
+SWEP.Primary.DistantSound			= nil
+SWEP.Primary.AttackGesture			= nil
 
-SWEP.Primary.Damage			= 5
-SWEP.Primary.EntitySpeed	= 3000
-SWEP.Primary.NumShots		= 1
-SWEP.Primary.Delay			= 0.05
-SWEP.Primary.PreFireDelay	= 0
-SWEP.Primary.PreFireReset	= 0.1
-SWEP.Primary.ClipSize		= 30
-SWEP.Primary.InfiniteAmmo	= false
-SWEP.Primary.Tracer			= 1
-SWEP.Primary.TracerName		= "ToolTracer"
+SWEP.Primary.Damage					= 5
+SWEP.Primary.EntitySpeed			= 3000
+SWEP.Primary.NumShots				= 1
+SWEP.Primary.Delay					= 0.05
+SWEP.Primary.PreFireDelay			= 0
+SWEP.Primary.PreFireReset			= 0.1
+SWEP.Primary.ClipSize				= 30
+SWEP.Primary.InfiniteAmmo			= false
+SWEP.Primary.Tracer					= 1
+SWEP.Primary.TracerName				= "ToolTracer"
 --[[
-SWEP.ANPTracerSettingTab			= { -- anp_tracer
-	['TracerMat']				= nil,
-	['TracerLength']			= nil,
-	['TracerSpeedMul']			= nil,
-	['TracerScale']				= nil,
-	['TracerColor']				= nil,
-	
-	['TrailMat']				= nil,
-	['TrailScale']				= nil,
-	['TrailDelay']				= nil,
-	['TrailDuration']			= nil,
-	['TrailColor']				= nil,
-}
---------------------------OR-------------------------------------------OR
 SWEP.ANPTracerSettingTab			= { -- anp_tracer_3d
-	['BulletModel']				= nil, -- 1 to 7 or model string.
+	['BulletModel']				= nil, -- 1 to 7 or model string or false.
 	['BulletMat']				= nil,
 	['BulletColor']				= nil,
 	['BulletScale']				= nil,
@@ -178,13 +165,17 @@ SWEP.ANPTracerSettingTab			= { -- anp_tracer_3d
 	['TrailDelay']				= nil,
 	['TrailDuration']			= 1,
 	['TrailColor']				= nil,
+	
+	['FunctionInit']			= nil --function(self, data) end,
+	['FunctionThink']			= nil --function(self) end,
+	['FunctionRender']			= nil --function(self, dir, trStartPos, trEndPos, startPos, endPos) end,
 }
 ]]--
-SWEP.Primary.Force			= 5
-SWEP.Primary.AmmoPerShot	= 1
-SWEP.Primary.Automatic		= true
-SWEP.Primary.AmmoType		= "AR2"
-SWEP.Primary.DefaultClip	= 10
+SWEP.Primary.Force					= 5
+SWEP.Primary.AmmoPerShot			= 1
+SWEP.Primary.Automatic				= true
+SWEP.Primary.AmmoType				= "AR2"
+SWEP.Primary.DefaultClip			= 10
 
 -- Don't touch
 SWEP.m_bWeaponReady = false
@@ -374,7 +365,6 @@ end
 function SWEP:ANPlusWeaponShootEffect(att, flags, scale, effect, muzzleSmokeDelay, muzzleSmokeDur)	-- dataVal for default hl2 muzzle = scale. For ANP muzzles = boneID (instead of the attachment).
 	
 	if effect then
-		local attTab = self:GetAttachment( att )
 		local fx = EffectData()
 		fx:SetEntity( self )
 		fx:SetAttachment( att || -1 )
@@ -463,8 +453,8 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback) -- bul
 	local att = self:GetAttachment( self.MuzzleAttachment )
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
-	local muzzlePos = IsValid(enemy) && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
-	local targetPos = ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	local muzzlePos = enemy && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
+	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
 	spread = self:GetOwner():IsMoving() && self.m_fPrimarySpread * self.m_fPrimarySpreadMMult || self.m_fPrimarySpread	
 	local direction = targetPos && ( targetPos - muzzlePos ):GetNormalized() || owner:GetAimVector()
 	
@@ -485,10 +475,7 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback) -- bul
 	
 	if isfunction( callback ) then
 		
-		local origin = IsValid(self:GetOwner()) && self:GetOwner():GetShootPos() || Vector( 0, 0, 0 )
-		local vector = IsValid(self:GetOwner()) && self:GetOwner():GetAimVector() || Vector( 0, 0, 0 )
-		
-		callback( origin, vector, att )
+		callback( muzzlePos, direction, att )
 			
 	end
 	
@@ -736,6 +723,12 @@ function SWEP:Equip(ent)
 	if ent:GetClass() == "npc_citizen" then ent:Fire("DisableWeaponPickup") end
 	timer.Remove( "ANPlusRemoveOnDrop" .. self:EntIndex() )
 	hook.Add( "Think", self, self.ThinkServer )
+	if self.ActivityTranslateAIOverride then
+		timer.Simple( 0.1, function()
+			if !IsValid(self) || !IsValid(ent) then return end
+			self:SetupWeaponHoldTypeForAI( self:GetHoldType() )
+		end )
+	end
 	self:ANPlusEquip( ent )
 end
 

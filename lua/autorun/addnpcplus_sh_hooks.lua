@@ -8,7 +8,13 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 	timer.Simple( 0, function() 
 		if !IsValid(ent) then return end 
-
+		--[[
+		if ent:GetClass() == "weapon_annabelle" then 
+			function ent:TranslateActivity( act )
+				print("fuck")
+			end
+		end
+		]]--
 		if (SERVER) then
 			net.Start("anplus_net_entity")
 			net.WriteEntity( ent )

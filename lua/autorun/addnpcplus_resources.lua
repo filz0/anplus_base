@@ -105,19 +105,27 @@ sound.Add( {
 	sound = "anp/fx/flashlight1.wav"
 } )
 
-local bulletModels = {
-	"models/anp/bullets/bt_9mm.mdl",
-	"models/anp/bullets/bt_357.mdl",
-	"models/anp/bullets/bt_762.mdl",
-	"models/anp/bullets/bt_h9mm.mdl",
-	"models/anp/bullets/bt_h357.mdl",
-	"models/anp/bullets/bt_h762.mdl",
-	"models/anp/bullets/w_pellet.mdl",
-}
-
-for i = 1, #bulletModels do
-	util.PrecacheModel( bulletModels[ i ] )
-end
+sound.Add( {
+	name = "ANP.WEAPON.Tracer.Flyby",
+	channel = CHAN_ITEM,
+	volume = 0.7,
+	level = 140,
+	pitch = 100, 
+	sound = {
+		"weapons/fx/nearmiss/bulletltor03.wav",
+		"weapons/fx/nearmiss/bulletltor04.wav",
+		"weapons/fx/nearmiss/bulletltor05.wav",
+		"weapons/fx/nearmiss/bulletltor06.wav",
+		"weapons/fx/nearmiss/bulletltor07.wav",
+		"weapons/fx/nearmiss/bulletltor08.wav",
+		"weapons/fx/nearmiss/bulletltor09.wav",
+		"weapons/fx/nearmiss/bulletltor10.wav",
+		"weapons/fx/nearmiss/bulletltor11.wav",
+		"weapons/fx/nearmiss/bulletltor12.wav",
+		"weapons/fx/nearmiss/bulletltor13.wav",
+		"weapons/fx/nearmiss/bulletltor14.wav",
+	}
+} )
 
 ANPlus.AddParticle( "particles/grenade_fx.pcf", {
 	"grenade_explosion_01",
@@ -149,3 +157,26 @@ ANPlus.AddParticle( "particles/devtest.pcf", {
 	"weapon_muzzle_smoke_long_b",
 	"weapon_shove",
 } )
+
+--
+local precacheSND = {
+	"ANP.WEAPON.Tracer.Flyby",
+}
+
+local precacheModels = {
+	"models/anp/bullets/bt_9mm.mdl",
+	"models/anp/bullets/bt_357.mdl",
+	"models/anp/bullets/bt_762.mdl",
+	"models/anp/bullets/bt_h9mm.mdl",
+	"models/anp/bullets/bt_h357.mdl",
+	"models/anp/bullets/bt_h762.mdl",
+	"models/anp/bullets/w_pellet.mdl",
+}
+
+for i = 1, #precacheModels do
+	util.PrecacheModel( precacheModels[ i ] )
+end 
+
+for i = 1, #precacheSND do
+	util.PrecacheSound( precacheSND[ i ] )
+end 

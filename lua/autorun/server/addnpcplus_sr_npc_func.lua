@@ -89,7 +89,7 @@ function ENT:ANPlusDealMeleeDamage(dist, dmg, dmgt, viewpunch, force, full360, s
 		force = forward * force.x + right * force.y + up * force.z
 	end
 	
-	for _, ent in ipairs(ents.FindInSphere( pos, dist ) ) do
+	for _, ent in ipairs( ents.FindInSphere( pos, dist ) ) do
 	
 		if IsValid(ent) && IsValid(self:GetEnemy()) && self:GetEnemy() == ent && self:Visible(ent) && ent:ANPlusAlive() then
 		

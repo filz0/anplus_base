@@ -33,12 +33,11 @@ function EFFECT:Init( data )
 	
 	self.OwnerEntity = data:GetEntity()
 	
-	--local bullettype = math.Clamp( ( data:GetRadius() or 1 ), 1, 6 )
-	local bullettype = math.Round( data:GetRadius() ) or 1 
-
+	--local bullettype = math.Clamp( ( data:GetRadius() || 1 ), 1, 6 )
+	local bullettype = math.Round( data:GetRadius() ) || 1 
 	local angle, pos = self.Entity:GetBulletEjectPos( data:GetOrigin(), data:GetEntity(), data:GetAttachment(), data:GetColor() )
 	
-	local angmod = data:GetStart() or Vector ( 0, 0, 0 )
+	local angmod = data:GetStart() || Vector ( 0, 0, 0 )
 	angle:RotateAroundAxis( angle:Forward(), angmod.x )
 	angle:RotateAroundAxis( angle:Right(), angmod.y )
 	angle:RotateAroundAxis( angle:Up(), angmod.z )
@@ -47,11 +46,11 @@ function EFFECT:Init( data )
 	local ang = LocalPlayer():GetAimVector():Angle()
 
 	self.Entity:SetPos( pos )
-	self.Entity:SetModel( self.Models[ bullettype ] or "models/shells/shell_9mm.mdl" )
+	self.Entity:SetModel( self.Models[ bullettype ] || "models/shells/shell_9mm.mdl" )
 	
 	self.Entity:PhysicsInitBox( Vector(-1,-1,-1), Vector(1,1,1) )
 	
-	self.Entity:SetModelScale( ( data:GetScale() or 1.2 ), 0 )
+	self.Entity:SetModelScale( ( data:GetScale() || 1.2 ), 0 )
 	self.Entity:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
 	self.Entity:SetCollisionBounds( Vector( -128 -128, -128 ), Vector( 128, 128, 128 ) )
 	
@@ -107,7 +106,7 @@ function EFFECT:Think( )
 
 	if self.RemoveMe then return false end
 
-	if self.SoundTime and self.SoundTime < CurTime() then
+	if self.SoundTime && self.SoundTime < CurTime() then
 	
 		self.SoundTime = nil
 		sound.Play( self.HitSound, self.Entity:GetPos(), 60, self.HitPitch ) 
@@ -129,4 +128,4 @@ function EFFECT:Render()
 	self.Entity:DrawModel()
 
 end
-effects.Register( EFFECT, "anp_shell" )
+effects.Register( EFFECT, "anp_shell" ) 

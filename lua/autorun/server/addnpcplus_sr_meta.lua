@@ -23,7 +23,7 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 		end
 
 		-- Convert the inflictor to the weapon that they're holding if we can.
-		-- This can be right or wrong with NPCs since combine can be holding a
+		-- This can be right || wrong with NPCs since combine can be holding a
 		-- pistol but kill you by hitting you with their arm.
 		if ( IsValid( inflictor ) && inflictor == attacker && ( inflictor:IsPlayer() || inflictor:IsNPC() ) ) then
 
@@ -256,7 +256,7 @@ function metaENT:ANPlusDisableCollisions(ent)
 end
 
 function metaENT:ANPlusClientEffect( effTab )
-	if !IsValid(self) or !effTab then return end	
+	if !IsValid(self) || !effTab then return end	
 	net.Start("anplus_client_effect")
 	net.WriteEntity( self )
 	net.WriteTable( effTab )
@@ -620,6 +620,60 @@ function metaENT:ANPlusToggleSpotlight(bool)
 	end
 end
 
+function ANPlusCreateProjectedTexture(color, texture, fov, nearZ, farZ, enableShadows, shadowQuality, lightWorld, sfs, kvs)
+	local ent = ents.Create( "env_projectedtexture" )
+	ent:SetKeyValue( "spawnflags", sfs || "0" )
+	ent:SetKeyValue( 'lightcolor', tostring( color ) )
+	ent:SetKeyValue( "texturename", texture || "effects/flashlight001" )
+	ent:SetKeyValue( "lightfov", fov || "90" )
+	ent:SetKeyValue( "nearz", nearZ || 1 )
+	ent:SetKeyValue( "farz", farZ || 500 )
+	ent:SetKeyValue( "lightworld", lightWorld || 1 )	
+
+	if kvs then
+		for _, v in pairs( kvs ) do	
+			ent:SetKeyValue( tostring( _ ), v )				
+		end	
+	end
+	ent:Spawn()
+	ent:Activate()
+	return ent
+end
+
+function metaENT:ANPlusToggleEntity(bool)
+	if !IsValid(self) then return end
+	if bool then
+		self:Fire( "TurnOn" )
+	elseif !bool then
+		self:Fire( "TurnOff")
+	end
+end
+
+--[[
+function ANPlusCreateLightPoint(color, innerCone, cone, exponent, distance, sfs, kvs)
+	local ent = ents.Create( "light_spot" )
+	ent:SetKeyValue( "spawnflags", sfs || 0 )
+	ent:SetKeyValue( "_inner_cone", innerCone )
+	ent:SetKeyValue( "_cone", cone )
+	ent:SetKeyValue( "_exponent", exponent )
+	ent:SetKeyValue( "_distance", distance )
+	--ent:SetKeyValue( "_hardfalloff", "1" )
+	ent:SetKeyValue( "_light", "255 255 255 4000" )
+	ent:SetKeyValue( "style", 0 )
+	--ent:SetName( "anp_lightspot" .. ent:EntIndex() )
+	ent:SetName( "dsadsaadssad" )
+	if kvs then
+		for _, v in pairs( kvs ) do	
+			ent:SetKeyValue( tostring( _ ), v )				
+		end	
+	end
+	--ent:SetColor( color )
+	ent:Spawn()
+	ent:Activate()
+	return ent
+end
+]]--
+
 function ANPlusCreateSporeExplosion(spawnRate, startDisabled)
 	startDisabled = startDisabled || false
 	local ent = ents.Create( "env_sporeexplosion" )
@@ -786,7 +840,7 @@ end
 
 function metaENT:ANPlusIsDoor()	
 	local doorClass = self:GetClass()	
-	if ( doorClass == "func_door" or doorClass == "func_door_rotating" or doorClass == "prop_door" or doorClass == "prop_door_rotating" ) then
+	if ( doorClass == "func_door" || doorClass == "func_door_rotating" || doorClass == "prop_door" || doorClass == "prop_door_rotating" ) then
 		return true		
 	else	
 		return false		
@@ -795,7 +849,7 @@ end
 
 function metaENT:ANPlusIsDoorOpen()	
 	local doorClass = self:GetClass()
-	if ( doorClass == "func_door" or doorClass == "func_door_rotating" ) then
+	if ( doorClass == "func_door" || doorClass == "func_door_rotating" ) then
 		return self:GetInternalVariable( "m_toggle_state" ) == 0
 	elseif ( doorClass == "prop_door_rotating" ) then
 		return self:GetInternalVariable( "m_eDoorState" ) != 0
@@ -851,7 +905,7 @@ function metaENT:ANPlusIsMoveSpeed( hORlORe, speed )
 	return false
 end
 
-function metaENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame and animation event ID
+function metaENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame && animation event ID
 	if(!self.m_tbAnimationFrames[seq]) then return end
 	self.m_tbAnimEvents[seq] = self.m_tbAnimEvents[seq] || {}
 	self.m_tbAnimEvents[seq][frame] = self.m_tbAnimEvents[seq][frame] || {}

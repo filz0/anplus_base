@@ -3,9 +3,15 @@ function SWEP:SetupWeaponHoldTypeForAI( htype )
 	local cVar = GetConVar("anplus_force_swep_anims"):GetBool()
 	local owner = self:GetOwner()
 	local class = owner:GetClass()
-    self.ActivityTranslateAI = {}
 	
-    if htype == "ar2" then
+    self.ActivityTranslateAI = {}
+
+	if self.ActivityTranslateAIOverride && owner:SelectWeightedSequence( self.ActivityTranslateAIOverride[ 1 ] ) != -1 then
+		
+		owner:SetActivity( self.ActivityTranslateAIOverride[ 1 ] )
+		self.ActivityTranslateAI = self.ActivityTranslateAIOverride
+	
+    elseif htype == "ar2" then
         
         if cVar then
 
@@ -800,8 +806,8 @@ function SWEP:SetupWeaponHoldTypeForAI( htype )
 			self.ActivityTranslateAI[ACT_WALK_CROUCH]					= ACT_WALK_CROUCH_AIM
 			self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM]				= ACT_WALK_CROUCH_AIM
 
-			self.ActivityTranslateAI[ACT_RUN]							= ACT_RUN_SHOTGUN
-			self.ActivityTranslateAI[ACT_RUN_RELAXED]					= ACT_RUN_SHOTGUN
+			self.ActivityTranslateAI[ACT_RUN]							= ACT_RUN_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_RELAXED]					= ACT_RUN_RIFLE
 			self.ActivityTranslateAI[ACT_RUN_STIMULATED]				= ACT_RUN_AIM_SHOTGUN
 			self.ActivityTranslateAI[ACT_RUN_AGITATED]					= ACT_RUN_AIM_SHOTGUN
 			self.ActivityTranslateAI[ACT_RUN_STEALTH]					= ACT_RUN_AIM_SHOTGUN
@@ -858,8 +864,8 @@ function SWEP:SetupWeaponHoldTypeForAI( htype )
 			self.ActivityTranslateAI[ACT_WALK_CROUCH]					= ACT_WALK_CROUCH_RIFLE
 			self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM]				= ACT_WALK_CROUCH_RIFLE
 
-			self.ActivityTranslateAI[ACT_RUN]							= ACT_RUN_SHOTGUN
-			self.ActivityTranslateAI[ACT_RUN_RELAXED]					= ACT_RUN_SHOTGUN
+			self.ActivityTranslateAI[ACT_RUN]							= ACT_RUN_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_RELAXED]					= ACT_RUN_RIFLE
 			self.ActivityTranslateAI[ACT_RUN_STIMULATED]				= ACT_RUN_AIM_SHOTGUN
 			self.ActivityTranslateAI[ACT_RUN_AGITATED]					= ACT_RUN_AIM_SHOTGUN
 			self.ActivityTranslateAI[ACT_RUN_STEALTH]					= ACT_RUN_AIM_SHOTGUN
@@ -916,8 +922,8 @@ function SWEP:SetupWeaponHoldTypeForAI( htype )
 			self.ActivityTranslateAI[ACT_WALK_CROUCH]					= ACT_WALK_CROUCH_AIM_RIFLE
 			self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM]				= ACT_WALK_CROUCH_AIM_RIFLE
 
-			self.ActivityTranslateAI[ACT_RUN]							= ACT_RUN_SHOTGUN
-			self.ActivityTranslateAI[ACT_RUN_RELAXED]					= ACT_RUN_SHOTGUN
+			self.ActivityTranslateAI[ACT_RUN]							= ACT_RUN_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_RELAXED]					= ACT_RUN_RIFLE
 			self.ActivityTranslateAI[ACT_RUN_STIMULATED]				= ACT_RUN_AIM_SHOTGUN
 			self.ActivityTranslateAI[ACT_RUN_AGITATED]					= ACT_RUN_AIM_SHOTGUN
 			self.ActivityTranslateAI[ACT_RUN_STEALTH]					= ACT_RUN_AIM_SHOTGUN

@@ -204,13 +204,17 @@ function metaPanel:ANPlus_MenuItem(callback, help)
 	if help then self:ControlHelp( help ) end
 end
 
-render.ANPlusDrawSpriteParallax = function(pos, widthMin, heightMin, widthMax, heightMax, dist, color )
+local defFov = GetConVar( "fov_desired" )
+
+render.ANPlusDrawSpriteParallax = function(pos, widthMin, heightMin, widthMax, heightMax, dist, color)
 	local ply = LocalPlayer()	
-	local dSqr, d = ANPlusGetRangeVector( ply:GetPos(), pos )		
-	local w = math.Remap( d, 1, dist, widthMin, widthMax )
+	local viewEnt = ply:GetViewEntity()	
+	local dSqr, d = ANPlusGetRangeVector( viewEnt:GetPos(), pos )	
+	local transFov = math.Remap( ply:GetFOV(), 0, defFov:GetFloat(), 0, 1 )
+	local w = math.Remap( d * transFov, 1, dist, widthMin, widthMax )
 	w = math.Round( w, 1 )
 	w = math.Clamp( w, widthMin, widthMax )
-	local h = math.Remap( d, 1, dist, heightMin, heightMax )
+	local h = math.Remap( d * transFov, 1, dist, heightMin, heightMax )
 	h = math.Round( h, 1 )
 	h = math.Clamp( h, heightMin, heightMax )
 	render.DrawSprite( pos, w, h, color )
