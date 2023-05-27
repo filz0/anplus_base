@@ -337,7 +337,7 @@ function SWEP:CanPrimaryAttack()
 	return true  		
 end
 
-function SWEP:ANPlusWeaponShell( att, bone, type, scale, angVec )
+function SWEP:ANPlusWeaponShell(att, bone, type, scale, angVec)
 	
 	local boneid = self:LookupBone( bone || "" )
 
@@ -362,7 +362,7 @@ function SWEP:ANPlusWeaponHitEffect( effect, tr, scale )
 	end
 end
 
-function SWEP:ANPlusWeaponShootEffect(att, flags, scale, effect, muzzleSmokeDelay, muzzleSmokeDur)	-- dataVal for default hl2 muzzle = scale. For ANP muzzles = boneID (instead of the attachment).
+function SWEP:ANPlusWeaponShootEffect(att, flags, scale, effect, muzzleSmokeDelay, muzzleSmokeDur)	-- flags for default hl2 muzzle = type. For ANP muzzles = boneID (instead of the attachment).
 	
 	if effect then
 		local fx = EffectData()

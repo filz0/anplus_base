@@ -189,13 +189,13 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				
 				if (SERVER) then
 					if self:IsNPC() then		
-						if !IsValid(self:GetActiveWeapon()) && self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
+						if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
+						if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end														
+						if !IsValid(self:GetActiveWeapon()) && self:ANPlusCapabilitiesHas( 2097152 ) && self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
 							self:Give( self:GetKeyValues()['additionalequipment'] ) 						
 						end
 						if data['ForceDefaultWeapons'] && data['DefaultWeapons'] then self:ANPlusForceDefaultWeapons( data['DefaultWeapons'] ) end
-						self:ANPlusUpdateWeaponProficency( self:GetActiveWeapon(), data['WeaponProficiencyTab'] )
-						if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end
-						if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
+						self:ANPlusUpdateWeaponProficency( self:GetActiveWeapon(), data['WeaponProficiencyTab'] )						
 						if data['LookDistance'] then self:SetMaxLookDistance( data['LookDistance'] ) end -- How tf it doesn't work for some people is beyond me. 
 						--if data['LookDistance'] then self:Fire( "SetMaxLookDistance", data['LookDistance'], 0.1 ) end	
 						if data['EnableInverseKinematic'] then self:ANPlusSetIK( data['EnableInverseKinematic'] ) end	
