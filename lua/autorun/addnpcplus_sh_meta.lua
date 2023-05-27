@@ -149,14 +149,14 @@ end
 
 function metaENT:ANPlusSequenceExists(anim)
 	if anim == nil || isbool(anim) then return false end	
-	if isnumber( anim ) then -- Activity
-		if ( self:SelectWeightedSequence( anim ) == -1 || self:SelectWeightedSequence( anim ) == 0 ) && ( self:GetSequenceName( self:SelectWeightedSequence( anim ) ) == "Not Found!" || self:GetSequenceName(self:SelectWeightedSequence( anim ) ) == "No model!" ) then
+	if isnumber( anim ) then
+		if ( self:SelectWeightedSequence( anim ) == -1 || self:SelectWeightedSequence( anim ) == 0 ) && ( self:GetSequenceName( self:SelectWeightedSequence( anim ) ) == "Not Found!" || self:GetSequenceName( self:SelectWeightedSequence( anim ) ) == "No model!" ) then
 			return false
 		end
-	elseif isstring( anim ) then -- Sequence
+	elseif isstring( anim ) then
 		if self:LookupSequence( anim ) == -1 then return false end
 	end
-	return true
+	return anim 
 end
 
 --[[////////////////////////

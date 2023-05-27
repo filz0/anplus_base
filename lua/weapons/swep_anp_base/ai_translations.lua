@@ -3,7 +3,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 	local owner = self:GetOwner()
 
     self.ActivityTranslateAI = {}
-	print(owner:ANPlusSequenceExists(ACT_RUN_RIFLE_RELAXED))
+
 	if self.ActivityTranslateAIOverride && owner:SelectWeightedSequence( self.ActivityTranslateAIOverride[ 1 ] ) != -1 then
 		
 		owner:SetActivity( self.ActivityTranslateAIOverride[ 1 ] )
@@ -126,7 +126,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			self.ActivityTranslateAI[ACT_CROUCHIDLE_AGITATED]			= ACT_RANGE_AIM_SMG1_LOW
 		
 	elseif hType == "pistol" then
-
+			
             self.ActivityTranslateAI[ACT_IDLE]							= owner:ANPlusSequenceExists(ACT_IDLE_PISTOL) || ACT_IDLE_SMG1
 			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= owner:ANPlusSequenceExists(ACT_IDLE_PISTOL) || ACT_IDLE_SMG1
 			self.ActivityTranslateAI[ACT_IDLE_STIMULATED]				= owner:ANPlusSequenceExists(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY_SMG1
