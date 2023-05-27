@@ -44,7 +44,7 @@ function ANPdevMsg(arg, lvl)
 end
 
 --[[////////////////////////
-||||| QOL function that runs only when rolled value is equal or lower than the given value.
+||||| QOL function that runs only when rolled value is equal || lower than the given value.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function ANPlusPercentageChance(chance)
@@ -147,6 +147,18 @@ function metaENT:ANPlusTranslateSequence(anim)
 	end	
 end
 
+function metaENT:ANPlusSequenceExists(anim)
+	if anim == nil || isbool(anim) then return false end	
+	if isnumber( anim ) then -- Activity
+		if ( self:SelectWeightedSequence( anim ) == -1 || self:SelectWeightedSequence( anim ) == 0 ) && ( self:GetSequenceName( self:SelectWeightedSequence( anim ) ) == "Not Found!" || self:GetSequenceName(self:SelectWeightedSequence( anim ) ) == "No model!" ) then
+			return false
+		end
+	elseif isstring( anim ) then -- Sequence
+		if self:LookupSequence( anim ) == -1 then return false end
+	end
+	return true
+end
+
 --[[////////////////////////
 ||||| Used to reset Entity's bones.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
@@ -199,7 +211,7 @@ function metaENT:ANPlusEditBone(tab)
 end
 
 --[[////////////////////////
-||||| Used to get the pos, ang and bone of the given hitgroup.
+||||| Used to get the pos, ang && bone of the given hitgroup.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function metaENT:ANPlusGetHitGroupBone( hg )	
@@ -808,11 +820,11 @@ function ANPlusOverrideSound(toReplace, data, sndReplace, play, sndLVL, sndPitch
 	return nil
 end
 
-function ANPlusOverrideSoundDir(inDir, data, outDir, onFail) -- nil to play the original instead or false to mute.
+function ANPlusOverrideSoundDir(inDir, data, outDir, onFail) -- nil to play the original instead || false to mute.
 	if string.find( string.lower( data.SoundName ), inDir ) then
 		local newDir = string.Replace( data.SoundName, inDir, outDir )
 		local newDirFix = string.Replace( newDir, "*", "" )	
-		local newDirExists = file.Exists( "sound/" .. newDirFix, "GAME" ) -- Check if this sound actually exist and if not return the onFail choise.
+		local newDirExists = file.Exists( "sound/" .. newDirFix, "GAME" ) -- Check if this sound actually exist && if not return the onFail choise.
 		if newDirExists then
 			data.SoundName = newDir
 			return true
