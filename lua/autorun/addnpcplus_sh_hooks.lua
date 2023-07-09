@@ -84,6 +84,26 @@ end)
 ||||| Thanks to this hook, We can replace NPC' sounds. We can also simlate NPC hearing stuff. This hook doesn't work with scripted sentences (facepunch pls fix).
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
+local sndChars = {
+	['*'] = true,
+	['#'] = true,
+	['@'] = true,
+	['>'] = true,
+	['<'] = true,
+	['^'] = true,
+	[')'] = true,
+	['}'] = true,
+	['$'] = true,
+	['!'] = true,
+	['?'] = true,
+	['&'] = true,
+	['~'] = true,
+	['`'] = true,
+	['+'] = true,
+	['('] = true,
+	['%'] = true,
+}
+
 hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)	
 	local ent = data.Entity	
 	local pos = data.Pos || IsValid(ent) && ent:GetPos()
@@ -101,7 +121,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 		end
 	end
 	
-	if ent:IsANPlus(true) then		
+	if ent:IsANPlus(true) then	
 		if ent:GetNWBool( "ANP_IsMuted" ) then return false end		
 		ent.m_tLastSoundEmitted = data			
 		if ent:ANPlusGetDataTab()['SoundModification'] && ent:ANPlusGetDataTab()['SoundModification']['SoundList'] then	
@@ -111,6 +131,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 				if v && string.find( string.lower( data.SoundName ), v[ 1 ] ) then				
 					if v['Play'] != nil && v['Play'] == false then return false end			
 					local sndReplace = v['Replacement'] && istable( v['Replacement'] ) && v['Replacement'][ math.random( 1, #v['Replacement'] ) ] || v['Replacement'] || data.SoundName
+					sndReplace = !v['SoundCharacter'] && sndReplace || v['SoundCharacter'] == true && ( sndChars[ string.Left( data.SoundName, 1 ) ] && string.Left( data.SoundName, 1 ) .. sndReplace || sndReplace ) || isstring( v['SoundCharacter'] ) && v['SoundCharacter'] .. sndReplace 
 					local sndLVL = v['SoundLevel'] && istable( v['SoundLevel'] ) && math.random( v['SoundLevel'][ 1 ], ( v['SoundLevel'][ 2 ] || v['SoundLevel'][ 1 ] ) ) || v['SoundLevel'] || data.SoundLevel
 					local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || data.Pitch
 					local sndChannel = v['Channel'] || data.Channel

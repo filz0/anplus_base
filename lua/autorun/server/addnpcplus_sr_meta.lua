@@ -620,7 +620,7 @@ function metaENT:ANPlusToggleSpotlight(bool)
 	end
 end
 
-function ANPlusCreateProjectedTexture(color, texture, fov, nearZ, farZ, enableShadows, shadowQuality, lightWorld, sfs, kvs)
+function ANPlusCreateProjectedTexture(color, texture, fov, nearZ, farZ, lightWorld, sfs, kvs)
 	local ent = ents.Create( "env_projectedtexture" )
 	ent:SetKeyValue( "spawnflags", sfs || "0" )
 	ent:SetKeyValue( 'lightcolor', tostring( color ) )
@@ -800,7 +800,10 @@ function ANPlusCreateBeam(texture, spawnStart, spawnEnd, color, width, sfs, kvs)
 end
 
 function metaENT:ANPlusDissolve(attacker, inflictor, dealDMG, dtype)
-
+	
+	attacker = attacker || self
+	inflictor = inflictor || self
+	
 	if self:IsPlayer() then
 		local dmgInfo = DamageInfo()
 		dmgInfo:SetDamage( self:Health() )
@@ -811,9 +814,7 @@ function metaENT:ANPlusDissolve(attacker, inflictor, dealDMG, dtype)
 		self:TakeDamageInfo( dmgInfo )
 		return
 	end
-	
-	attacker = attacker || self
-	inflictor = inflictor || self
+
 	local _sName = self:ANPlusGetName()
 	local sName = "entDissolve" .. self:EntIndex() .. "_entTarget"
 	
@@ -981,4 +982,16 @@ function metaENT:ANPlusDealBlastDamage(target, dmginfo, pos, radius, cooldown, c
 		
 	self.anpdamage_DMGBlastLast = CurTime()
 
+end
+
+function metaENT:ANPlusCreateOutputHook(entOutput, eventName, callback)
+	--[[
+	self['anp_luarun_id' .. eventName] = ents.Create( "lua_run" )
+	local name = eventName .. self['anp_luarun_id' .. eventName]:EntIndex() .. self:EntIndex()
+	self['anp_luarun_id' .. eventName]:SetName( eventName .. self['anp_luarun_id' .. eventName]:EntIndex() .. self:EntIndex() )
+	self['anp_luarun_id' .. eventName]:Spawn()
+	]]--
+	if !IsValid(ANP_LUA_RUN_ENT) then print( "ANPlus lua run not found! Abording..." ) return end
+	self:Fire( "AddOutput", entOutput .. " anp_lua_run:RunPassedCode:hook.Run( '" .. eventName .. "' ):0:-1" )
+	--hook.Add( eventName, eventName .. "_hook", callback )
 end

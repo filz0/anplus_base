@@ -192,6 +192,7 @@ ANPlus = {
 			PrecacheParticleSystem( v )
 		end	
 	end,
+	
 } 
 
 timer.ANPlusDelayed = function( id, delay, time, repeats, callback ) -- This is stupid and has to go... Far away... Pls don't use.	
@@ -218,6 +219,21 @@ function ANPlusIDCreate( name )
 	end	
 	local id = string.lower( name )	
 	return id	
+end
+
+if (SERVER) then
+
+ANP_LUA_RUN_ENT = nil
+
+local function SetupMapLua()
+	ANP_LUA_RUN_ENT = ents.Create( "lua_run" )
+	ANP_LUA_RUN_ENT:SetName( "anp_lua_run" )
+	ANP_LUA_RUN_ENT:Spawn()
+end
+
+hook.Add( "InitPostEntity", "ANP_LUA_RUN_ENT", SetupMapLua )
+hook.Add( "PostCleanupMap", "ANP_LUA_RUN_ENT", SetupMapLua )
+
 end
 
 if (CLIENT) then

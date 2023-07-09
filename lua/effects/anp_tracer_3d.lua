@@ -144,7 +144,7 @@ function EFFECT:RenderFixed()
 				self['m_bNearMissFXPlayed' .. ply:EntIndex()] = true 
 			end
 			if viewEnt == ply && dist <= 60 then
-				render.ANPlusDrawOverlay( "suppress", { Offset = 0, Scatter = 1, Strength = 50, Fadeout = 0.5 } )
+				--render.ANPlusDrawOverlay( "suppress", { Offset = 0, Scatter = 1, Strength = 5, Fadeout = 30 } )
 			end
 		end
 --##--------------------------------------------------------------------------------------------------------------------## Nearmiss / Flyby bullet sounds.		

@@ -24,7 +24,6 @@ function ENT:Initialize()
 					self:SetParent( self.Parent )					
 					if self.Attachment then 
 						local attName = self.Parent:ANPlusGetAttachmentName( self.Attachment )
-						print(self.Attachment)
 						self:Fire( "SetParentAttachment", attName, 0 )
 					end
 				end

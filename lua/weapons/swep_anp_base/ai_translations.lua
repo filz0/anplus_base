@@ -51,13 +51,13 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM_RIFLE
 
 			self.ActivityTranslateAI[ACT_RELOAD]						= ACT_RELOAD_SMG1
-			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= ACT_RELOAD_SMG1_LOW
+			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= ACT_RELOAD_SMG1_LOW		
 
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= ACT_IDLE_ANGRY_SMG1
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= owner:ANPlusSequenceExists(ACT_RANGE_ATTACK_AR2) || ACT_RANGE_ATTACK_SMG1
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= ACT_RANGE_AIM_AR2_LOW
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= owner:ANPlusSequenceExists(ACT_RANGE_ATTACK_AR2_LOW) || ACT_RANGE_ATTACK_SMG1_LOW
-			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_AR2) || ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= self.Primary.AttackGesture || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_AR2) || ACT_GESTURE_RANGE_ATTACK_SMG1
 
 			self.ActivityTranslateAI[ACT_COVER_LOW]						= ACT_COVER_SMG1_LOW
 			self.ActivityTranslateAI[ACT_CROUCHIDLE]					= ACT_COVER_SMG1_LOW
@@ -115,7 +115,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= ACT_IDLE_ANGRY_SMG1
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= ACT_RANGE_ATTACK_SMG1_LOW
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= ACT_RANGE_AIM_SMG1_LOW
-			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= self.Primary.AttackGesture || ACT_GESTURE_RANGE_ATTACK_SMG1
 
 			self.ActivityTranslateAI[ACT_COVER_LOW]						= ACT_COVER_SMG1_LOW
 			self.ActivityTranslateAI[ACT_CROUCHIDLE]					= ACT_COVER_SMG1_LOW
@@ -126,6 +126,64 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			self.ActivityTranslateAI[ACT_CROUCHIDLE_AGITATED]			= ACT_RANGE_AIM_SMG1_LOW
 		
 	elseif hType == "pistol" then
+			
+            self.ActivityTranslateAI[ACT_IDLE]							= owner:ANPlusSequenceExists(ACT_IDLE_PISTOL) || ACT_IDLE_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= owner:ANPlusSequenceExists(ACT_IDLE_PISTOL) || ACT_IDLE_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_STIMULATED]				= owner:ANPlusSequenceExists(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_AGITATED]					= owner:ANPlusSequenceExists(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_STEALTH]					= owner:ANPlusSequenceExists(ACT_IDLE_STEALTH_PISTOL) || owner:ANPlusSequenceExists(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_ANGRY]					= owner:ANPlusSequenceExists(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_AIM_RELAXED]				= owner:ANPlusSequenceExists(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_AIM_STIMULATED]			= owner:ANPlusSequenceExists(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_AIM_AGITATED]				= owner:ANPlusSequenceExists(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY_SMG1
+			self.ActivityTranslateAI[ACT_IDLE_AIM_STEALTH]				= owner:ANPlusSequenceExists(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY_SMG1
+
+			self.ActivityTranslateAI[ACT_WALK]							= owner:ANPlusSequenceExists(ACT_WALK_PISTOL) || ACT_WALK_RIFLE
+			self.ActivityTranslateAI[ACT_WALK_RELAXED]					= owner:ANPlusSequenceExists(ACT_WALK_PISTOL) || ACT_WALK_RIFLE
+			self.ActivityTranslateAI[ACT_WALK_STIMULATED]				= owner:ANPlusSequenceExists(ACT_WALK_AIM_PISTOL) || ACT_WALK_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_WALK_AGITATED]					= owner:ANPlusSequenceExists(ACT_WALK_AIM_PISTOL) || ACT_WALK_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_WALK_STEALTH]					= owner:ANPlusSequenceExists(ACT_WALK_STEALTH_PISTOL) || owner:ANPlusSequenceExists(ACT_WALK_AIM_PISTOL) || ACT_WALK_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_WALK_AIM]						= owner:ANPlusSequenceExists(ACT_WALK_AIM_PISTOL) || ACT_WALK_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_WALK_AIM_RELAXED]				= owner:ANPlusSequenceExists(ACT_WALK_AIM_PISTOL) || ACT_WALK_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_WALK_AIM_STIMULATED]			= owner:ANPlusSequenceExists(ACT_WALK_AIM_PISTOL) || ACT_WALK_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_WALK_AIM_AGITATED]				= owner:ANPlusSequenceExists(ACT_WALK_AIM_PISTOL) || ACT_WALK_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_WALK_AIM_STEALTH]				= owner:ANPlusSequenceExists(ACT_WALK_AIM_STEALTH_PISTOL) || owner:ANPlusSequenceExists(ACT_WALK_AIM_PISTOL) || ACT_WALK_AIM_RIFLE
+
+			self.ActivityTranslateAI[ACT_WALK_CROUCH]					= ACT_WALK_CROUCH_AIM
+			self.ActivityTranslateAI[ACT_WALK_CROUCH_AIM]				= ACT_WALK_CROUCH_AIM
+
+			self.ActivityTranslateAI[ACT_RUN]							= owner:ANPlusSequenceExists(ACT_RUN_PISTOL) || ACT_RUN_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_RELAXED]					= owner:ANPlusSequenceExists(ACT_RUN_PISTOL) || ACT_RUN_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_STIMULATED]				= owner:ANPlusSequenceExists(ACT_RUN_AIM_PISTOL) || ACT_RUN_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_AGITATED]					= owner:ANPlusSequenceExists(ACT_RUN_AIM_PISTOL) || ACT_RUN_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_STEALTH]					= owner:ANPlusSequenceExists(ACT_RUN_STEALTH_PISTOL) || owner:ANPlusSequenceExists(ACT_RUN_AIM_PISTOL) || ACT_RUN_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_AIM]						= owner:ANPlusSequenceExists(ACT_RUN_AIM_PISTOL) || ACT_RUN_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_AIM_RELAXED]				= owner:ANPlusSequenceExists(ACT_RUN_AIM_PISTOL) || ACT_RUN_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_AIM_STIMULATED]			= owner:ANPlusSequenceExists(ACT_RUN_AIM_PISTOL) || ACT_RUN_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_AIM_AGITATED]				= owner:ANPlusSequenceExists(ACT_RUN_AIM_PISTOL) || ACT_RUN_AIM_RIFLE
+			self.ActivityTranslateAI[ACT_RUN_AIM_STEALTH]				= owner:ANPlusSequenceExists(ACT_RUN_AIM_STEALTH_PISTOL) || owner:ANPlusSequenceExists(ACT_RUN_AIM_PISTOL) || ACT_RUN_AIM_RIFLE
+
+			self.ActivityTranslateAI[ACT_RUN_CROUCH]					= ACT_RUN_CROUCH_AIM
+			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM
+
+			self.ActivityTranslateAI[ACT_RELOAD]						= owner:ANPlusSequenceExists(ACT_RELOAD_PISTOL) || ACT_RELOAD_SMG1
+			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= owner:ANPlusSequenceExists(ACT_RELOAD_PISTOL_LOW) || ACT_RELOAD_SMG1_LOW
+
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= owner:ANPlusSequenceExists(ACT_RANGE_ATTACK_PISTOL) || ACT_RANGE_ATTACK_SMG1
+			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= ACT_IDLE_ANGRY_PISTOL
+			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= owner:ANPlusSequenceExists(ACT_RANGE_ATTACK_PISTOL_LOW) || ACT_RANGE_ATTACK_SMG1_LOW
+			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= ACT_RANGE_AIM_PISTOL_LOW
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= self.Primary.AttackGesture || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_PISTOL) || ACT_GESTURE_RANGE_ATTACK_SMG1
+
+			self.ActivityTranslateAI[ACT_COVER_LOW]						= owner:ANPlusSequenceExists(ACT_COVER_PISTOL_LOW) || ACT_COVER_SMG1_LOW
+			self.ActivityTranslateAI[ACT_CROUCHIDLE]					= owner:ANPlusSequenceExists(ACT_COVER_PISTOL_LOW) || ACT_COVER_SMG1_LOW
+			self.ActivityTranslateAI[ACT_RANGE_AIM_LOW]					= owner:ANPlusSequenceExists(ACT_RANGE_AIM_PISTOL_LOW) || ACT_RANGE_AIM_SMG1_LOW
+			
+			self.ActivityTranslateAI[ACT_CROUCHIDLE_STIMULATED]			= owner:ANPlusSequenceExists(ACT_RANGE_AIM_PISTOL_LOW) || ACT_RANGE_AIM_SMG1_LOW
+			self.ActivityTranslateAI[ACT_CROUCHIDLE_AIM_STIMULATED]		= owner:ANPlusSequenceExists(ACT_RANGE_AIM_PISTOL_LOW) || ACT_RANGE_AIM_SMG1_LOW
+			self.ActivityTranslateAI[ACT_CROUCHIDLE_AGITATED]			= owner:ANPlusSequenceExists(ACT_RANGE_AIM_PISTOL_LOW) || ACT_RANGE_AIM_SMG1_LOW
+			
+	elseif hType == "revolver" then
 			
             self.ActivityTranslateAI[ACT_IDLE]							= owner:ANPlusSequenceExists(ACT_IDLE_PISTOL) || ACT_IDLE_SMG1
 			self.ActivityTranslateAI[ACT_IDLE_RELAXED]					= owner:ANPlusSequenceExists(ACT_IDLE_PISTOL) || ACT_IDLE_SMG1
@@ -231,7 +289,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= ACT_IDLE_ANGRY_SHOTGUN
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= owner:ANPlusSequenceExists(ACT_RANGE_ATTACK_SHOTGUN_LOW) || owner:ANPlusSequenceExists(ACT_RANGE_ATTACK_AR2_LOW) || ACT_RANGE_ATTACK_SMG1
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= ACT_RANGE_AIM_SMG1_LOW
-			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_SHOTGUN) || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_AR2) || ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= self.Primary.AttackGesture || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_SHOTGUN) || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_AR2) || ACT_GESTURE_RANGE_ATTACK_SMG1
 
 			self.ActivityTranslateAI[ACT_COVER_LOW]						= ACT_COVER_SMG1_LOW
 			self.ActivityTranslateAI[ACT_CROUCHIDLE]					= ACT_COVER_SMG1_LOW 
@@ -289,7 +347,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= ACT_IDLE_ANGRY_SHOTGUN
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= owner:ANPlusSequenceExists(ACT_RANGE_ATTACK_AR2_LOW) || ACT_RANGE_ATTACK_SMG1
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= ACT_RANGE_AIM_SMG1_LOW
-			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_SHOTGUN) || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_AR2) || ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= self.Primary.AttackGesture || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_SHOTGUN) || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_AR2) || ACT_GESTURE_RANGE_ATTACK_SMG1
 
 			self.ActivityTranslateAI[ACT_COVER_LOW]						= ACT_COVER_SMG1_LOW
 			self.ActivityTranslateAI[ACT_CROUCHIDLE]					= ACT_COVER_SMG1_LOW 
@@ -347,7 +405,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= ACT_IDLE_ANGRY_SMG1
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= owner:ANPlusSequenceExists(ACT_RANGE_ATTACK_AR2_LOW) || ACT_RANGE_ATTACK_SMG1_LOW
 			--self.ActivityTranslateAI[ACT_RANGE_ATTACK1_LOW]				= ACT_RANGE_AIM_SMG1_LOW
-			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_SHOTGUN) || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_AR2) || ACT_GESTURE_RANGE_ATTACK_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1]			= self.Primary.AttackGesture || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_SHOTGUN) || owner:ANPlusSequenceExists(ACT_GESTURE_RANGE_ATTACK_AR2) || ACT_GESTURE_RANGE_ATTACK_SMG1
 
 			self.ActivityTranslateAI[ACT_COVER_LOW]						= owner:ANPlusSequenceExists(ACT_COVER_LOW_RPG) || ACT_COVER_SMG1_LOW
 			self.ActivityTranslateAI[ACT_CROUCHIDLE]					= owner:ANPlusSequenceExists(ACT_COVER_LOW_RPG) || ACT_COVER_SMG1_LOW

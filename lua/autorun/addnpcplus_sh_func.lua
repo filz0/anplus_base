@@ -19,7 +19,6 @@ end
 function ENT:ANPlusNPCThink()
 
 	if !IsValid(self) || !self:ANPlusAlive() then	
-		
 		return false			
 	elseif ( self:IsANPlus() && !GetConVar("ai_disabled"):GetBool() ) || !self:IsNPC() && self:IsANPlus(true) then
 		

@@ -303,18 +303,20 @@ end
 ]]--
 
 function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for this glorius thing.
-	local seq = self:GetSequenceName( self:GetSequence() )
-	if(self.m_tbAnimEvents[ seq ] ) then
-		if ( self.m_seqLast != seq ) then self.m_seqLast = seq; self.m_frameLast = -1 end
-		local frameNew = math.floor( self:GetCycle() * self.m_tbAnimationFrames[ seq ] )	-- Despite what the wiki says, GetCycle doesn't return the frame, but a float between 0 and 1
-		for frame = self.m_frameLast + 1, frameNew do	-- a loop, just in case the think function is too slow to catch all frame changes
-			if ( self.m_tbAnimEvents[ seq ][ frame ] ) then
-				for _, ev in ipairs(self.m_tbAnimEvents[ seq ][ frame ]) do
-					self:ANPlusHandleAnimationEvent( seq, ev )
+	if self.m_tbAnimEvents then
+		local seq = self:GetSequenceName( self:GetSequence() )
+		if(self.m_tbAnimEvents[ seq ] ) then
+			if ( self.m_seqLast != seq ) then self.m_seqLast = seq; self.m_frameLast = -1 end
+			local frameNew = math.floor( self:GetCycle() * self.m_tbAnimationFrames[ seq ] )	-- Despite what the wiki says, GetCycle doesn't return the frame, but a float between 0 and 1
+			for frame = self.m_frameLast + 1, frameNew do	-- a loop, just in case the think function is too slow to catch all frame changes
+				if ( self.m_tbAnimEvents[ seq ][ frame ] ) then
+					for _, ev in ipairs(self.m_tbAnimEvents[ seq ][ frame ]) do
+						self:ANPlusHandleAnimationEvent( seq, ev )
+					end
 				end
 			end
+			self.m_frameLast = frameNew
 		end
-		self.m_frameLast = frameNew
 	end
 end
 --[[

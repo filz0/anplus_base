@@ -301,7 +301,7 @@ end
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function metaENT:ANPlusAlive()
-	if IsValid(self) && ( ( self:IsNPC() && ( ( (SERVER) && !self:ANPlusPlayingDeathAnim() && self:GetNPCState() != 7 ) || ( (CLIENT) && self:Health() > 0 ) ) ) || ( !self:IsNPC() && self:Health() > 0 ) || ( self:IsPlayer() && self:Alive() ) ) then
+	if IsValid(self) && ( ( self:IsNPC() && ( ( (SERVER) && !self:ANPlusPlayingDeathAnim() && self:GetNPCState() != 7 ) || ( (CLIENT) && self:Health() > 0 ) ) ) || ( self:IsPlayer() && self:Alive() ) ) || ( self:GetMaxHealth() >= 0 && self:Health() > 0 ) || ( !self:IsNPC() && !self:IsPlayer() && self:GetMaxHealth() == 0 && self:Health() == 0 ) then
 		return true		
 	else	
 		return false		

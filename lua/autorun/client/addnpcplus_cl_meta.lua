@@ -3,6 +3,7 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
 local metaPanel = FindMetaTable("Panel")
+local metaPLAYER = FindMetaTable("Player")
 
 local scrWidth = 1920
 local scrHeight = 1080
@@ -269,5 +270,76 @@ render.ANPlusDrawBeamTrail = function(ent, attachmentID, offsetVec, color, width
 		end
 	else
 		ent['m_tPoints_att'..attachmentID] = {}
+	end
+end
+
+local offset	=	ScreenScale( 256 )
+local blur		=	Material( "pp/blurscreen" )
+
+local function PlayerVisionSuppress()
+	local ply = LocalPlayer()
+	local scrW = ScrW()
+	local scrH = ScrH()
+	local offx = scrW + offset
+	local offy = scrH + offset
+	local texW = ply.anpOTab.suppressGWidth || ScrW()
+	local texH = ply.anpOTab.suppressGHeight || ScrH()
+	local fadeout = 1 / 1 * ply.anpOTab.suppressDuration / 100
+
+	if texW <= offx then
+		--texW = Lerp( FrameTime() * ply.suppressNextFadeout, texW, offx )
+		texW = math.min( texW + fadeout, offx )
+	end
+
+	if texH <= offy then
+		--texH = Lerp( FrameTime() * ply.suppressNextFadeout, texH, offy )
+		texH = math.min( texH + fadeout, offy )
+	end
+		
+	if ply.anpOTab.suppressGMat then
+		ply.anpOTab.suppressGColor.a = math.max( ply.anpOTab.suppressGColor.a - fadeout, 0 )
+		surface.SetDrawColor( ply.anpOTab.suppressGColor )
+		surface.SetMaterial( ply.anpOTab.suppressGMat )
+		surface.DrawTexturedRect( scrW / 2 - texW / 2, scrH / 2 - texH / 2, texW, texH )
+	end
+	
+	if ply.anpOTab.suppressBLayers > 0 then
+		surface.SetDrawColor( 255, 255, 255 )
+		surface.SetMaterial( blur )
+		if ply.anpOTab.suppressBScatter || 0 > 0 then
+			for i = 1, ply.anpOTab.suppressBLayers || 0 do
+				blur:SetFloat( "$blur", ( i / ply.anpOTab.suppressBLayers ) * ply.anpOTab.suppressBScatter )
+				blur:Recompute()
+				render.UpdateScreenEffectTexture()			
+				surface.DrawTexturedRect( 0, 0, scrW, scrH )
+			end
+		end		
+		ply.anpOTab.suppressBScatter = math.max( ply.anpOTab.suppressBScatter - fadeout, 0 )
+		if ply.anpOTab.suppressBLayers > 1 && ply.anpOTab.suppressBScatter <= 0 then ply.anpOTab.suppressBLayers = math.max( ply.anpOTab.suppressBLayers - fadeout, 0 ) end		
+	end
+	
+	ply.anpOTab.suppressGWidth 	= texW
+	ply.anpOTab.suppressGHeight	= texH
+
+	if ply.anpOTab.suppressDuration + ply.anpOTab.suppressStartTime <= CurTime() then
+		ply.anpOTab = nil
+		hook.Remove( "HUDPaint", "ANPlusLoad_OVERLAY_PlayerVisionSuppress" )
+	end
+end
+
+function render.ANPlusDrawOverlay( effectName, tab )
+	local ply = LocalPlayer()
+	if effectName == "suppress" && tab then
+		tab.suppressGWidth		= ScrW() + ( tab['Offset'] || 0 )
+		tab.suppressGHeight		= ScrH() + ( tab['Offset'] || 0 )
+		tab.suppressGMat		= tab['Texture'] && Material( tab['Texture'] ) || Material( "effects/anp/vignette.png" )
+		tab.suppressGColor		= tab['Color'] || Color( 255, 255, 255, 255 )
+		tab.suppressBLayers 	= tab['Strength'] || 1
+		tab.suppressBScatter 	= tab['Scatter'] || 1
+		tab.suppressNextFadeout	= tab['Fadeout'] || 1
+		tab.suppressDuration	= tab['Duration'] || 50
+		tab.suppressStartTime	= CurTime()
+		ply.anpOTab 			= tab
+		hook.Add( "HUDPaint", "ANPlusLoad_OVERLAY_PlayerVisionSuppress", PlayerVisionSuppress )
 	end
 end

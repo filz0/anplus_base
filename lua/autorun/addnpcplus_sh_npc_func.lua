@@ -39,6 +39,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						newSelf:Spawn()
 						newSelf:Activate()
 						
+						newSelf.m_sNewWeapon = IsValid(self:GetActiveWeapon()) && self:GetActiveWeapon():GetClass()
+						
 						if isfunction( preCallback ) then
 							preCallback( newSelf )
 						end
@@ -64,7 +66,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 
 				--local min2, max2 = self:GetSurroundingBounds()
 				if (SERVER) then
-					ANPdevMsg( "Collision Bounds: Min[" .. tostring(min) .. "] Max[" .. tostring(max) .. "] | Hull: " .. tostring(hull), 1 )
+					ANPdevMsg( "Collision Bounds: Min[" .. tostring(colBoundsMin) .. "] Max[" .. tostring(colBoundsMax) .. "] | Hull: " .. tostring(hull), 1 )
 					ANPdevMsg( "SolidType: " .. self:GetSolid() .. " CollisionGroup: " .. self:GetCollisionGroup() .. " MoveCollide: " .. self:GetMoveCollide() .. " MoveType: " .. self:GetMoveType(), 1 )
 				end
 				--ANPdevMsg( "Surrounding Bounds: Min[" .. tostring(min2) .. "] Max[" .. tostring(max2), 1 )
@@ -121,8 +123,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						
 						local physCheck = self:GetPhysicsObject()
 						if !IsValid(physCheck) || self:GetSolid() != SOLID_VPHYSICS then
-							self:SetCycle( 0 )
-							self:ResetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
+							--self:SetCycle( 0 )
+							--self:ResetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
 						end
 						
 						if modelTab['BodyGroups'] then
@@ -191,8 +193,12 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					if self:IsNPC() then		
 						if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
 						if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end														
-						if !IsValid(self:GetActiveWeapon()) && self:ANPlusCapabilitiesHas( 2097152 ) && self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
-							self:Give( self:GetKeyValues()['additionalequipment'] ) 						
+						if !data['ForceDefaultWeapons'] && !IsValid(self:GetActiveWeapon()) && self:ANPlusCapabilitiesHas( 2097152 ) then
+							if self.m_sNewWeapon then
+								self:Give( self.m_sNewWeapon ) 
+							elseif self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
+								self:Give( self:GetKeyValues()['additionalequipment'] ) 	
+							end
 						end
 						if data['ForceDefaultWeapons'] && data['DefaultWeapons'] then self:ANPlusForceDefaultWeapons( data['DefaultWeapons'] ) end
 						self:ANPlusUpdateWeaponProficency( self:GetActiveWeapon(), data['WeaponProficiencyTab'] )						
@@ -214,18 +220,21 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					end
 					self.m_fANPUseLast = 0
 					self:SetUseType(SIMPLE_USE)
-					self.m_tbAnimationFrames = {}
-					for _, v in pairs( self:GetSequenceList() ) do
-						local seqID = self:LookupSequence( v )
-						local seqInfo = self:GetAnimInfo( seqID )
-						self.m_tbAnimationFrames[v] = seqInfo.numframes
+					
+					if self:GetSequenceList() then
+						self.m_tbAnimationFrames = {}
+						for _, v in pairs( self:GetSequenceList() ) do
+							local seqID = self:LookupSequence( v )
+							local seqInfo = self:GetAnimInfo( seqID )
+							self.m_tbAnimationFrames[v] = seqInfo.numframes
+						end
+						--
+						ANPdevMsg( "A table with all animations of this Entity with their frames:", 1 )
+						ANPdevMsg( self.m_tbAnimationFrames, 1 )
+						self.m_tbAnimEvents = {}
+						self.m_frameLast = -1
+						self.m_seqLast = -1		
 					end
-					--
-					ANPdevMsg( "A table with all animations of this Entity with their frames:", 1 )
-					ANPdevMsg( self.m_tbAnimationFrames, 1 )
-					self.m_tbAnimEvents = {}
-					self.m_frameLast = -1
-					self.m_seqLast = -1		
 					
 					local hpMul = GetConVar( "anplus_hp_mul" ):GetFloat()
 					self:SetHealth( ( data['Health'] || self:Health() ) * hpMul )				
@@ -267,6 +276,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end	
 				
 				hook.Add( "Think", self, self.ANPlusNPCThink )
+				
 				if (SERVER) then
 					self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) 
 				end				
