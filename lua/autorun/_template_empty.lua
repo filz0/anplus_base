@@ -1,6 +1,5 @@
 /*
 
-
 local ANPlusLoaded = file.Exists("lua/autorun/addnpcplus_base.lua","GAME") 
 if !ANPlusLoaded then return end
 
@@ -8,13 +7,14 @@ if !ANPlusLoaded then return end
 --WARNING!
 --Modelprecache is limited to 4096 unique models. When it reaches the limit the game will crash.
 --Soundcache is limited to 16384 unique sounds on the server.
---------------------------------------------------------*/ 
+----------------------------------------------------------]] 
 
 --util.PrecacheModel( "models/odessa.mdl" ) -- There is no need to precache this model
 
 --util.PrecacheSound( string soundName )
 ------------------------------------------------------------
-/*
+
+--[[
 ANPlus.AddNPCWeapon( basefile, name, class, killicon, killiconcolor )
 > basefile - A name of a lua file from autorun folder from chosen weapon base. This is required so if the base is not installed, weapon will not be added to the NPC weapon list.
 > name - Name of a weapon,
@@ -24,7 +24,7 @@ ANPlus.AddNPCWeapon( basefile, name, class, killicon, killiconcolor )
 
 example:
 ANPlus.AddNPCWeapon( "sh_npcweapons_weaponlist", "[NPCW] Sparbine M6D", "swep_ai_sp_magnum", nil, nil )
-]]--
+--]]
 
 ANPlus.AddNPC( {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
@@ -36,7 +36,7 @@ ANPlus.AddNPC( {
 ----------------------------------------------------------------- Entity class of your NPC aka base NPC       
 	['Class'] 					= "npc_citizen",
 ----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
-/*
+--[[
 	['Models'] = {
 		--- 
 		{ "models/mymodel.mdl", 
@@ -75,7 +75,7 @@ ANPlus.AddNPC( {
 		},
 			---   
 	},
-*/
+--]]
 	['Models'] = nil,
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
@@ -92,23 +92,23 @@ ANPlus.AddNPC( {
 ----------------------------------------------------------------- NPC health and max health.	
 	['Health'] 					= 50,
 ----------------------------------------------------------------- The first variable sets if NPC should regenerate health only when out of combat, the second variable represents the delay between health gains, and the third variable represents the health of each gain.	
-/* EXAMPLE
+--[[ EXAMPLE
 	['HealthRegen'] 		= { true, 1, 10 }, 
-*/
+--]]
 	['HealthRegen'] 			= nil, 
 ----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
-/* EXAMPLE
+--[[ EXAMPLE
 	['KeyValues'] 			= { citizentype = CT_REBEL, SquadName = "resistance" },
-*/
+--]]
 	['KeyValues'] 				= {},
 ----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
 	['SpawnFlags'] 				= 0, 
 ----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
-/* EXAMPLE
+--[[ EXAMPLE
 	['InputsAndOutputs'] 	= { -- string input, string param = "nil", number delay = 0, Entity activator = nil, Entity caller = nil
 		{ "kill", "", 1 }, -- I'll kill*myself within 1 second after spawn.
 	},  
-*/
+--]]
 	['InputsAndOutputs'] 		= nil,    
 ----------------------------------------------------------------- Default weapons for your NPC.
 	['DefaultWeapons'] 			= { "weapon_smg1" },
@@ -119,7 +119,7 @@ ANPlus.AddNPC( {
 ----------------------------------------------------------------- Set a distance at which your NPC will be able to spot enemies.	
 	['LookDistance'] 			= nil,    
 ----------------------------------------------------------------- Set how well your NPC should handle certain weapons. You can either specify a certain weapon by its Class or HoldType https://wiki.facepunch.com/gmod/Hold_Types . Default refers to weapons that do not meet the Class or HoldType requirement.	 
-/* EXAMPLE
+--[[ EXAMPLE
 	['WeaponProficiencyTab'] 	= {
 	
 		['Default']	= { 
@@ -134,21 +134,21 @@ ANPlus.AddNPC( {
 		['weapon_crossbow'] = { ['Proficiency'] = 4, ['PrimaryMinRange'] = 0,  ['SecondaryMinRange'] = 0, ['PrimaryMaxRange'] = 20000, ['SecondaryMaxRange'] = nil },
 		
 	},
-*/
+--]]
 	['WeaponProficiencyTab'] 	= {
 	
 		['Default']	= { ['Proficiency'] = 1, ['PrimaryMinRange'] = nil, ['SecondaryMinRange'] = nil, ['PrimaryMaxRange'] = nil, ['SecondaryMaxRange'] = nil },
 
 	},
 ----------------------------------------------------------------- Capabilities that should be added to your NPC. They should be added like this: 24 + 54 + 256 + etc. https://wiki.facepunch.com/gmod/Enums/CAP
-/* EXAMPLE
+--[[ EXAMPLE
 	['AddCapabilities'] 	= 2 + 8 + 67108864,
-*/
+--]]
 	['AddCapabilities'] 		= nil,
 ----------------------------------------------------------------- Capabilities that should be removed from your NPC. https://wiki.facepunch.com/gmod/Enums/CAP	
-/* EXAMPLE
+--[[ EXAMPLE
 	['RemoveCapabilities'] 	= 2 + 8 + 67108864,
-*/
+--]]
 	['RemoveCapabilities'] 		= nil,
 ----------------------------------------------------------------- Enables or disables the inverse kinematic usage of this NPC.	
 	['EnableInverseKinematic'] 	= true,
@@ -161,7 +161,7 @@ ANPlus.AddNPC( {
 ----------------------------------------------------------------- Increase or decrease NPC's self damage. The lowest is -100 (%) and it can go as high as you wish (be reasonable).
 	['DamageSelfScale'] 		= 0, --%, 0 is default.
 ----------------------------------------------------------------- This table allows you to increase or decrease NPC's resistances based on body part hit or damage type.	
-/* EXAMPLE
+--[[ EXAMPLE
 	['DamageTakenScale'] = {
 		  
 		---------- Body parts
@@ -181,7 +181,7 @@ ANPlus.AddNPC( {
 		[DMG_POISON]	= -30, --%,
 		
 	},
-*/
+--]]
 	['DamageTakenScale'] 		= nil, 
 ----------------------------------------------------------------- If set, NPC will be able to follow friendly Players when used. Val1 = OffCombat walk distance, Val2 = OffCombat run distance, Val3 = InCombat walk distance, Val4 = InCombat run distance.
 	['CanFollowPlayers'] 		= { 100, 200, 400, 800 },
@@ -195,32 +195,32 @@ ANPlus.AddNPC( {
 		--['Other ANPlus NPC ID/Name'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Like", 0 } },
 	}, 
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
-/* EXAMPLE
+--[[ EXAMPLE
 	['ActivityOther'] = {
 	
 		[ACT_RELOAD] = { 100, { 49, 50 } }, -- The first value (100) represents speed in %, the second value (table) contains replacement activities. You can either use numbers or ACT_NAMEs. If you simply wish to only change the current activity speed, remove the table with the replacements ( { 100, { 49, 50 } } --> { 100 } ).
 	
 	},
-*/
+--]]
 	['ActivityOther'] 			= nil,
 ----------------------------------------------------------------- Similar to ActivityOther but only for movement activities. You can also change the movement speed at specified activities.
-/* EXAMPLE
+--[[ EXAMPLE
 	['ActivityMovement'] = {
 	
 		[ACT_RUN] = { 100, 100, { 49, 50 } }, -- The first value (100) represents the animation speed in %, the second value (100) represents the movement speed in %, and the third value (table) contains replacement activities. You can either use numbers or ACT_NAMEs. If you simply wish to only change the current activity speed, remove the table with the replacements ( { 100, { 49, 50 } } --> { 100 } ).
 	
 	},
-*/
+--]]
 	['ActivityMovement'] 		= nil,
 ----------------------------------------------------------------- This table lets you override/edit sounds made by your NPC.	
-/* EXAMPLE
+--[[ EXAMPLE
 	['SoundModification'] = {
 	
 		['OverPitch'] 			= { 90, 110 }, -- Pitch override for realistic random voices.
 		['SoundList'] = {
 			[1] = {"*vo/npc/male01/abouttime", -- Sound that we want to edit/replace. If you use only a part of sound path like here (normally it would look something like this vo/npc/male01/abouttime01.wav), all sounds with similar names/paths will be edited like this. It saves some time.
 			['Play'] = true, -- Should We even play this sound?
-			['SoundCharacter'] = true, Sound characters. Set to true to keep the original, set to false to remove or set to your own sound character (eg. ['SoundCharacter'] = "^"). https://developer.valvesoftware.com/wiki/Soundscripts
+			['SoundCharacter'] = true, --Sound characters. Set to true to keep the original, set to false to remove or set to your own sound character (eg. ['SoundCharacter'] = "^"). https://developer.valvesoftware.com/wiki/Soundscripts
 			['SoundLevel'] = 100, -- Or sound range, can be randomized ['SoundLevel'] = { min, max } or specified ['SoundLevel'] = { val }
 			['Pitch'] = { 70, 100 }, -- Also can be randomised,
 			['Channel'] = CHAN_VOICE, 
@@ -232,7 +232,7 @@ ANPlus.AddNPC( {
 		},
 		
 	}, 
-*/
+--]]
 	['SoundModification'] 		= nil,
 ----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
 	['Functions'] = {
@@ -345,6 +345,10 @@ ANPlus.AddNPC( {
 		['OnNPCTakeDamage'] = function(self, dmginfo)
 		end,
 		
+		------------------------------------------------------------ OnNPCPostTakeDamage - This function runs whenever NPC gets damaged and after all of the damage calcualtions are done.
+		['OnNPCPostTakeDamage'] = function(self, dmginfo, tookDMG)
+		end,
+		
 		------------------------------------------------------------ OnNPCScaleDamage - This function runs whenever NPC gets damaged. Can also be used to detect which body part was hit.
 		['OnNPCScaleDamage'] = function(self, hitgroup, dmginfo)	
 		end,
@@ -359,6 +363,10 @@ ANPlus.AddNPC( {
 		
 		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
 		['OnNPCDamageOnEntity'] = function(self, ent, dmginfo)	
+		end,
+		
+		------------------------------------------------------------ OnNPCPostDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities) and after damage calcualtions are done. You can't define hit groups through it.
+		['OnNPCPostDamageOnEntity'] = function(self, ent, dmginfo, tookDMG)	
 		end,
 		
 		------------------------------------------------------------ OnNPCDeath - This function runs whenever NPC dies.
@@ -412,7 +420,7 @@ ANPlus.AddNPC( {
 ----------------------------------------------------------------- Entity class of your NPC aka base NPC       
 	['Class'] 					= "ent_class",
 ----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
-/*
+--[[
 	['Models'] = {
 		--- 
 		{ "models/mymodel.mdl", 
@@ -451,7 +459,7 @@ ANPlus.AddNPC( {
 		},
 			---   
 	},
-*/
+--]]
 	['Models'] = nil,
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
@@ -470,18 +478,18 @@ ANPlus.AddNPC( {
 ----------------------------------------------------------------- NPC health and max health.	
 	['Health'] 					= false,
 ----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
-/* EXAMPLE
+--[[ EXAMPLE
 	['KeyValues'] 			= { citizentype = CT_REBEL, SquadName = "resistance" },
-*/
+--]]
 	['KeyValues'] 				= {},
 ----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
 	['SpawnFlags'] 				= 0, 
 ----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
-/* EXAMPLE
+--[[ EXAMPLE
 	['InputsAndOutputs'] 	= { -- string input, string param = "nil", number delay = 0, Entity activator = nil, Entity caller = nil
 		{ "kill", "", 1 }, -- I'll kill*myself within 1 second after spawn.
 	},  
-*/
+--]]
 	['InputsAndOutputs'] 		= nil,    
 ----------------------------------------------------------------- Allow or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
 	['AllowPhysgunPickup'] 		= true, 
@@ -490,16 +498,16 @@ ANPlus.AddNPC( {
 ----------------------------------------------------------------- Increase or decrease NPC's damage output. The lowest is -100 (%) and it can go as high as you wish (be reasonable).
 	['DamageDealtScale'] 		= 0, --%, 0 is default.
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
-/* EXAMPLE
+--[[ EXAMPLE
 	['ActivityOther'] = {
 	
 		[ACT_RELOAD] = { 100, { 49, 50 } }, -- The first value (100) represents speed in %, the second value (table) contains replacement activities. You can either use numbers or ACT_NAMEs. If you simply wish to only change the current activity speed, remove the table with the replacements ( { 100, { 49, 50 } } --> { 100 } ).
 	
 	},
-*/
+--]]
 	['ActivityOther'] 			= false,
 ----------------------------------------------------------------- This table lets you override/edit sounds made by your NPC.	
-/* EXAMPLE
+--[[ EXAMPLE
 	['SoundModification'] = {
 	
 		['OverPitch'] 			= { 90, 110 }, -- Pitch override for realistic random voices.
@@ -518,7 +526,7 @@ ANPlus.AddNPC( {
 		},
 		
 	}, 
-*/
+--]]
 	['SoundModification'] 		= nil,
 ----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
 	['Functions'] = {
@@ -597,6 +605,10 @@ ANPlus.AddNPC( {
 		['OnNPCTakeDamage'] = function(self, dmginfo)
 		end,
 		
+		------------------------------------------------------------ OnNPCPostTakeDamage - This function runs whenever NPC gets damaged and after all of the damage calcualtions are done.
+		['OnNPCPostTakeDamage'] = function(self, dmginfo, tookDMG)
+		end,
+		
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
 		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)		
 		end,
@@ -607,6 +619,10 @@ ANPlus.AddNPC( {
 		
 		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
 		['OnNPCDamageOnEntity'] = function(self, ent, dmginfo)	
+		end,
+		
+		------------------------------------------------------------ OnNPCPostDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities) and after damage calcualtions are done. You can't define hit groups through it.
+		['OnNPCPostDamageOnEntity'] = function(self, ent, dmginfo, tookDMG)	
 		end,
 		
 		------------------------------------------------------------ OnNPCEmitSound - This function runs whenever NPC emits any sounds (no scripted sequences).
