@@ -33,10 +33,41 @@ function ENT:ANPlusNPCThink()
 			self:ANPlusDetectDanger()
 			self:ANPlusDoingSchedule()
 			
-			if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'] != nil && self:GetBestSoundHint() then	
-				if ( !GetConVar("ai_ignoreplayers"):GetBool() && self:GetBestSoundHint().type == 4 ) || ( GetConVar("ai_ignoreplayers"):GetBool() && self:GetBestSoundHint().type != 4 ) then
-					self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'](self, self:GetBestSoundHint())	
-				end
+			if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'] != nil then	
+				--if ( !GetConVar("ai_ignoreplayers"):GetBool() && sound.GetLoudestSoundHint( 0, self:GetPos() ).type == 4 ) || ( GetConVar("ai_ignoreplayers"):GetBool() && sound.GetLoudestSoundHint( 0, self:GetPos() ).type != 4 ) then
+					local sndHintTab = 
+					sound.GetLoudestSoundHint( 0, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 1, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 2, self:GetPos() )
+					|| !GetConVar("ai_ignoreplayers"):GetBool() && sound.GetLoudestSoundHint( 4, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 8, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 16, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 32, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 64, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 128, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 256, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 512, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 1024, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 2048, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 4096, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 8192, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 16384, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 32768, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 65536, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 1048576, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 2097152, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 4194304, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 8388608, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 16777216, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 33554432, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 67108864, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 134217728, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 268435456, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 536870912, self:GetPos() )
+					if sndHintTab then
+						self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'](self, sndHintTab)	
+					end
+				--end
 			end
 		end
 		

@@ -995,3 +995,7 @@ function metaENT:ANPlusCreateOutputHook(entOutput, eventName, callback)
 	self:Fire( "AddOutput", entOutput .. " anp_lua_run:RunPassedCode:hook.Run( '" .. eventName .. "' ):0:-1" )
 	--hook.Add( eventName, eventName .. "_hook", callback )
 end
+
+function metaENT:ANPlusIsRagdoll()
+	return self:GetClass() == "prop_ragdoll" || false
+end

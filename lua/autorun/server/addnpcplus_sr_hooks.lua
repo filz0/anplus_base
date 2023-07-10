@@ -84,15 +84,20 @@ concommand.Add( "anplus_reload_ents", function(ply)
 end)
 
 hook.Add( "PlayerSpawnedNPC", "ANPlusLoad_PlayerSpawnedNPC", function(ply, npc)		
-	local dataTab = ANPlusLoadGlobal[npc:GetInternalVariable( "m_iName" )]
-	npc.m_pMyPlayer = ply
+	local dataTab = ANPlusLoadGlobal[npc:GetInternalVariable( "m_iName" )]	
 	if dataTab then
+		npc.m_pMyPlayer = ply
 		if GetConVar( "anplus_random_placement" ):GetBool() then
 			npc:ANPlusRandomTeleport( false, 2, Vector( 0, 0, 1 ), function()
 				npc:SetAngles( npc:GetAngles() + Angle( 0, math.random( 0, 360 ), 0 ) )
 			end )
 		end
 	end
+end)
+
+hook.Add( "PlayerSpawnedSENT", "ANPlusLoad_PlayerSpawnedSENT", function(ply, ent)		
+	local dataTab = ANPlusLoadGlobal[ent:GetInternalVariable( "m_iName" )]
+	if dataTab then ent.m_pMyPlayer = ply end
 end)
 
 hook.Add( "PlayerDeath", "ANPlusLoad_PlayerDeath", function(ply, inf, att)
@@ -111,7 +116,7 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 	if IsValid(npc) && npc:IsNPC() && IsValid(rag) then
 		
 		npc.m_pSRagdollEntity = rag
-		
+
 		if npc:IsANPlus() then
 		
 			if npc:ANPlusGetDataTab() then
@@ -409,7 +414,7 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 	local att = dmginfo:GetAttacker()
 	local inf = dmginfo:GetInflictor()
 	local dmginfot = dmginfo:GetDamageType()	
-	
+
 	if ent.m_bNPCNoDamage then dmginfo:SetDamage( 0 ) end
 	
 	if !GetConVar( "anplus_ff_disabled" ):GetBool() && ent:IsANPlus() && IsValid(att) && ( att:IsNPC() || att:IsPlayer() ) && ent != att && ent:Disposition( att ) == D_LI then
@@ -442,9 +447,9 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 
 	end
 	
-	if IsValid(att) && att:IsANPlus(true) && att:ANPlusGetDataTab()['DamageDealtScale'] then
+	if IsValid(att) && att:IsANPlus(true) then
 	
-		dmginfo:AddDamage( dmginfo:GetDamage() * ( ( att:ANPlusGetDataTab()['DamageDealtScale'] / 100 ) >= -1 && att:ANPlusGetDataTab()['DamageDealtScale'] / 100 || -1 ) )
+		if att:ANPlusGetDataTab()['DamageDealtScale'] then dmginfo:AddDamage( dmginfo:GetDamage() * ( ( att:ANPlusGetDataTab()['DamageDealtScale'] / 100 ) >= -1 && att:ANPlusGetDataTab()['DamageDealtScale'] / 100 || -1 ) ) end
 		
 		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCDamageOnEntity'] != nil then
 			att:ANPlusGetDataTab()['Functions']['OnNPCDamageOnEntity'](att, ent, dmginfo)	
@@ -468,6 +473,28 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCTakeDamage'] != nil then
 			ent:ANPlusGetDataTab()['Functions']['OnNPCTakeDamage'](ent, dmginfo)			
+		end
+	
+	end
+
+end)
+
+hook.Add( "PostEntityTakeDamage", "ANPlusLoad_PostEntityTakeDamage", function(ent, dmginfo, tookDMG) 
+
+	local att = dmginfo:GetAttacker()	
+	
+	if IsValid(att) && att:IsANPlus(true) then
+
+		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCPostDamageOnEntity'] != nil then
+			att:ANPlusGetDataTab()['Functions']['OnNPCPostDamageOnEntity'](att, ent, dmginfo, tookDMG)	
+		end
+	
+	end
+	
+	if IsValid(ent) && ent:IsANPlus(true) then
+
+		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPostTakeDamage'] != nil then
+			ent:ANPlusGetDataTab()['Functions']['OnNPCPostTakeDamage'](ent, dmginfo, tookDMG)			
 		end
 	
 	end
