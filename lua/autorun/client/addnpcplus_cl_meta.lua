@@ -37,7 +37,7 @@ function metaPanel:ANPlus_CreateButton(x, y, w, h, r, color, text, txtcolor, too
 		panel:SizeToContents()
 	end
 	panel:SetText( text )
-	panel:SetTextColor( txtcolor )
+	panel:SetTextColor( txtcolor || Color( 255, 255, 255, 255 ) )
 	panel:SetFont( "DermaDefaultBold" )
 	panel:SetTooltip( tooltp )	
 	if r then
@@ -64,12 +64,23 @@ function metaPanel:ANPlus_CreateNumberWang(x, y, w, h, val, deci, mins, maxs, to
 	return panel
 end
 
+function metaPanel:ANPlus_CreateNumberScratch(x, y, val, deci, mins, maxs, tooltp)
+	local panel = vgui.Create( "DNumberScratch", self )
+	if x && y then panel:SetPos( x, y ) end
+	panel:SetMin( mins )
+	panel:SetMax( maxs )			
+	panel:SetValue( val )					
+	panel:SetDecimals( deci )
+	panel:SetTooltip( tooltp )
+	return panel
+end
+
 function metaPanel:ANPlus_CreateLabel(x, y, w, text, color, font)
 	local panel = vgui.Create( "DLabel", self )
 	if x && y then panel:SetPos( x, y ) end
 	panel:SetWidth( w )
 	panel:SetText( text )
-	panel:SetFont( font )
+	panel:SetFont( font || "DermaDefaultBold" )
 	panel:SetTextColor( color )	
 	return panel
 end
@@ -113,9 +124,9 @@ function metaPanel:ANPlus_CreateTextEntry(x, y, w, h, deftext, txtcolor, font, t
 	elseif isbool( w ) && isbool( h ) && w == true && h == true then 
 		panel:SizeToContents()
 	end
-	panel:SetFont( font )
+	panel:SetFont( font || "DermaDefaultBold" )
 	panel:SetTooltip( tooltp )
-	panel:SetTextColor( txtcolor )
+	panel:SetTextColor( txtcolor || Color( 255, 255, 255, 255 ) )
 	panel:SetText( deftext )
 	return panel
 end
@@ -128,11 +139,11 @@ function metaPanel:ANPlus_CreateCheckBox(x, y, state, tooltp)
 	return panel
 end
 
-function metaPanel:ANPlus_CreateCheckBoxLabel(x, y, text, txtcolor, state, tooltp)
+function metaPanel:ANPlus_CreateCheckBoxLabel(x, y, label, txtcolor, state, tooltp)
 	local panel = vgui.Create( "DCheckBoxLabel", self ) 
 	if x && y then panel:SetPos( x, y ) end
-	panel:SetTextColor( txtcolor )
-	panel:SetText( text )
+	panel:SetTextColor( txtcolor || Color( 255, 255, 255, 255 ) )
+	panel:SetText( label )
 	panel:SetTooltip( tooltp )
 	panel:SetValue( state )
 	if isnumber( w ) && isnumber( h ) then
@@ -140,6 +151,26 @@ function metaPanel:ANPlus_CreateCheckBoxLabel(x, y, text, txtcolor, state, toolt
 	elseif isbool( w ) && isbool( h ) && w == true && h == true then 
 		panel:SizeToContents()
 	end
+	return panel
+end
+
+function metaPanel:ANPlus_CreateCollapsibleCategory(x, y, w, h, expanded, label, tooltp)
+	local panel = vgui.Create( "DCollapsibleCategory", self )
+	panel:SetLabel( label )	
+	panel:SetExpanded( expanded )
+	if x && y then panel:SetPos( x, y ) end
+	if isnumber( w ) && isnumber( h ) then
+		panel:SetSize( w, h ) 
+	elseif isbool( w ) && isbool( h ) && w == true && h == true then 
+		panel:SizeToContents()
+	end
+	panel:SetTooltip( tooltp )
+	if r then
+		function panel:Paint(w, h)
+			draw.RoundedBox( r, 0, 0, w, h, color )
+		end
+	end
+	
 	return panel
 end
 
@@ -168,7 +199,7 @@ function metaPanel:ANPlus_ComboBox(x, y, w, h, deftext, txtcolor, font, tooltp)
 	end
 	panel:SetFont( font )
 	panel:SetTooltip( tooltp )
-	panel:SetTextColor( txtcolor )
+	panel:SetTextColor( txtcolor || Color( 255, 255, 255, 255 ) )
 	panel:SetValue( deftext )
 	return panel
 end

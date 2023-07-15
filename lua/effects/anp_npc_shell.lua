@@ -68,13 +68,18 @@ function EFFECT:Init( data )
 	
 	self.Entity:SetAngles( ang )
 	
-	if cVar:GetBool() then ParticleEffectAttach( "weapon_muzzle_smoke", 1, self.Entity, -1 ) end
+	if cVar:GetBool() then
+		timer.Simple( 1.5, function()
+			if !IsValid(self) || !IsValid(self.Entity) then return end
+			ParticleEffectAttach( "weapon_muzzle_smoke", 1, self.Entity, -1 ) 
+		end )
+	end
 	
 	self.HitSound = table.Random( self.Sounds[ bullettype ].Wavs )
 	self.HitPitch = self.Sounds[ bullettype ].Pitch + math.random(-10,10)
 	
 	self.SoundTime = CurTime() + math.Rand( 0.5, 0.75 )
-	self.LifeTime = CurTime() + 3
+	self.LifeTime = CurTime() + 9
 	self.Alpha = 255
 	
 end

@@ -236,9 +236,31 @@ ANPlus.AddNPC( {
 	['SoundModification'] 		= nil,
 ----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
 	['Functions'] = {
-	
+		
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- ( CLIENT & SERVER ) -- ply is valid only when PlayerSpawnedNPC gets called.
+		end,
+		
+		------------------------------------------------------------ OnNPCPropertyMenu - Used to setup editable variables for the property menu.
+		['OnNPCPropertyMenu'] = function(self, ply) -- ( CLIENT & SERVER )
+		--[[
+			local tab = { -- Example from Combine Mortar, from Combine Units +PLUS+
+				-- [no] = { Variable, Label, Descritpion, Min, Max, Decimals } -- It takes floats/strings/bools.
+				[1] = { "m_fNPCGunnerRange", "NPC Range", "Set the max range at which NPCs can engage enemies using this mortar.", 500, 20000 },
+			}
+			return tab
+		]]--
+		end,
+		
+		------------------------------------------------------------ OnNPCPropertyMenuApplyVar - Runs when property menu is applied.
+		['OnNPCPropertyMenuApplyVar'] = function(self, var, ply) -- ( CLIENT & SERVER )	
+		--[[
+			if (SERVER) then
+				if var == "m_fFireRate" then
+					self.m_pFuncMortar:SetKeyValue( "firerate", self[var] )
+				end
+			end
+		--]]
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
@@ -533,6 +555,28 @@ ANPlus.AddNPC( {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- ( CLIENT & SERVER ) -- Player is valid only when PlayerSpawnedNPC gets called.
+		end,
+		
+		------------------------------------------------------------ OnNPCPropertyMenu - Used to setup editable variables for the property menu.
+		['OnNPCPropertyMenu'] = function(self, ply) -- ( CLIENT & SERVER )
+		--[[
+			local tab = { -- Example from Combine Mortar, from Combine Units +PLUS+
+				-- [no] = { Variable, Label, Descritpion, Min, Max, Decimals } -- It takes floats/strings/bools.
+				[1] = { "m_fNPCGunnerRange", "NPC Range", "Set the max range at which NPCs can engage enemies using this mortar.", 500, 20000 },
+			}
+			return tab
+		]]--
+		end,
+		
+		------------------------------------------------------------ OnNPCPropertyMenuApplyVar - Runs when property menu is applied.
+		['OnNPCPropertyMenuApplyVar'] = function(self, var, ply) -- ( CLIENT & SERVER )	
+		--[[
+			if (SERVER) then
+				if var == "m_fFireRate" then
+					self.m_pFuncMortar:SetKeyValue( "firerate", self[var] )
+				end
+			end
+		--]]
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.

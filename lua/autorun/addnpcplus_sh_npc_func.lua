@@ -270,6 +270,12 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				if isfunction( postCallback ) then
 					postCallback( self )
 				end
+				
+				for _, v in pairs( self:GetTable() ) do 
+					if v && IsEntity( v ) && IsValid(v) && IsValid(v:GetParent()) && v:GetParent() == self then
+						SafeRemoveEntity( v )
+					end
+				end
 
 				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
 					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		

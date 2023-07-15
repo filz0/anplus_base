@@ -1228,18 +1228,23 @@ function metaENT:ANPlusEmitSoundSentence(stable, stopdead, callback)
 end
 
 function metaENT:ANPlusStopSoundSentence(fullstop)
-
-	if timer.Exists( "ANPEmitSoundSentenceTimer" .. self:EntIndex() ) then 
-	
-		timer.Remove( "ANPEmitSoundSentenceTimer" .. self:EntIndex() ) 
-		
+	if timer.Exists( "ANPEmitSoundSentenceTimer" .. self:EntIndex() ) then 	
+		timer.Remove( "ANPEmitSoundSentenceTimer" .. self:EntIndex() ) 	
 		if fullstop == true && self.m_sASSCurSentence != nil then
 		
 			self:StopSound( self.m_sASSCurSentence )
 			self.m_sASSCurSentence = nil
 			
-		end
-		
+		end	
+	end	
+end
+
+function metaENT:ANPlusAddSaveData( key, val )
+	if key then
+		duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveData'] = { [ key ] = val } } )
 	end
-	
+end
+
+function metaENT:ANPlusCreateVar(var, val)
+	self[var] = self[var] || val
 end

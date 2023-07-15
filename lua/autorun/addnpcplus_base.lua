@@ -295,7 +295,8 @@ properties.Add( "anplus_editmenu", {
 			net.WriteEntity( ent )
 		self:MsgEnd()
 		
-		ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- CLIENT
+		ent:ANPlusCustomConfigMenu( ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) )
+		--ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- CLIENT
 
 	end,
 	Receive = function( self, length, ply ) -- The action to perform upon using the property ( Serverside )
@@ -304,7 +305,7 @@ properties.Add( "anplus_editmenu", {
 		if ( !properties.CanBeTargeted( ent, ply ) ) then return end
 		if ( !self:Filter( ent, ply ) ) then return end
 		
-		ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- SERVER
+		--ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- SERVER
 		
 	end 
 } )

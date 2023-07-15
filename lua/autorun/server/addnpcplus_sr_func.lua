@@ -466,24 +466,20 @@ function ANPlusSameType(ent1, ent2)
 	return false		
 end
 
-local function ANPlusOnLoad(ply, ent, data)
-	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!
-		timer.Simple( 0, function()
-			if !IsValid(ent) then return end
-			ent:ANPlusIgnoreTillSet()
-			ent:ANPlusNPCApply(data['CurName'])
-		end)
+net.Receive("anplus_propmenu", function(_, ply)
+	local ent = net.ReadEntity()		
+	local tab = net.ReadTable()		
+	
+	if IsValid(ent) && tab then
+		for _, var in pairs( tab ) do 
+			if var then
+				ent:GetTable()[ var[ 1 ] ] = var[ 10 ] || ent:GetTable()[ var[ 1 ] ]
+				ent:ANPlusAddSaveData( var[ 1 ], var[ 10 ] || ent:GetTable()[ var[ 1 ] ] )
+				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	
+					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var[ 1 ], ply)			
+				end
+			end
+		end
 	end
-	timer.Simple( 0, function()
-		if !IsValid(ent) || !istable( data ) then return end
-		if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'] != nil then		
-			ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'](ply, ent, data)		
-		end	
-	end)
-end
-duplicator.RegisterEntityModifier( "anp_duplicator_data", ANPlusOnLoad )
-
-function ENT:ANPlusStoreEntityModifier(data)
-	if !data then return end
-    duplicator.StoreEntityModifier( self, "anp_duplicator_data", data )
-end
+	
+end)

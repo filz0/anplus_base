@@ -78,3 +78,38 @@ function ENT:ANPlusNPCThink()
 	end
 
 end
+
+local function ANPlusOnLoad(ply, ent, data)
+	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!		
+		ent:ANPlusIgnoreTillSet()
+		ent:ANPlusNPCApply(data['CurName'])
+	end
+	timer.Simple( 0, function()
+		if !IsValid(ent) || !istable( data ) then return end
+		if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'] != nil then		
+			ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'](ply, ent, data)		
+		end	
+
+		if data['m_tSaveData'] then
+
+			for _, var in pairs( data['m_tSaveData'] ) do 
+				if var && ent:GetTable()[ _ ] then			
+					ent:GetTable()[ _ ] = var	
+				end
+			end
+
+			net.Start("anplus_entmod_net")
+			net.WriteEntity( ent )
+			net.WriteTable( data['m_tSaveData'] )
+			net.Broadcast()
+			
+		end
+
+	end )
+end
+duplicator.RegisterEntityModifier( "anp_duplicator_data", ANPlusOnLoad )
+
+function ENT:ANPlusStoreEntityModifier(data)
+	if !data then return end
+	duplicator.StoreEntityModifier( self, "anp_duplicator_data", data )
+end
