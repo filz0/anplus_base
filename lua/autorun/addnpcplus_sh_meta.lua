@@ -301,7 +301,7 @@ end
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 function metaENT:ANPlusAlive()
-	if IsValid(self) && ( ( self:IsNPC() && ( ( (SERVER) && !self:ANPlusPlayingDeathAnim() && self:GetNPCState() != 7 ) || ( (CLIENT) && self:Health() > 0 ) ) ) || ( self:IsPlayer() && self:Alive() ) ) || ( self:GetMaxHealth() >= 0 && self:Health() > 0 ) || ( !self:IsNPC() && !self:IsPlayer() && self:GetMaxHealth() == 0 && self:Health() == 0 ) then
+	if IsValid(self) && !self.m_bDeathAnimPlay && ( ( ( self:IsNPC() && ( ( (SERVER) && !self:ANPlusPlayingDeathAnim() && self:GetNPCState() != 7 ) || ( (CLIENT) && self:Health() > 0 ) ) ) || ( self:IsPlayer() && self:Alive() ) ) || ( self:GetMaxHealth() >= 0 && self:Health() > 0 ) || ( !self:IsNPC() && !self:IsPlayer() && self:GetMaxHealth() == 0 && self:Health() == 0 ) ) then
 		return true		
 	else	
 		return false		
@@ -703,6 +703,24 @@ function ANPlusEmitUISound(ply, snd, vol)
 				end			
 			end
 		end			
+	end
+end
+
+function metaENT:ANPlusHaloEffect(color, size, lenght)	
+	if (SERVER)	then
+		net.Start( "anplus_holo_eff" ) 
+		net.WriteEntity( self )
+		net.WriteColor( color )
+		net.WriteFloat( size )
+		net.WriteFloat( lenght )		
+		net.Broadcast()
+	elseif (CLIENT) then
+		local fx = EffectData()
+		fx:SetEntity( self )
+		fx:SetStart( Vector( color.r, color.g, color.b ) ) -- color
+		fx:SetScale( size ) -- color
+		fx:SetMagnitude( lenght ) -- color
+		util.Effect( "anp_holo_blip", fx, true )	
 	end
 end
 

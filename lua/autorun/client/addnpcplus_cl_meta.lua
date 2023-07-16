@@ -39,7 +39,7 @@ function metaPanel:ANPlus_CreateButton(x, y, w, h, r, color, text, txtcolor, too
 	panel:SetText( text )
 	panel:SetTextColor( txtcolor || Color( 255, 255, 255, 255 ) )
 	panel:SetFont( "DermaDefaultBold" )
-	panel:SetTooltip( tooltp )	
+	if tooltp then panel:SetTooltip( tooltp ) end
 	if r then
 		function panel:Paint(w, h)
 			draw.RoundedBox( r, 0, 0, w, h, color )
@@ -60,7 +60,7 @@ function metaPanel:ANPlus_CreateNumberWang(x, y, w, h, val, deci, mins, maxs, to
 	panel:SetMax( maxs )			
 	panel:SetValue( val )			
 	panel:SetDecimals( deci )
-	panel:SetTooltip( tooltp )
+	if tooltp then panel:SetTooltip( tooltp ) end
 	return panel
 end
 
@@ -71,7 +71,7 @@ function metaPanel:ANPlus_CreateNumberScratch(x, y, val, deci, mins, maxs, toolt
 	panel:SetMax( maxs )			
 	panel:SetValue( val )					
 	panel:SetDecimals( deci )
-	panel:SetTooltip( tooltp )
+	if tooltp then panel:SetTooltip( tooltp ) end
 	return panel
 end
 
@@ -94,7 +94,7 @@ function metaPanel:ANPlus_CreateListView(x, y, w, h, multisel, sort, columntab, 
 		panel:SizeToContents()
 	end
 	panel:SetMultiSelect( multisel )
-	panel:SetTooltip( tooltp )
+	if tooltp then panel:SetTooltip( tooltp ) end
 	panel:SetSortable( sort )
 	for i = 1, columntab && #columntab || -1 do
 		local column = columntab[ i ]
@@ -110,7 +110,7 @@ function metaPanel:ANPlus_CreateListView(x, y, w, h, multisel, sort, columntab, 
 		panelN:SetPos( pX, pY - 17 )
 		local pW, pH = panel:GetSize()
 		panelN:SetSize( pW, 18 )
-		panelN:SetTooltip( tooltp )
+		if tooltp then panelN:SetTooltip( tooltp ) end
 		panelN:AddColumn( title )
 	end
 	return panel
@@ -125,7 +125,7 @@ function metaPanel:ANPlus_CreateTextEntry(x, y, w, h, deftext, txtcolor, font, t
 		panel:SizeToContents()
 	end
 	panel:SetFont( font || "DermaDefaultBold" )
-	panel:SetTooltip( tooltp )
+	if tooltp then panel:SetTooltip( tooltp ) end
 	panel:SetTextColor( txtcolor || Color( 255, 255, 255, 255 ) )
 	panel:SetText( deftext )
 	return panel
@@ -134,7 +134,7 @@ end
 function metaPanel:ANPlus_CreateCheckBox(x, y, state, tooltp)
 	local panel = vgui.Create( "DCheckBox", self ) 
 	if x && y then panel:SetPos( x, y ) end
-	panel:SetTooltip( tooltp )
+	if tooltp then panel:SetTooltip( tooltp ) end
 	panel:SetValue( state )
 	return panel
 end
@@ -144,7 +144,7 @@ function metaPanel:ANPlus_CreateCheckBoxLabel(x, y, label, txtcolor, state, tool
 	if x && y then panel:SetPos( x, y ) end
 	panel:SetTextColor( txtcolor || Color( 255, 255, 255, 255 ) )
 	panel:SetText( label )
-	panel:SetTooltip( tooltp )
+	if tooltp then panel:SetTooltip( tooltp ) end
 	panel:SetValue( state )
 	if isnumber( w ) && isnumber( h ) then
 		panel:SetSize( w, h ) 
@@ -164,7 +164,7 @@ function metaPanel:ANPlus_CreateCollapsibleCategory(x, y, w, h, expanded, label,
 	elseif isbool( w ) && isbool( h ) && w == true && h == true then 
 		panel:SizeToContents()
 	end
-	panel:SetTooltip( tooltp )
+	if tooltp then panel:SetTooltip( tooltp ) end
 	if r then
 		function panel:Paint(w, h)
 			draw.RoundedBox( r, 0, 0, w, h, color )
@@ -185,7 +185,7 @@ function metaPanel:ANPlus_CreateImage(x, y, w, h, image, color, keepAspect, tool
 	panel:SetImage( image, "vgui/anp_ico.png" )
 	panel:SetImageColor( color || Color( 255, 255, 255, 255 ) )
 	panel:SetKeepAspect( keepAspect || true )
-	panel:SetTooltip( tooltp )
+	if tooltp then panel:SetTooltip( tooltp ) end
 	return panel
 end
 
@@ -198,7 +198,7 @@ function metaPanel:ANPlus_ComboBox(x, y, w, h, deftext, txtcolor, font, tooltp)
 		panel:SizeToContents()
 	end
 	panel:SetFont( font )
-	panel:SetTooltip( tooltp )
+	if tooltp then panel:SetTooltip( tooltp ) end
 	panel:SetTextColor( txtcolor || Color( 255, 255, 255, 255 ) )
 	panel:SetValue( deftext )
 	return panel

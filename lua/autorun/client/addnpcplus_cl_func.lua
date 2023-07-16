@@ -49,7 +49,7 @@ net.Receive("anplus_holo_eff", function()
 	local ent = net.ReadEntity()
 	local color = net.ReadColor()
 	local size = net.ReadFloat()
-	local leng = net.ReadFloat()
+	local lenght = net.ReadFloat()
 
 	--if IsValid(ent) then
 	
@@ -57,7 +57,7 @@ net.Receive("anplus_holo_eff", function()
 		fx:SetEntity( ent )
 		fx:SetStart( Vector( color.r, color.g, color.b ) ) -- color
 		fx:SetScale( size ) -- color
-		fx:SetMagnitude( leng ) -- color
+		fx:SetMagnitude( lenght ) -- color
 		util.Effect( "anp_holo_blip", fx, true )	
 		
 	--end
@@ -238,7 +238,8 @@ function ENT:ANPlusCustomConfigMenu(tab)
 			timer.Simple( colCat:GetAnimTime() + 0.1, function()
 				if !dFrame then return end
 				local w, h = colCat:GetSize()
-				dFrame:SetSize( 280, h + 10 )
+				h = h + 10 < 55 && 55 || h + 10 >= 55 && h + 10
+				dFrame:SetSize( 280, h )
 			end )
 		elseif bool == false then		
 			ANPlusUISound( "ANP.UI.List.Close" )		
@@ -259,20 +260,21 @@ function ENT:ANPlusCustomConfigMenu(tab)
 		if var then
 			if isbool( ent:GetTable()[ var[ 1 ] ] ) then
 				count = count + 1				
-				local val = colCatSP:ANPlus_CreateCheckBoxLabel( 5, ( count * height ) - 20, var[ 2 ], false, ent:GetTable()[ var[ 1 ] ], var[ 3 ] )
+				local val = colCatSP:ANPlus_CreateCheckBoxLabel( 5, ( count * height ) - 20, var[ 2 ], false, ent:GetTable()[ var[ 1 ] ], var[ 3 ] || "" )
 				function val:OnChange( bVal )
 					var[ 10 ] = bVal
 				end
 			elseif isnumber( ent:GetTable()[ var[ 1 ] ] ) then
 				count = count + 1
 				local valLab = colCatSP:ANPlus_CreateLabel( 25, ( count * height - 2 ) - 20, 200, var[ 2 ], Color( 200, 200, 200, 255 ) )
-				local val = colCatSP:ANPlus_CreateNumberScratch( 5, ( count * height ) - 20, ent:GetTable()[ var[ 1 ] ], var[ 6 ] || 0, var[ 4 ], var[ 5 ], var[ 3 ] )
-				function val:OnValueChanged( nVal )
+				local val = colCatSP:ANPlus_CreateNumberScratch( 5, ( count * height ) - 20, ent:GetTable()[ var[ 1 ] ], var[ 6 ] || 0, var[ 4 ] || 0, var[ 5 ] || 1, var[ 3 ] || "" )
+				function val:OnValueChanged( nVal )					
+					nVal = math.Round( nVal, var[ 6 ] || 0 )
 					var[ 10 ] = nVal
 				end				
 			elseif isstring( ent:GetTable()[ var[ 1 ] ] ) then
 				count = count + 1				
-				local val = colCatSP:ANPlus_CreateTextEntry( 5, ( count * height ) - 20, 200, 15, "", Color( 200, 200, 200, 255 ), false, var[ 3 ] )
+				local val = colCatSP:ANPlus_CreateTextEntry( 5, ( count * height ) - 20, 200, 15, ent:GetTable()[ var[ 1 ] ], Color( 200, 200, 200, 255 ), false, var[ 3 ] || "" )
 				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var[ 2 ], Color( 200, 200, 200, 255 ) )
 				function val:OnEnter( sVal )
 					var[ 10 ] = sVal
@@ -287,6 +289,8 @@ function ENT:ANPlusCustomConfigMenu(tab)
 			end
 		end
 	end
+	
+	colCat:Toggle()
 	
 	local save = dFrame:ANPlus_CreateButton( 225, 5, 50, 20, 8, Color( 200, 200, 200, 255 ), "Apply", Color ( 100, 100, 100, 255 ), "Apply all of the changes." )
 	function save:OnCursorEntered()
@@ -312,10 +316,12 @@ function ENT:ANPlusCustomConfigMenu(tab)
 			end
 		end
 		
+		--ent:ANPlusHaloEffect( Color( 255, 255, 0 ), 5, 0.5 )
+		
 		net.Start( "anplus_propmenu" )
 		net.WriteEntity( ent )
 		net.WriteTable( tab )
-		net.SendToServer() 
+		net.SendToServer() 	
 		
 		timer.Simple( 0.2, function() 
 			if !IsValid(dFrame) then return end

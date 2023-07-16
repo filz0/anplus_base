@@ -470,6 +470,8 @@ net.Receive("anplus_propmenu", function(_, ply)
 	local ent = net.ReadEntity()		
 	local tab = net.ReadTable()		
 	
+	ent:ANPlusHaloEffect( Color( 0, 255, 255 ), 5, 1 )
+	
 	if IsValid(ent) && tab then
 		for _, var in pairs( tab ) do 
 			if var then

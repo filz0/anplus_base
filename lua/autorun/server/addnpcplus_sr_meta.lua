@@ -237,15 +237,6 @@ function metaENT:ANPlusCapabilitiesHas(cap)
 	end
 end
 
-function metaENT:ANPlusHaloEffect(color, size, lenght)	
-	net.Start( "anplus_holo_eff" ) 
-	net.WriteEntity( self )
-	net.WriteColor( color )
-	net.WriteFloat( size )
-	net.WriteFloat( lenght )
-	net.Broadcast()	
-end
-
 function metaENT:ANPlusDisableCollisions(ent)	
 	self.anpnocollidetab = self.anpnocollidetab || {}
 	if !IsValid(ent) then return end -- self.anpnocollidetab end	
