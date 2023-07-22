@@ -29,7 +29,11 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 			local dataTab = ANPlusLoadGlobal[name]
 			
 			if ( dataTab ) then
+			
 				if (SERVER) then
+				
+					self:SetSaveValue( "m_iName" , "" ) -- We don't need it anymore
+					
 					if ( !override && dataTab['Class'] != self:GetClass() ) then 
 						return	
 					elseif ( override && dataTab['Class'] != self:GetClass() ) then				
@@ -84,16 +88,19 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					local CurColor = ( modelTab && modelTab['Color'] ) || Color( 255, 255, 255, 255 )
 					local CurMaterial = ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && util.SharedRandom( "anp_mat_rng", modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""
 					local CurBoneEdit = ( modelTab && modelTab['BoneEdit'] ) || nil
-					local CurColBoundsMin, CurColBoundsMax = ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Max'] || colBoundsMax )
-					local CurHull = modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['HullType'] || hull
 					local CurScale, CurScaleDelta = modelTab['Scale'] && modelTab['Scale'][ 1 ] / 100 || 1, modelTab['scale'] && modelTab['scale'][ 2 ] || 0				
-					data['CurBGS'] = {}			
+					--data['CurBGS'] = {}			
 					local CurBGS = {}
-					data['CurSMS'] = {}		
+					--data['CurSMS'] = {}		
 					local CurSMS = {}
 					
 					if (SERVER) then
-					
+						
+						local sColMin, sColMax, sHull = self['m_tColTab'] && self['m_tColTab'][ 1 ], self['m_tColTab'] && self['m_tColTab'][ 2 ], self['m_tColTab'] && self['m_tColTab'][ 3 ]
+						local CurColBoundsMin, CurColBoundsMax = ( sColMin || modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( sColMax || modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Max'] || colBoundsMax )								
+						local CurHull = sHull || modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['HullType'] || hull
+						self:ANPlusAddSaveData( "m_tColTab", { CurColBoundsMin, CurColBoundsMax, hull } )
+						
 						for i = 1, #data['Models'] do
 							if self:GetModel() != data['Models'][ i ][ 1 ] then							
 								self:SetModel( CurModel )
@@ -105,6 +112,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self:SetMaterial( CurMaterial )
 						self:SetBloodColor( modelTab['BloodColor'] || self:GetBloodColor() )
 						self:ANPlusEditBone( CurBoneEdit )
+
 						self:SetCollisionBounds( CurColBoundsMin, CurColBoundsMax )
 						if modelTab['Scale'] then self:SetModelScale( CurScale, CurScaleDelta ) end
 						--self:SetSurroundingBounds( data['SurroundingBounds'] && data['SurroundingBounds']['Min'] || min2, data['SurroundingBounds'] && data['SurroundingBounds']['Max'] || max2 )
@@ -157,7 +165,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						
 					end
 					
-					if table.Count( data['CurBGS'] ) <= 0 then
+					--if table.Count( data['CurBGS'] ) <= 0 then
 
 						for i = 1, #self:GetBodyGroups() do		
 							CurBGS[ i ] = self:GetBodygroup( i )	
@@ -166,8 +174,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						local addTab = { ['CurBGS'] = CurBGS }
 						table.Merge( data, addTab )
 				
-					end
-					if table.Count( data['CurSMS'] ) <= 0 then
+					--end
+					--if table.Count( data['CurSMS'] ) <= 0 then
 				
 						for i = 0, #self:GetMaterials() do			
 							CurSMS[ i + 1 ] = self:GetSubMaterial( i ) || self:GetMaterials()[ i ]	
@@ -176,7 +184,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						local addTab = { ['CurSMS'] = CurSMS }
 						table.Merge( data, addTab )
 		
-					end
+					--end
 					local addTab = { ['CurModel'] = self:GetModel() }
 					table.Merge( data, addTab )			
 					local addTab = { ['CurSkin'] = self:GetSkin() }
@@ -274,12 +282,6 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					postCallback( self )
 				end
 				
-				for _, v in pairs( self:GetTable() ) do 
-					if v && IsEntity( v ) && IsValid(v) && IsValid(v:GetParent()) && v:GetParent() == self then
-						SafeRemoveEntity( v )
-					end
-				end
-
 				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
 					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
 				end	
@@ -302,7 +304,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						hook.Add( "PostDrawEffects", self, self.ANPlusNPCPostDrawEffects )
 					end
 				end
-				
+
 				self.ANPlusEntity = true
 			end
 		

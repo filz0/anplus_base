@@ -15,14 +15,17 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 			end
 		end
 		]]--
-		if (SERVER) then
+		if (SERVER) && !ent.ANPlusEntity then
+		
 			net.Start("anplus_net_entity")
 			net.WriteEntity( ent )
 			net.WriteString( ent:GetInternalVariable( "m_iName" ) )
 			net.Broadcast()
+			
 		end
 		
-		timer.Simple( 0, function()		
+		timer.Simple( 0, function()
+		
 			if !IsValid(ent) then return end	
 			
 			if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
@@ -32,7 +35,8 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 				end				
 			end
 			
-			if ( SERVER ) then
+			if (SERVER) && !ent.ANPlusEntity then
+			
 				for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
 					local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
 					if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
@@ -42,10 +46,11 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 				ent:ANPlusIgnoreTillSet()
 				ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
 				ent.m_pMyPlayer = nil	
+				
 			end	
 		end )	
 	end )	
-end)
+end )
 
 --[[////////////////////////
 ||||| If any KeyValues are getting applied to our Entity, We want access to them. It won't run on KeyValues applied by the spawn menu on spawn.
@@ -57,7 +62,7 @@ hook.Add( "EntityKeyValue", "ANPlusLoad_EntityKeyValue", function(ent, key, val)
 			ent:ANPlusGetDataTab()['Functions']['OnNPCKeyValue'](ent, key, val)		
 		end					
 	end	
-end)
+end )
 
 --[[////////////////////////
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
@@ -78,7 +83,7 @@ hook.Add( "EntityFireBullets", "ANPlusLoad_EntityFireBullets", function(npc, dat
 
 		return allow		
 	end		
-end)
+end )
 
 --[[////////////////////////
 ||||| Thanks to this hook, We can replace NPC' sounds. We can also simlate NPC hearing stuff. This hook doesn't work with scripted sentences (facepunch pls fix).
@@ -155,7 +160,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 			return bool
 		end	
 	end	
-end)
+end )
 
 hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)	
 	if IsValid(ent) then
@@ -168,11 +173,13 @@ hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)
 				if ent:IsNPC() && ent:ANPlusGetDataTab()['UseANPSquadSystem'] then 
 					ent:ANPlusRemoveFromCSquad( ent:ANPlusGetSquadName() )
 				end
-				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
-					ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'](ent)	
-				end
 			end
 		elseif (CLIENT) then
 		end
+		
+		if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
+			ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'](ent)	
+		end
+		
 	end	
-end)
+end )

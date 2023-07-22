@@ -93,6 +93,7 @@ end)
 net.Receive("anplus_net_entity", function()
 	local ent = net.ReadEntity()
 	local id = net.ReadString()
+
 	if ent then
 		ent:ANPlusNPCApply( id )	
 	end
@@ -179,7 +180,7 @@ net.Receive("anplus_screenmsg_ply", function()
 	ANPlusScreenMsg( nil, x, y, size, dur, text, font, color)
 end)
 
-net.Receive("anplus_entmod_net", function()	
+net.Receive("anplus_savedata_net", function()	
 	local ent = net.ReadEntity()
 	local data = net.ReadTable()
 	if IsValid(ent) && data then table.Merge( ent, data ) end

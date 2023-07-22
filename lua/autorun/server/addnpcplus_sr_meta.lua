@@ -992,3 +992,9 @@ end
 function metaENT:ANPlusIsRagdoll()
 	return self:GetClass() == "prop_ragdoll" || false
 end
+
+function metaENT:ANPlusAddSaveData(key, val)
+	if key then
+		duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveData'] = { [ key ] = val } } )
+	end
+end

@@ -16,7 +16,7 @@ util.AddNetworkString("anplus_notify")
 util.AddNetworkString("anplus_paint_decal")
 util.AddNetworkString("anplus_net_entity")
 util.AddNetworkString("anplus_propmenu")
-util.AddNetworkString("anplus_entmod_net")
+util.AddNetworkString("anplus_savedata_net")
 
 net.Receive("anplus_gmodsave_load_from_the_menu", function(len, ply)	
 	--ANPlusNPCPreApply()	

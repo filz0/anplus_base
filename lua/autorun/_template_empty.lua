@@ -65,7 +65,7 @@ ANPlus.AddNPC( {
 				['Max']				= nil,  -- Vector.
 				['BoundsType']		= nil,  -- https://wiki.facepunch.com/gmod/Enums/BOUNDS
 			},
-			['CollisionBounds']			= { -- It is sadly necessary to input these manually. Model change tends to break NPCs collisions.
+			['CollisionBounds']			= {
 	
 				['Min']				= Vector( -13, -13, 0 ), -- Mins of collision bounds. For a human-sized NPC (npc_citizen or npc_combine_s for example).
 				['Max']				= Vector( 13, 13, 72 ),  -- Maxs of collision bounds. For a human-sized NPC (npc_citizen or npc_combine_s for example).
@@ -404,7 +404,7 @@ ANPlus.AddNPC( {
 		end,
 		
 		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
-		['OnNPCRemove'] = function(self)	
+		['OnNPCRemove'] = function(self) -- ( CLIENT & SERVER )
 		end,
 		
 	},
@@ -450,7 +450,7 @@ ANPlus.AddNPC( {
 				['Max']				= nil,  -- Vector.
 				['BoundsType']		= nil,  -- https://wiki.facepunch.com/gmod/Enums/BOUNDS
 			},
-			['CollisionBounds']			= { -- It is sadly necessary to input these manually. Model change tends to break NPCs collisions.
+			['CollisionBounds']			= {
 	
 				['Min']				= Vector( -13, -13, 0 ), -- Mins of collision bounds. For a human-sized NPC (npc_citizen or npc_combine_s for example).
 				['Max']				= Vector( 13, 13, 72 ),  -- Maxs of collision bounds. For a human-sized NPC (npc_citizen or npc_combine_s for example).
@@ -636,7 +636,7 @@ ANPlus.AddNPC( {
 		end,
 		
 		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
-		['OnNPCRemove'] = function(self)	
+		['OnNPCRemove'] = function(self) -- ( CLIENT & SERVER )
 		end,
 		
 	},
