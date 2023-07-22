@@ -182,7 +182,7 @@ end)
 net.Receive("anplus_entmod_net", function()	
 	local ent = net.ReadEntity()
 	local data = net.ReadTable()
-	if IsValid(ent) && data then table.Merge( ent:GetTable(), data ) end
+	if IsValid(ent) && data then table.Merge( ent, data ) end
 end)
 
 function ENT:ANPlusNPCPreDrawEffects()
@@ -258,30 +258,30 @@ function ENT:ANPlusCustomConfigMenu(tab)
 	local height = 20
 	for _, var in ipairs( tab ) do 
 		if var then
-			if isbool( ent:GetTable()[ var[ 1 ] ] ) then
+			if isbool( ent[ var['Variable'] ] ) then
 				count = count + 1				
-				local val = colCatSP:ANPlus_CreateCheckBoxLabel( 5, ( count * height ) - 20, var[ 2 ], false, ent:GetTable()[ var[ 1 ] ], var[ 3 ] || "" )
+				local val = colCatSP:ANPlus_CreateCheckBoxLabel( 5, ( count * height ) - 20, var['Label'], false, ent[ var['Variable'] ], var['Description'] || "" )
 				function val:OnChange( bVal )
-					var[ 10 ] = bVal
+					var['ValueNew'] = bVal
 				end
-			elseif isnumber( ent:GetTable()[ var[ 1 ] ] ) then
+			elseif isnumber( ent[ var['Variable'] ] ) then
 				count = count + 1
-				local valLab = colCatSP:ANPlus_CreateLabel( 25, ( count * height - 2 ) - 20, 200, var[ 2 ], Color( 200, 200, 200, 255 ) )
-				local val = colCatSP:ANPlus_CreateNumberScratch( 5, ( count * height ) - 20, ent:GetTable()[ var[ 1 ] ], var[ 6 ] || 0, var[ 4 ] || 0, var[ 5 ] || 1, var[ 3 ] || "" )
+				local valLab = colCatSP:ANPlus_CreateLabel( 25, ( count * height - 2 ) - 20, 200, var['Label'], Color( 200, 200, 200, 255 ) )
+				local val = colCatSP:ANPlus_CreateNumberScratch( 5, ( count * height ) - 20, ent[ var['Variable'] ], var['Decimals'] || 0, var['Min'] || 0, var['Max'] || 1, var['Description'] || "" )
 				function val:OnValueChanged( nVal )					
-					nVal = math.Round( nVal, var[ 6 ] || 0 )
-					var[ 10 ] = nVal
+					nVal = math.Round( nVal, var['Decimals'] || 0 )
+					var['ValueNew'] = nVal
 				end				
-			elseif isstring( ent:GetTable()[ var[ 1 ] ] ) then
+			elseif isstring( ent[ var['Variable'] ] ) then
 				count = count + 1				
-				local val = colCatSP:ANPlus_CreateTextEntry( 5, ( count * height ) - 20, 200, 15, ent:GetTable()[ var[ 1 ] ], Color( 200, 200, 200, 255 ), false, var[ 3 ] || "" )
-				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var[ 2 ], Color( 200, 200, 200, 255 ) )
+				local val = colCatSP:ANPlus_CreateTextEntry( 5, ( count * height ) - 20, 200, 15, ent[ var['Variable'] ], Color( 200, 200, 200, 255 ), false, var['Description'] || "" )
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'], Color( 200, 200, 200, 255 ) )
 				function val:OnEnter( sVal )
-					var[ 10 ] = sVal
+					var['ValueNew'] = sVal
 				end	
 				function val:OnGetFocus()
 					valLab:SetWidth( 1 )
-					val:SetText( ent:GetTable()[ var[ 1 ] ] )
+					val:SetText( ent[ var['Variable'] ] )
 				end	
 				function val:OnLoseFocus()
 					valLab:SetWidth( 200 )
@@ -309,9 +309,9 @@ function ENT:ANPlusCustomConfigMenu(tab)
 		
 		for _, var in pairs( tab ) do 
 			if var then
-				ent:GetTable()[ var[ 1 ] ] = var[ 10 ] || ent:GetTable()[ var[ 1 ] ]
+				ent[ var['Variable'] ] = var['ValueNew'] || ent[ var['Variable'] ]
 				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	
-					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var[ 1 ], ply)			
+					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var['Variable'], ply)			
 				end
 			end
 		end

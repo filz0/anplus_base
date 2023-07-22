@@ -305,11 +305,11 @@ end
 function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for this glorius thing.
 	if self.m_tbAnimEvents then
 		local seq = self:GetSequenceName( self:GetSequence() )
-		if(self.m_tbAnimEvents[ seq ] ) then
-			if ( self.m_seqLast != seq ) then self.m_seqLast = seq; self.m_frameLast = -1 end
+		if ( self.m_tbAnimEvents[ seq ] ) then			
+			if ( self.m_seqLast != seq ) then self.m_seqLast = seq; self.m_frameLast = -1 end				
 			local frameNew = math.floor( self:GetCycle() * self.m_tbAnimationFrames[ seq ] )	-- Despite what the wiki says, GetCycle doesn't return the frame, but a float between 0 and 1
-			for frame = self.m_frameLast + 1, frameNew do	-- a loop, just in case the think function is too slow to catch all frame changes
-				if ( self.m_tbAnimEvents[ seq ][ frame ] ) then
+			for frame = self.m_frameLast + 1, frameNew do	-- a loop, just in case the think function is too slow to catch all frame changes						
+				if ( self.m_tbAnimEvents[ seq ][ frame ] ) then					
 					for _, ev in ipairs(self.m_tbAnimEvents[ seq ][ frame ]) do
 						self:ANPlusHandleAnimationEvent( seq, ev )
 					end
@@ -474,14 +474,25 @@ net.Receive("anplus_propmenu", function(_, ply)
 	
 	if IsValid(ent) && tab then
 		for _, var in pairs( tab ) do 
-			if var then
-				ent:GetTable()[ var[ 1 ] ] = var[ 10 ] || ent:GetTable()[ var[ 1 ] ]
-				ent:ANPlusAddSaveData( var[ 1 ], var[ 10 ] || ent:GetTable()[ var[ 1 ] ] )
+			if var && var['ValueNew'] then
+				ent[ var['Variable'] ] = var['ValueNew'] || ent[ var['Variable'] ]
+				ent:ANPlusAddSaveData( var['Variable'], var['ValueNew'] || ent[ var['Variable'] ] )
+
+				if ent['m_tSaveDataUpdateFuncs'] && isfunction( ent['m_tSaveDataUpdateFuncs'][ var['Variable'] ] ) then
+					ent['m_tSaveDataUpdateFuncs'][ var['Variable'] ](ent, var['ValueNew'])
+				end
+				
 				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	
-					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var[ 1 ], ply)			
+					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var['Variable'], var['ValueNew'], ply)			
 				end
 			end
 		end
 	end
 	
 end)
+
+function ENT:ANPlusAddSaveData(key, val)
+	if key then
+		duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveData'] = { [ key ] = val } } )
+	end
+end

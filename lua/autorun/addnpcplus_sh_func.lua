@@ -93,8 +93,8 @@ local function ANPlusOnLoad(ply, ent, data)
 		if data['m_tSaveData'] then
 
 			for _, var in pairs( data['m_tSaveData'] ) do 
-				if var && ent:GetTable()[ _ ] then			
-					ent:GetTable()[ _ ] = var	
+				if var && ent[ _ ] then			
+					ent[ _ ] = var	
 				end
 			end
 

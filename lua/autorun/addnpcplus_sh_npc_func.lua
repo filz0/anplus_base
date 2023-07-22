@@ -202,7 +202,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						end
 						if data['ForceDefaultWeapons'] && data['DefaultWeapons'] then self:ANPlusForceDefaultWeapons( data['DefaultWeapons'] ) end
 						self:ANPlusUpdateWeaponProficency( self:GetActiveWeapon(), data['WeaponProficiencyTab'] )						
-						if data['LookDistance'] then self:SetMaxLookDistance( data['LookDistance'] ) end -- How tf it doesn't work for some people is beyond me. 
+						self:SetMaxLookDistance( data['LookDistance'] || GetConVar( "anplus_look_distance_override" ):GetFloat() ) 
 						--if data['LookDistance'] then self:Fire( "SetMaxLookDistance", data['LookDistance'], 0.1 ) end	
 						if data['EnableInverseKinematic'] then self:ANPlusSetIK( data['EnableInverseKinematic'] ) end	
 						--if data['AllowActivityTranslation'] && !IsValid(self:GetWeapon( "ai_translate_act" )) then self:Give( "ai_translate_act" ) end									
@@ -266,6 +266,9 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				self:ANPlusApplyDataTab( data )					
 				
 				if (SERVER) then self:ANPlusSetKillfeedName( data['KillfeedName'] ) end
+				
+				self['m_tSaveDataMenu'] = self['m_tSaveDataMenu'] || {}
+				self['m_tSaveDataUpdateFuncs'] = self['m_tSaveDataUpdateFuncs'] || {}
 				
 				if isfunction( postCallback ) then
 					postCallback( self )

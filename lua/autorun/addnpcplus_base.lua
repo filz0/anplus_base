@@ -207,8 +207,9 @@ end
 ANPlus.AddConVar( "anplus_ff_disabled", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Allow friendly fire.", 0, 1 )
 ANPlus.AddConVar( "anplus_force_swep_anims", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Force fixed swep animations.", 0, 1 )
 ANPlus.AddConVar( "anplus_random_placement", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "If enabled and spawned by Players, ANPCs will be placed randomy around the map.", 0, 1 )
-ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply NPC's health.", 0.1 )
+ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply ANPC's health.", 0.1 )
 ANPlus.AddConVar( "anplus_replacer_enabled", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Enable ANPlus Replacer.", 0, 1 )
+ANPlus.AddConVar( "anplus_look_distance_override", 2048, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Set NPC look/sight distance. This command only affect ANPCs that don't have thier look distance changed by thier code.", 0, 32000 )
 ANPlus.AddClientConVar( "anplus_swep_muzzlelight", 1, "Enable light effect used by the muzzle effects from this base.", 0, 1 )
 ANPlus.AddClientConVar( "anplus_swep_shell_smoke", 1, "Allow smoke effect to be emitted from fired bullet casings.", 0, 1 )
  
@@ -249,6 +250,7 @@ if (CLIENT) then
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Disable Anti-FriendlyFire", "anplus_ff_disabled" ), "Disable Anti-FriendlyFire feature built-in to the base." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Random Placement", "anplus_random_placement" ), "If enabled, ANPCs spawned by the Players will be placed randomly if possible." )		
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Health Multiplier", "anplus_hp_mul", 1, 10, 2 ), "Multiply health values of ANPCs." )
+		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Look Distance", "anplus_look_distance_override", 0, 32000, 0 ), "Sets look distance of ANPCs. This setting only affect ANPCs which don't have thier look distance already changed in thier code." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Muzzle Light Effect", "anplus_swep_muzzlelight" ), "If enabled, muzzle effects from this base will emit light." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Casing/Shell Smoke", "anplus_swep_shell_smoke" ), "If enabled, spent casings/shells from this base will generate smoke particle effect." )
 	end
@@ -284,7 +286,7 @@ properties.Add( "anplus_editmenu", {
 		if ( !IsValid( ent ) ) then return false end
 		if ( ent:IsPlayer() ) then return false end
 		if ( !ent:IsANPlus( true ) ) then return false end
-		if ( !ent:ANPlusGetDataTab()['Functions'] || ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'] == nil ) then return false end
+		if ( !ent['m_tSaveDataMenu'] ) then return false end
 		if ( !gamemode.Call( "CanProperty", ply, "anplus_editmenu", ent ) ) then return false end
 		
 		return true
@@ -295,7 +297,7 @@ properties.Add( "anplus_editmenu", {
 			net.WriteEntity( ent )
 		self:MsgEnd()
 		
-		ent:ANPlusCustomConfigMenu( ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) )
+		ent:ANPlusCustomConfigMenu( ent['m_tSaveDataMenu'] )
 		--ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- CLIENT
 
 	end,

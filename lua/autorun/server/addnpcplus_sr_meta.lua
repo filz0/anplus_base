@@ -381,7 +381,7 @@ function metaENT:ANPlusIsOnGround(dist)
 
 end
 
-function metaENT:ANPlusUnParentFromBone(ent, bone, solid, collisiongroup, physinit, movetype)
+function metaENT:ANPlusUnParentFromBone(ent, bone, solid, collisiongroup, physinit, movetype, dontDel)
 
 	local boneid = ent:LookupBone( bone )
 	
@@ -401,11 +401,11 @@ function metaENT:ANPlusUnParentFromBone(ent, bone, solid, collisiongroup, physin
 	if collisiongroup then self:SetCollisionGroup( collisiongroup ) end
 	if physinit then self:PhysicsInit( physinit ) end
 	if movetype then self:SetMoveType( movetype ) end
-	ent:DontDeleteOnRemove( self )
+	if !dontDel then ent:DeleteOnRemove( self ) end
 	
 end
 
-function metaENT:ANPlusParent(ent, att, pos, ang)
+function metaENT:ANPlusParent(ent, att, pos, ang, dontDel)
 	
 	local oldPI = self:GetSolid()
 	local oldMT = self:GetMoveType()
@@ -430,11 +430,11 @@ function metaENT:ANPlusParent(ent, att, pos, ang)
 	self:SetMoveType( oldMT )
 	self:SetSolid( oldS )
 	
-	ent:DeleteOnRemove( self )
+	if !dontDel then ent:DeleteOnRemove( self ) end
 
 end
 
-function metaENT:ANPlusParentToBone(ent, bone, pos, ang)
+function metaENT:ANPlusParentToBone(ent, bone, pos, ang, dontDel)
 	
 	local boneid = ent:LookupBone( bone )
 
@@ -465,7 +465,7 @@ function metaENT:ANPlusParentToBone(ent, bone, pos, ang)
 	self:SetMoveType( oldMT )
 	self:SetSolid( oldS )
 	
-	ent:DeleteOnRemove( self )
+	if !dontDel then ent:DeleteOnRemove( self ) end
 
 end
 
@@ -897,11 +897,13 @@ function metaENT:ANPlusIsMoveSpeed( hORlORe, speed )
 	return false
 end
 
-function metaENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame && animation event ID
-	if(!self.m_tbAnimationFrames[seq]) then return end
+function metaENT:ANPlusAddAnimationEvent(seq, frame, ev, animFrames) -- Sequence, target frame && animation event ID
+	if(!self.m_tbAnimationFrames[seq]) then return end	
 	self.m_tbAnimEvents[seq] = self.m_tbAnimEvents[seq] || {}
 	self.m_tbAnimEvents[seq][frame] = self.m_tbAnimEvents[seq][frame] || {}
-	table.insert(self.m_tbAnimEvents[seq][frame],ev)
+	
+	table.insert( self.m_tbAnimEvents[seq][frame], ev )	
+	if animFrames then self.m_tbAnimationFrames[seq] = animFrames end
 end
 
 function metaENT:ANPlusAddGesture(act, autoKill)

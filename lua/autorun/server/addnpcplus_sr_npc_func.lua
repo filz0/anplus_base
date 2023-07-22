@@ -650,7 +650,7 @@ function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, cal
 	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() ) then return end
 	local actSeq = self:SelectWeightedSequence( act )
 	local actSeqName = self:GetSequenceName( actSeq )
-	local gestCheck = string.find( string.lower( actSeqName ), "gesture_" ) || string.find( string.lower( actSeqName ), "g_" )
+	local gestCheck = string.find( string.lower( actSeqName ), "gesture_" ) || string.find( string.lower( actSeqName ), "g_" ) || string.find( string.lower( actSeqName ), "gest" )
 	
 	local speed = speed || 1
 	local facespeed = facespeed || 0

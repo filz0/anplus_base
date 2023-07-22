@@ -1257,12 +1257,14 @@ function metaENT:ANPlusStopSoundSentence(fullstop)
 	end	
 end
 
-function metaENT:ANPlusAddSaveData( key, val )
-	if key then
-		duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveData'] = { [ key ] = val } } )
-	end
-end
-
-function metaENT:ANPlusCreateVar(var, val)
+function metaENT:ANPlusCreateVar(var, val, label, desc, min, max, deci, updateCallback)
 	self[var] = self[var] || val
+	if var && label then
+		local addtab = { ['Variable'] = var, ['Label'] = label, ['Description'] = desc, ['Min'] = min, ['Max'] = max, ['Decimals'] = deci }
+		table.insert( self['m_tSaveDataMenu'], addtab )
+		if updateCallback then
+			local addtab = { [var] = updateCallback }
+			table.Merge( self['m_tSaveDataUpdateFuncs'], addtab )
+		end
+	end
 end
