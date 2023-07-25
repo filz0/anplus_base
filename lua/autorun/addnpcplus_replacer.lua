@@ -332,7 +332,7 @@ if (CLIENT) then
 		end
 
 		for _, v in pairs( ANPlusLoadGlobal ) do
-			if v then
+			if v && ( v['Spawnable'] || v['Spawnable'] != false ) then
 				dListANPCs:AddLine( v['Category'], v['Name'] )
 			end
 		end

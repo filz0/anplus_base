@@ -79,13 +79,13 @@ concommand.Add( "anplus_reload_ents", function(ply)
 		for _, npc in pairs( ents.GetAll() ) do		
 			if !IsValid(npc) || npc:IsANPlus(true) then continue end
 			--npc:ANPlusIgnoreTillSet()		
-			npc:ANPlusNPCApply( npc:ANPlusGetDataTab['Name'], true )	
+			npc:ANPlusNPCApply( npc:ANPlusGetDataTab()['Name'], true )	
 		end		
 	end	
 end)
 
 hook.Add( "PlayerSpawnedNPC", "ANPlusLoad_PlayerSpawnedNPC", function(ply, npc)		
-	local dataTab = ANPlusLoadGlobal[npc:ANPlusGetDataTab['Name']]	
+	local dataTab = ANPlusLoadGlobal[ npc:GetKeyValues()['parentname'] ]	
 	if dataTab then
 		npc.m_pMyPlayer = ply
 		if GetConVar( "anplus_random_placement" ):GetBool() then
@@ -97,7 +97,7 @@ hook.Add( "PlayerSpawnedNPC", "ANPlusLoad_PlayerSpawnedNPC", function(ply, npc)
 end)
 
 hook.Add( "PlayerSpawnedSENT", "ANPlusLoad_PlayerSpawnedSENT", function(ply, ent)		
-	local dataTab = ANPlusLoadGlobal[ent:GetKeyValues()['parentname']]
+	local dataTab = ANPlusLoadGlobal[ ent:GetKeyValues()['parentname'] ]
 	if dataTab then ent.m_pMyPlayer = ply end
 end)
 

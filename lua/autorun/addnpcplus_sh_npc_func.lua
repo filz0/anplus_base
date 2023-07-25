@@ -10,7 +10,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 		name = tostring( name )
 		local dataTab = ANPlusLoadGlobal[ name ]
 		local cVar = GetConVar( "anplus_replacer_enabled" ):GetBool()
-		if cVar && !dataTab then
+		if cVar && !dataTab && !self:IsANPlus(true) then
 			for _, repData in pairs( ANPlusENTReplacerData ) do				
 				if repData && !override then
 					local modelCheck = self:GetModel() && string.find( string.lower( self:GetModel() ), string.lower( repData['Model'] ) ) || repData['Model'] == "No Model" || false	
