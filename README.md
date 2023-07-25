@@ -1,6 +1,6 @@
 ![AnpLogo](https://i.imgur.com/Un3AR9h.png)
 # ANPlus[BASE]
-*Warning! Reading this Base' code may cause brain aneurysm (not really).*
+*Warning! Reading the code of this BASE may cause a severe brain aneurysm (not really).*
 
 **Viewer Discretion is Advised**
 
@@ -17,21 +17,21 @@ Features
 * Ability to set random or specified skins,
 * Ability to set a custom material,
 * Ability to override or edit sounds,
-* Ability to edit model scale,
+* Ability to edit the model scale,
 * Ability to edit bones, 
 >Scale, position, angle or to enable jigglebones.
 * Ability to add custom dispositions/relations, 
->Based on names, entity classes, NPC classes, VJ classes.
+>Based on names, entity classes, NPC classes, and VJ classes.
 * Ability to increase/decrease the speed or even replace certain activities like reloading,
 * Ability to set weapon proficiency and range,
 * Full save and dupe support,
-* Avaible custom functions to customise engine NPCs even further,
-* Kill feed NPC' name support,
-* Build in health renegeration mechanic,
-* Support for inengine entities,
->Ever wanted a spawnable citadel super suit charger?
+* Available custom functions to customize engine NPCs even further,
+* Kill feed NPC's name support,
+* Build in health regeneration mechanic,
+* Support for in-engine entities,
+>Ever wanted a spawnable Citadel Super Suit Charger?
 * Support for the Hammer Editor? 
->In theory you can change NPCs/Entity name to a certain ANP NPC/Entity and it will be appplied on the map load.
+>In theory you can change NPC's/Entity's parentname KeyValue to a certain ANP NPC/Entity name and it will be applied on the map load.
 
 Commands
 -
@@ -45,7 +45,7 @@ Commands
 >A command to start the invasion.
 
 * anplus_ff_disabled 0/1
->Disable Anti-FriendlyFire feature.
+>Disable the Anti-Friendly Fire feature.
 
 Templates
 -
