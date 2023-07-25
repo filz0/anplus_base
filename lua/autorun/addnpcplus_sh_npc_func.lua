@@ -25,11 +25,17 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 		end
 
 		if name && isstring( name ) then
+		
 			local dataTab = ANPlusLoadGlobal[ name ]	
 			
 			if ( dataTab ) then
 
 				if (SERVER) then
+				
+					net.Start("anplus_net_entity")
+					net.WriteEntity( self )
+					net.WriteString( name )
+					net.Broadcast()
 				
 					self:SetKeyValue( "parentname" , "" ) -- We don't need it anymore
 					

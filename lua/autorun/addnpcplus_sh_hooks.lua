@@ -8,21 +8,6 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 	timer.Simple( 0, function() 
 		if !IsValid(ent) then return end 
-		--[[
-		if ent:GetClass() == "weapon_annabelle" then 
-			function ent:TranslateActivity( act )
-				print("fuck")
-			end
-		end
-		]]--
-		if (SERVER) && !ent:IsANPlus(true) then
-		
-			net.Start("anplus_net_entity")
-			net.WriteEntity( ent )
-			net.WriteString( ent:GetKeyValues()['parentname'] )
-			net.Broadcast()
-			
-		end
 		
 		timer.Simple( 0, function()
 		
@@ -36,7 +21,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 			end
 			
 			if (SERVER) && !ent:IsANPlus(true) then
-			
+
 				for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
 					local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
 					if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
