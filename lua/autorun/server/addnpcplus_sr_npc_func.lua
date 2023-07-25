@@ -405,7 +405,7 @@ function ENT:ANPlusCreateScriptedSequence(seqDataTab, faceEnt, faceSpeed, callba
 	if !seqDataTab then return end
 	
 	self.m_pScriptedSequence = ents.Create( "scripted_sequence" )	
-	local ssName = self:GetInternalVariable( "m_iName" ) .. "_ScriptedSequence_" .. self.m_pScriptedSequence:EntIndex()	
+	local ssName = self:ANPlusGetName() .. "_ScriptedSequence_" .. self.m_pScriptedSequence:EntIndex()	
 	self.m_pScriptedSequence:SetName( ssName )
 	self.m_pScriptedSequence:SetKeyValue( "spawnflags", ( seqDataTab['SpawnFlags'] || 0 ) )
 		
@@ -426,11 +426,10 @@ function ENT:ANPlusCreateScriptedSequence(seqDataTab, faceEnt, faceSpeed, callba
 	self.m_pScriptedSequence.Speed = seqDataTab['PlayBackRate']
 	
 	if seqDataTab['Delay'] then self.m_pScriptedSequence:Fire( "BeginSequence", "", seqDataTab['Delay'] ) end
-	--self.m_pScriptedSequence:Fire( "AddOutput", "OnEndSequence "..self:GetInternalVariable( "m_iName" ) .. self.m_pScriptedSequence:EntIndex()..":Kill", 0 )
 	self:DeleteOnRemove( self.m_pScriptedSequence )
 	
 	self.m_pScriptedSequence.pSSLuaRun = ents.Create( "lua_run" )
-	local lrName = self:GetInternalVariable( "m_iName" ) .. "_LuaRun_" .. self.m_pScriptedSequence.pSSLuaRun:EntIndex()
+	local lrName = self:ANPlusGetName() .. "_LuaRun_" .. self.m_pScriptedSequence.pSSLuaRun:EntIndex()
 	self.m_pScriptedSequence.pSSLuaRun:SetName( lrName )
 	self.m_pScriptedSequence.pSSLuaRun:Spawn()
 	self.m_pScriptedSequence:DeleteOnRemove( self.m_pScriptedSequence.pSSLuaRun )

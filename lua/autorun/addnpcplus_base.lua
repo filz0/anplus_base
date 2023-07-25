@@ -40,7 +40,7 @@ ANPlus = {
 			local listType = listType || "NPC"
 			local id = tostring( tab['Name'] ) 	
 			
-			local addTab = { [id] = tab } 		
+			local addTab = { [ id ] = tab } 		
 			table.Merge( ANPlusLoadGlobal, addTab )	
 			ANPlusLoadGlobalCount = ANPlusLoadGlobalCount + 1
 			
@@ -74,7 +74,7 @@ ANPlus = {
 			end
 			
 			tab['KeyValues'] = tab['KeyValues'] || {}
-			local addTab = { targetname = id } -- This should help with all these NPC spawner tools :/
+			local addTab = { parentname = id } -- This should help with all these NPC spawner tools :/
 			table.Merge( tab['KeyValues'], addTab )		
 			
 			if tab['Spawnable'] != nil && tab['Spawnable'] == false then return end		
@@ -213,13 +213,13 @@ ANPlus.AddConVar( "anplus_look_distance_override", 2048, (FCVAR_GAMEDLL + FCVAR_
 ANPlus.AddClientConVar( "anplus_swep_muzzlelight", 1, "Enable light effect used by the muzzle effects from this base.", 0, 1 )
 ANPlus.AddClientConVar( "anplus_swep_shell_smoke", 1, "Allow smoke effect to be emitted from fired bullet casings.", 0, 1 )
  
-local ANPlusInvalidChars = {" ","{","}","[","]","(",")","!","+","=","?",".",",","/","-","`","~"}
-function ANPlusIDCreate( name )
-	for i = 1, #ANPlusInvalidChars do
-		name = string.Replace( name, ANPlusInvalidChars[ i ], ANPlusInvalidChars[ i ] == " " && "_" || "" )	
+local invChars = {" ","{","}","[","]","(",")","!","+","=","?",".",",","/","-","`","~"}
+function ANPlusIDCreate(name)
+	for i = 1, #invChars do
+		name = string.Replace( name, invChars[ i ], invChars[ i ] == " " && "_" || "" )	
 	end	
-	local id = string.lower( name )	
-	return id	
+	name = string.lower( name )	
+	return name	
 end
 
 if (SERVER) then

@@ -208,7 +208,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 
 	local dFrame = vgui.Create( "DFrame" )
 		dFrame:SetTitle( "" )
-		dFrame:SetSize( 280, 55 )
+		dFrame:SetSize( 225, 75 )
 		dFrame:Center()
 		dFrame:SetVisible( true )
 		dFrame:SetDraggable( true )
@@ -231,7 +231,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 	end
 	
 	
-	local colCat = dFrame:ANPlus_CreateCollapsibleCategory( 5, 5, 215, 50, false, "List Of Editable Variables (CLICK)", "Use this list to edit certain things about this entity." )
+	local colCat = dFrame:ANPlus_CreateCollapsibleCategory( 5, 30, 215, 50, false, "List Of Editable Variables (CLICK)", "Use this list to edit certain things about this entity." )
 	function colCat:OnToggle( bool )	
 
 		if bool == true then		
@@ -239,14 +239,14 @@ function ENT:ANPlusCustomConfigMenu(tab)
 			timer.Simple( colCat:GetAnimTime() + 0.1, function()
 				if !dFrame then return end
 				local w, h = colCat:GetSize()
-				h = h + 10 < 55 && 55 || h + 10 >= 55 && h + 10
-				dFrame:SetSize( 280, h )
+				h = h + 10 < 75 && 75 || h + 10 >= 75 && h + 35
+				dFrame:SetSize( 225, h )
 			end )
 		elseif bool == false then		
 			ANPlusUISound( "ANP.UI.List.Close" )		
 			timer.Simple( colCat:GetAnimTime() + 0.1, function()
 				if !dFrame then return end
-				dFrame:SetSize( 280, 55 )
+				dFrame:SetSize( 225, 55 )
 			end )
 		end		
 	end
@@ -293,7 +293,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 	
 	colCat:Toggle()
 	
-	local save = dFrame:ANPlus_CreateButton( 225, 5, 50, 20, 8, Color( 200, 200, 200, 255 ), "Apply", Color ( 100, 100, 100, 255 ), "Apply all of the changes." )
+	local save = dFrame:ANPlus_CreateButton( 5, 5, 50, 20, 8, Color( 200, 200, 200, 255 ), "Apply", Color ( 100, 100, 100, 255 ), "Apply all of the changes." )
 	function save:OnCursorEntered()
 		function save:Paint(w, h)
 			draw.RoundedBox( 8, 3, 3, w - 6, h - 6, Color( 150, 150, 150, 255 ) )
@@ -331,7 +331,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 		
 	end
 	
-	local cancel = dFrame:ANPlus_CreateButton( 225, 30, 50, 20, 8, Color( 200, 200, 200, 255 ), "Close", Color ( 100, 100, 100, 255 ), "Close the interface." )
+	local cancel = dFrame:ANPlus_CreateButton( 170, 5, 50, 20, 8, Color( 200, 200, 200, 255 ), "Close", Color ( 100, 100, 100, 255 ), "Close the interface." )
 	function cancel:OnCursorEntered()
 		function cancel:Paint(w, h)
 			draw.RoundedBox( 8, 3, 3, w - 6, h - 6, Color( 150, 150, 150, 255 ) )

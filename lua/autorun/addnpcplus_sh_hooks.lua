@@ -15,11 +15,11 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 			end
 		end
 		]]--
-		if (SERVER) && !ent.ANPlusEntity then
+		if (SERVER) && !ent:IsANPlus(true) then
 		
 			net.Start("anplus_net_entity")
 			net.WriteEntity( ent )
-			net.WriteString( ent:GetInternalVariable( "m_iName" ) )
+			net.WriteString( ent:GetKeyValues()['parentname'] )
 			net.Broadcast()
 			
 		end
@@ -35,7 +35,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 				end				
 			end
 			
-			if (SERVER) && !ent.ANPlusEntity then
+			if (SERVER) && !ent:IsANPlus(true) then
 			
 				for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
 					local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
@@ -44,7 +44,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 					end			
 				end
 				ent:ANPlusIgnoreTillSet()
-				ent:ANPlusNPCApply( ent:GetInternalVariable( "m_iName" ) )		
+				ent:ANPlusNPCApply( ent:GetKeyValues()['parentname'] )		
 				ent.m_pMyPlayer = nil	
 				
 			end	

@@ -196,7 +196,7 @@ function ANPIsAnyoneLookingAtPos( ent, entTab, pos )
 end
 
 function metaENT:ANPlusRandomTeleport( entTab, iType, poscorrection, callback )	
-	local v = ANPlusAIGetNodes( iType )[ math.random( 1, #ANPlusAIGetNodes( iType ) ) ]	
+	local v = ANPlusAIGetNodes( iType ) && ANPlusAIGetNodes( iType )[ math.random( 1, #ANPlusAIGetNodes( iType ) ) ] || false	
 	if v && v['type'] == iType && !ANPlusAINodeOccupied( v['pos'] ) && ( ( !entTab && v['pos'] != self:GetPos() ) || ( entTab && v['pos'] != self:GetPos() && !ANPIsAnyoneLookingAtPos( self, entTab, v['pos'] ) ) ) then
 		
 		self:SetPos( v['pos'] + ( poscorrection || Vector( 0, 0, 0 ) ) )

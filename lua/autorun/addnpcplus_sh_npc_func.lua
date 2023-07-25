@@ -7,8 +7,8 @@ local ENT = FindMetaTable("Entity")
 function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 	
 	if ANPlusLoadGlobal && IsValid(self) then
-
-		local dataTab = ANPlusLoadGlobal[name]	
+		name = tostring( name )
+		local dataTab = ANPlusLoadGlobal[ name ]
 		local cVar = GetConVar( "anplus_replacer_enabled" ):GetBool()
 		if cVar && !dataTab then
 			for _, repData in pairs( ANPlusENTReplacerData ) do				
@@ -25,14 +25,13 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 		end
 
 		if name && isstring( name ) then
-
-			local dataTab = ANPlusLoadGlobal[name]
+			local dataTab = ANPlusLoadGlobal[ name ]	
 			
 			if ( dataTab ) then
-			
+
 				if (SERVER) then
 				
-					self:SetSaveValue( "m_iName" , "" ) -- We don't need it anymore
+					self:SetKeyValue( "parentname" , "" ) -- We don't need it anymore
 					
 					if ( !override && dataTab['Class'] != self:GetClass() ) then 
 						return	
