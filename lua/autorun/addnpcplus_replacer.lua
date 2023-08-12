@@ -3,6 +3,160 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
 ANPlusENTReplacerData = {}
+ANPlusReplacerNPCList = ANPlusReplacerNPCList || {}
+local customNPCList = {
+	------------=#
+	['Citizen Male'] = {
+		Category	=	"Humans + Resistance",
+		Class		=	"npc_citizen",
+		KeyValues = {
+			SquadName	=	"resistance",
+			citizentype	=	1,
+		},
+		Model		=	"models/Humans/Group01/male",
+		Name		=	"Citizen Male",
+	},
+	------------=#
+	['Citizen Female'] = {
+		Category	=	"Humans + Resistance",
+		Class		=	"npc_citizen",
+		KeyValues = {
+			SquadName	=	"resistance",
+			citizentype	=	1,
+		},
+		Model		=	"models/Humans/Group01/female",
+		Name		=	"Citizen Female",
+	},
+	------------=#
+	['Rebel Male'] = {
+		Category	=	"Humans + Resistance",
+		Class		=	"npc_citizen",
+		KeyValues = {
+			SquadName	=	"resistance",
+			citizentype	=	3,
+		},
+		Model		=	"models/Humans/Group03/male",
+		Name		=	"Rebel Male",
+		SpawnFlags	=	262144,
+		Weapons 	= {
+			"weapon_pistol",
+			"weapon_ar2",
+			"weapon_smg1",
+			"weapon_ar2",
+			"weapon_shotgun",
+		}
+	},
+	------------=#
+	['Rebel Female'] = {
+		Category	=	"Humans + Resistance",
+		Class		=	"npc_citizen",
+		KeyValues = {
+			SquadName	=	"resistance",
+			citizentype	=	3,
+		},
+		Model		=	"models/Humans/Group03/female",
+		Name		=	"Rebel Female",
+		SpawnFlags	=	262144,
+		Weapons 	= {
+			"weapon_pistol",
+			"weapon_ar2",
+			"weapon_smg1",
+			"weapon_ar2",
+			"weapon_shotgun",
+		}
+	},
+	------------=#
+	['Medic Male'] = {
+		Category	=	"Humans + Resistance",
+		Class		=	"npc_citizen",
+		KeyValues = {
+			SquadName	=	"resistance",
+			citizentype	=	3,
+		},
+		Model		=	"models/Humans/Group03m/male",
+		Name		=	"Medic Male",
+		SpawnFlags	=	131080,
+		Weapons 	= {
+			"weapon_pistol",
+			"weapon_ar2",
+			"weapon_smg1",
+			"weapon_shotgun",
+		}
+	},
+	------------=#
+	['Medic Female'] = {
+		Category	=	"Humans + Resistance",
+		Class		=	"npc_citizen",
+		KeyValues = {
+			SquadName	=	"resistance",
+			citizentype	=	3,
+		},
+		Model		=	"models/Humans/Group03m/female",
+		Name		=	"Medic Female",
+		SpawnFlags	=	131080,
+		Weapons 	= {
+			"weapon_pistol",
+			"weapon_ar2",
+			"weapon_smg1",
+			"weapon_shotgun",
+		}
+	},
+	------------=#
+	['Refugee Male'] = {
+		Category	=	"Humans + Resistance",
+		Class		=	"npc_citizen",
+		KeyValues = {
+			SquadName	=	"resistance",
+			citizentype	=	2,
+		},
+		Model		=	"models/Humans/Group02/male",
+		Name		=	"Refugee Male",
+		Weapons 	= {
+			"weapon_pistol",
+			"weapon_smg1",
+		}
+	},
+	------------=#
+	['Refugee Female'] = {
+		Category	=	"Humans + Resistance",
+		Class		=	"npc_citizen",
+		KeyValues = {
+			SquadName	=	"resistance",
+			citizentype	=	2,
+		},
+		Model		=	"models/Humans/Group02/female",
+		Name		=	"Refugee Female",
+		Weapons 	= {
+			"weapon_pistol",
+			"weapon_smg1",
+		}
+	},
+	------------=#
+}
+ANPlusENTReplacerFix = {
+	['Rebel'] 			= "models/Humans/Group03/",
+	['Refugee'] 		= "models/Humans/Group02/",
+	['Medic'] 			= "models/Humans/Group03m/",
+	--['VortigauntUriah'] = "models/vortigaunt_doctor.mdl",
+	--['VortigauntSlave'] = "models/vortigaunt_slave.mdl",
+}
+	
+hook.Add( "InitPostEntity", "ANPlus_InitPostEntity", function()
+	ANPlusReplacerNPCList = table.Copy( list.Get( "NPC" ) )
+
+	for _, v in pairs( ANPlusReplacerNPCList ) do 
+		if v then
+			if ANPlusENTReplacerFix[ tostring( _ ) ] then
+				v.Model = ANPlusENTReplacerFix[ tostring( _ ) ]
+			end
+			if ANPlusLoadGlobal[ _ ] then
+				table.RemoveByValue( ANPlusReplacerNPCList, v )				
+			end
+		end
+	end
+	
+	table.Merge( ANPlusReplacerNPCList, customNPCList )
+end )
 
 if (SERVER) then
 	
@@ -13,142 +167,6 @@ if (SERVER) then
 	local dir = "anplus_replacer"
 	local dir_presets = dir.."/anplus_replacer_data.txt"
 	
-	local customNPCList = {
-		------------=#
-		['Citizen Male'] = {
-			Category	=	"Humans + Resistance",
-			Class		=	"npc_citizen",
-			KeyValues = {
-				SquadName	=	"resistance",
-				citizentype	=	1,
-			},
-			Model		=	"models/Humans/Group01/male",
-			Name		=	"Citizen Male",
-		},
-		------------=#
-		['Citizen Female'] = {
-			Category	=	"Humans + Resistance",
-			Class		=	"npc_citizen",
-			KeyValues = {
-				SquadName	=	"resistance",
-				citizentype	=	1,
-			},
-			Model		=	"models/Humans/Group01/female",
-			Name		=	"Citizen Female",
-		},
-		------------=#
-		['Rebel Male'] = {
-			Category	=	"Humans + Resistance",
-			Class		=	"npc_citizen",
-			KeyValues = {
-				SquadName	=	"resistance",
-				citizentype	=	3,
-			},
-			Model		=	"models/Humans/Group03/male",
-			Name		=	"Rebel Male",
-			SpawnFlags	=	262144,
-			Weapons 	= {
-				"weapon_pistol",
-				"weapon_ar2",
-				"weapon_smg1",
-				"weapon_ar2",
-				"weapon_shotgun",
-			}
-		},
-		------------=#
-		['Rebel Female'] = {
-			Category	=	"Humans + Resistance",
-			Class		=	"npc_citizen",
-			KeyValues = {
-				SquadName	=	"resistance",
-				citizentype	=	3,
-			},
-			Model		=	"models/Humans/Group03/female",
-			Name		=	"Rebel Female",
-			SpawnFlags	=	262144,
-			Weapons 	= {
-				"weapon_pistol",
-				"weapon_ar2",
-				"weapon_smg1",
-				"weapon_ar2",
-				"weapon_shotgun",
-			}
-		},
-		------------=#
-		['Medic Male'] = {
-			Category	=	"Humans + Resistance",
-			Class		=	"npc_citizen",
-			KeyValues = {
-				SquadName	=	"resistance",
-				citizentype	=	3,
-			},
-			Model		=	"models/Humans/Group03m/male",
-			Name		=	"Medic Male",
-			SpawnFlags	=	131080,
-			Weapons 	= {
-				"weapon_pistol",
-				"weapon_ar2",
-				"weapon_smg1",
-				"weapon_shotgun",
-			}
-		},
-		------------=#
-		['Medic Female'] = {
-			Category	=	"Humans + Resistance",
-			Class		=	"npc_citizen",
-			KeyValues = {
-				SquadName	=	"resistance",
-				citizentype	=	3,
-			},
-			Model		=	"models/Humans/Group03m/female",
-			Name		=	"Medic Female",
-			SpawnFlags	=	131080,
-			Weapons 	= {
-				"weapon_pistol",
-				"weapon_ar2",
-				"weapon_smg1",
-				"weapon_shotgun",
-			}
-		},
-		------------=#
-		['Refugee Male'] = {
-			Category	=	"Humans + Resistance",
-			Class		=	"npc_citizen",
-			KeyValues = {
-				SquadName	=	"resistance",
-				citizentype	=	2,
-			},
-			Model		=	"models/Humans/Group02/male",
-			Name		=	"Refugee Male",
-			Weapons 	= {
-				"weapon_pistol",
-				"weapon_smg1",
-			}
-		},
-		------------=#
-		['Refugee Female'] = {
-			Category	=	"Humans + Resistance",
-			Class		=	"npc_citizen",
-			KeyValues = {
-				SquadName	=	"resistance",
-				citizentype	=	2,
-			},
-			Model		=	"models/Humans/Group02/female",
-			Name		=	"Refugee Female",
-			Weapons 	= {
-				"weapon_pistol",
-				"weapon_smg1",
-			}
-		},
-		------------=#
-	}
-	ANPlusENTReplacerFix = {
-		['Rebel'] 			= "models/Humans/Group03/",
-		['Refugee'] 		= "models/Humans/Group02/",
-		['Medic'] 			= "models/Humans/Group03m/",
-		--['VortigauntUriah'] = "models/vortigaunt_doctor.mdl",
-		--['VortigauntSlave'] = "models/vortigaunt_slave.mdl",
-	}
 ------------------------------------------------------------------------------=#
 	if !file.Exists( dir, "DATA" ) then file.CreateDir( dir ) end
 	if !file.Exists( dir_presets, "DATA" ) then file.Write( dir_presets ) end 
@@ -166,23 +184,11 @@ if (SERVER) then
 	end
 ------------------------------------------------------------------------------=#	
 	net.Receive("anplus_replacer_gettab_s", function(_, ply)	
-		local newNPCList = table.Copy( list.Get( "NPC" ) )
 
-		for _, v in pairs( newNPCList ) do 
-			if v then
-				if ANPlusENTReplacerFix[ tostring( _ ) ] then
-					v.Model = ANPlusENTReplacerFix[ tostring( _ ) ]
-				end
-				if ANPlusLoadGlobal[ _ ] then
-					table.RemoveByValue( newNPCList, v )				
-				end
-			end
-		end
-
-		table.Merge( newNPCList, customNPCList )
+		
 		net.Start( "anplus_replacer_gettab_c" )
 		net.WriteTable( ANPlusENTReplacerData )
-		net.WriteTable( newNPCList )
+		--net.WriteTable( newNPCList )
 		--net.WriteString( game.GetMap() ) -- We do it here because of " In Multiplayer this does not return the current map in the CLIENT realm before GM:Initialize. "
 		net.Send( ply )
 	end)
@@ -454,15 +460,15 @@ if (CLIENT) then
 		function help:OnCursorEntered()
 			ANPlusUISound( "ANP.UI.Hover" )
 		end
-		
+
 		------------=#
 		dFrame:ShowCloseButton( false )
 	end
 
 	net.Receive("anplus_replacer_gettab_c", function()
 		local tab = net.ReadTable()
-		local tab2 = net.ReadTable()
-		ANPlusNPCReplacerMenu( tab, tab2 )	
+		--local tab2 = net.ReadTable()
+		ANPlusNPCReplacerMenu( tab, ANPlusReplacerNPCList )	
 	end)
 
 	concommand.Add( "anplus_replacer_menu", function(ply, cmd, args, argStr)

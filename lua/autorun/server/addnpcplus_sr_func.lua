@@ -11,7 +11,7 @@ function ENT:ANPlusNPCHealthRegen()
 	
 		self:ANPlusGetDataTab()['HealthRegen'][ 4 ] = self:ANPlusGetDataTab()['HealthRegen'][ 4 ] || 0
 	
-		if ( self:ANPlusGetDataTab()['HealthRegen'][ 1 ] || ( !self:ANPlusGetDataTab()['HealthRegen'][ 1 ] && !self:GetEnemy() ) ) && CurTime() - self:ANPlusGetDataTab()['HealthRegen'][ 4 ] >= self:ANPlusGetDataTab()['HealthRegen'][ 2 ] then
+		if ( self:ANPlusGetDataTab()['HealthRegen'][ 1 ] || ( self:IsNPC() && !self:ANPlusGetDataTab()['HealthRegen'][ 1 ] && !self:GetEnemy() ) ) && CurTime() - self:ANPlusGetDataTab()['HealthRegen'][ 4 ] >= self:ANPlusGetDataTab()['HealthRegen'][ 2 ] then
 
 			local hpAdd = math.min( self:GetMaxHealth() - self:Health(), self:ANPlusGetDataTab()['HealthRegen'][ 3 ] )-- Dont overheal	
 			self:SetHealth(math.Approach( self:Health(), self:GetMaxHealth(), hpAdd ))
@@ -473,10 +473,11 @@ net.Receive("anplus_propmenu", function(_, ply)
 	ent:ANPlusHaloEffect( Color( 0, 255, 255 ), 5, 1 )
 	
 	if IsValid(ent) && tab then
+
 		for _, var in pairs( tab ) do 
-			if var && var['ValueNew'] then
-				ent[ var['Variable'] ] = var['ValueNew'] || ent[ var['Variable'] ]
-				ent:ANPlusAddSaveData( var['Variable'], var['ValueNew'] || ent[ var['Variable'] ] )
+			if var && var['ValueNew'] != nil then
+				ent[ var['Variable'] ] = var['ValueNew'] || var['ValueNew'] != false && ent[ var['Variable'] ]
+				ent:ANPlusAddSaveData( var['Variable'], ent[ var['Variable'] ] )
 
 				if ent['m_tSaveDataUpdateFuncs'] && isfunction( ent['m_tSaveDataUpdateFuncs'][ var['Variable'] ] ) then
 					ent['m_tSaveDataUpdateFuncs'][ var['Variable'] ](ent, var['ValueNew'])

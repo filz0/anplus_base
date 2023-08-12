@@ -21,7 +21,6 @@ function ENT:ANPlusNPCThink()
 	if !IsValid(self) || !self:ANPlusAlive() then	
 		return false			
 	elseif ( self:IsANPlus() && !GetConVar("ai_disabled"):GetBool() ) || !self:IsNPC() && self:IsANPlus(true) then
-		
 		if (SERVER)	then	
 			self:ANPlusNPCRelations()					
 			self:ANPlusNPCHealthRegen()					
@@ -32,14 +31,13 @@ function ENT:ANPlusNPCThink()
 			self:ANPlusNPCTranslateActivity()
 			self:ANPlusDetectDanger()
 			self:ANPlusDoingSchedule()
-			
 			if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'] != nil then	
 				--if ( !GetConVar("ai_ignoreplayers"):GetBool() && sound.GetLoudestSoundHint( 0, self:GetPos() ).type == 4 ) || ( GetConVar("ai_ignoreplayers"):GetBool() && sound.GetLoudestSoundHint( 0, self:GetPos() ).type != 4 ) then
-					local sndHintTab = 
+					local data = 
 					sound.GetLoudestSoundHint( 0, self:GetPos() )
 					|| sound.GetLoudestSoundHint( 1, self:GetPos() )
 					|| sound.GetLoudestSoundHint( 2, self:GetPos() )
-					|| !GetConVar("ai_ignoreplayers"):GetBool() && sound.GetLoudestSoundHint( 4, self:GetPos() )
+					|| sound.GetLoudestSoundHint( 4, self:GetPos() )
 					|| sound.GetLoudestSoundHint( 8, self:GetPos() )
 					|| sound.GetLoudestSoundHint( 16, self:GetPos() )
 					|| sound.GetLoudestSoundHint( 32, self:GetPos() )
@@ -64,8 +62,9 @@ function ENT:ANPlusNPCThink()
 					|| sound.GetLoudestSoundHint( 134217728, self:GetPos() )
 					|| sound.GetLoudestSoundHint( 268435456, self:GetPos() )
 					|| sound.GetLoudestSoundHint( 536870912, self:GetPos() )
-					if sndHintTab then
-						self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'](self, sndHintTab)	
+					if data then
+						if IsValid(data.owner) && data.owner:IsPlayer() && GetConVar("ai_ignoreplayers"):GetBool() then return end
+						self:ANPlusGetDataTab()['Functions']['OnNPCSoundHint'](self, data)	
 					end
 				--end
 			end
@@ -81,14 +80,14 @@ end
 
 local function ANPlusOnLoad(ply, ent, data)
 	
-	--timer.Simple( 0, function()
 	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!	
 
 		if data['m_tSaveData'] then
 
-			for _, var in pairs( data['m_tSaveData'] ) do 
-				if var then			
-					ent[ _ ] = var	
+			for var, val in pairs( data['m_tSaveData'] ) do 
+				if val then		
+					val = isstring(val) && ( val == "true" || val == "false" ) && tobool(val) || val
+					ent[ var ] = val	
 				end
 			end
 
@@ -101,18 +100,12 @@ local function ANPlusOnLoad(ply, ent, data)
 
 		ent:ANPlusIgnoreTillSet()
 		ent:ANPlusNPCApply(data['CurName'])
-			
-		net.Start("anplus_net_entity")
-		net.WriteEntity( ent )
-		net.WriteString( data['CurName'] )
-		net.Broadcast()
 		
 		if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'] != nil then		
 			ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'](ply, ent, data)		
 		end	
-		
+
 	end
-	--end )
 	
 end
 duplicator.RegisterEntityModifier( "anp_duplicator_data", ANPlusOnLoad )

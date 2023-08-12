@@ -241,7 +241,7 @@ if (SERVER) then
 		if !ply:IsPlayer() || self:GetNWBool( "ANP_INV_ACTIVE" ) then return end	
 
 		net.Start( "ANP_InvasionMenu" )
-		net.WriteTable( list.Get( "NPC" ) ) -- Cuz on client it's missing half of the data >:(
+		--net.WriteTable( list.Get( "NPC" ) ) -- Cuz on client it's missing half of the data >:(
 		net.WriteTable( self.SettingTab )
 		net.Send( ply )	
 		net.Receive("ANP_InvasionUpdate", function(_, ply)
@@ -453,8 +453,8 @@ if (SERVER) then
 |||||
 ]]--////////////////////////////////////////////////////////////////////////////////////////////////	
 local function GetNPCInShape(self, npc, npcData)
-	
-	if npc:IsNPC() && !IsValid(npc:GetActiveWeapon()) && npcData['Weapons'] && !npcData['CustomWeapon'] then 
+
+	if npc:IsNPC() && !IsValid(npc:GetActiveWeapon()) && list.Get( "NPC" )[npcData['ID']] && list.Get( "NPC" )[npcData['ID']]['Weapons'] && !npcData['CustomWeapon'] then 
 		local wep = npcData['Weapons'][ math.random( 1, #npcData['Weapons'] ) ]
 		if wep then npc:Give( wep ) end
 	elseif !IsValid(npc:GetActiveWeapon()) && npcData['CustomWeapon'] then
@@ -503,13 +503,13 @@ end
 		local npcData = self.NPCForCurWave[ math.random( 1, #self.NPCForCurWave ) ]
 		local spRand = self.NPCSpawnPoints[ math.random( 1, #self.NPCSpawnPoints ) ]
 		local spoint = IsValid(spRand) && spRand || self		
-		local npc = ents.Create( tostring( npcData['Class'] ) )	
-		npc:SetName( npcData['Name'] )
+		local npc = ents.Create( tostring( npcData['Class'] ) )		
 		npc:SetPos( spoint:GetPos() + Vector( 0, 0, 10 ) )
 		npc:SetAngles( Angle( 0, spoint:GetAngles().y, 0 ) )
-		GetNPCInShape( self, npc, npcData )	
+		GetNPCInShape( self, npc, npcData )
 		npc:Spawn()
 		npc:Activate()
+		npc:ANPlusNPCApply( npcData['Name'] )
 		local fx = EffectData()
 			fx:SetEntity( npc )
 		util.Effect( "inv_spawn", fx, true )
@@ -547,13 +547,13 @@ end
 		local npcData = self.NPCBossForCurWave[ math.random( 1, #self.NPCBossForCurWave ) ]
 		local spRand = self.NPCSpawnPoints[ math.random( 1, #self.NPCSpawnPoints ) ]
 		local spoint = IsValid(spRand) && spRand || self		
-		local npc = ents.Create( npcData['Class'] )
-		npc:SetName( npcData['Name'] )
+		local npc = ents.Create( npcData['Class'] )	
 		npc:SetPos( spoint:GetPos() + Vector( 0, 0, 10 ) )
 		npc:SetAngles( Angle( 0, spoint:GetAngles().y, 0 ) )
 		GetNPCInShape( self, npc, npcData )
 		npc:Spawn()
 		npc:Activate()
+		npc:ANPlusNPCApply( npcData['Name'] )
 		local fx = EffectData()
 			fx:SetEntity( npc )
 		util.Effect( "inv_spawn", fx, true )
@@ -675,7 +675,7 @@ if (CLIENT) then
 	local function ANP_Invasion_Menu()
 		
 		local ply = LocalPlayer()
-		local npcList = net.ReadTable()	
+		local npcList = list.Get( "NPC" )
 		local tab = net.ReadTable()	
 		if !tab then return end
 		local newtab = tab || {}
@@ -919,7 +919,7 @@ if (CLIENT) then
 				for _, npc in pairs( npcList ) do 
 					if npc['Name'] == l1v1 && npc['Class'] == l1v2 then
 						local npcTab = table.Copy( npc )
-						local addTab = { ['Wave'] = waveCommon:GetValue() }
+						local addTab = { ['Wave'] = waveCommon:GetValue(), ['ID'] = _ }
 						table.Merge( npcTab, addTab )
 						if l2v1 then
 							for _, wep in pairs( list.GetForEdit( "NPCUsableWeapons" ) ) do 
@@ -961,7 +961,7 @@ if (CLIENT) then
 				for _, npc in pairs( npcList ) do 
 					if npc['Name'] == l1v1 && npc['Class'] == l1v2 then
 						local npcTab = table.Copy( npc )
-						local addTab = { ['Wave'] = waveBoss:GetValue() }
+						local addTab = { ['Wave'] = waveBoss:GetValue(), ['ID'] = _ }
 						table.Merge( npcTab, addTab )
 						if l2v1 then
 							for _, wep in pairs( list.GetForEdit( "NPCUsableWeapons" ) ) do 

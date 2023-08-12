@@ -216,17 +216,19 @@ end
 
 function metaENT:ANPlusGetHitGroupBone( hg )	
 	local numHitBoxSets = self:GetHitboxSetCount()
-	for hboxset = 0, numHitBoxSets - 1 do	
-		local numHitBoxes = self:GetHitBoxCount( hboxset )  
-		for hitbox = 0, numHitBoxes - 1 do	
-			if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then	
-				local bone = self:GetHitBoxBone( hitbox, hboxset )			
-				if ( !bone || bone < 0 ) then return false end			
-				local pos, ang = self:GetBonePosition( bone )
-				return pos, ang, bone			
-			end			
-		end		
-	end	
+	if numHitBoxSets then
+		for hboxset = 0, numHitBoxSets - 1 do	
+			local numHitBoxes = self:GetHitBoxCount( hboxset )  
+			for hitbox = 0, numHitBoxes - 1 do	
+				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then	
+					local bone = self:GetHitBoxBone( hitbox, hboxset )			
+					if ( !bone || bone < 0 ) then return false end			
+					local pos, ang = self:GetBonePosition( bone )
+					return pos, ang, bone			
+				end			
+			end		
+		end	
+	end
 	return nil, -1	
 end
 
@@ -662,12 +664,16 @@ function ANPlusIsEmptySpace(spos, epos, filterTab, vecmin, vecmax)
 		endpos = epos,
 		mins = vecmin,
 		maxs = vecmax,
-		filter = entsTab
+		filter = filterTab
 	})
 	if tr.Hit then
 		return false					
 	end	
 	return true	
+end
+
+function metaENT:ANPlusGetName()
+	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Name'] || (SERVER) && self:GetName() || self:GetClass()
 end
 
 function ANPlusEmitUISound(ply, snd, vol)	
@@ -1129,15 +1135,14 @@ end
 
 --[[
 self.ANPlusDoorKickVL = {
-	sound = {{"npc/combine_soldier/vo/on1.wav","npc/combine_soldier/vo/on2.wav"},"npc/combine_soldier/vo/team.wav",{"npc/combine_soldier/vo/fixsightlinesmovein.wav","npc/combine_soldier/vo/flash.wav","npc/combine_soldier/vo/flush.wav","npc/combine_soldier/vo/movein.wav"},{"npc/combine_soldier/vo/off1.wav","npc/combine_soldier/vo/off2.wav","npc/combine_soldier/vo/off3.wav"}},
-	duration = {0,0,0,0},
+	sound = { sound1.wav, sound2.wav } one after another, OR sound = { {sound1b.wav sound1a.wav}, sound2.wav } first getting randomised, OR sound = { { sound1.wav, -5 }, sound2.wav } first's duration is reduced by 5 seconds (it wont stop but the second will play if their CHANNELs are not the same)
 	channel = CHAN_AUTO,
 	volume = VOL_NORM,
 	level = 75,
 	pitch = 100
 }
 ]]--
-function metaENT:ANPlusEmitSoundSentence(stable, stopdead, callback)
+function metaENT:ANPlusEmitSoundSentence(stable, callback)
 	
 	stopdead = stopdead || false
 	
@@ -1170,13 +1175,13 @@ function metaENT:ANPlusEmitSoundSentence(stable, stopdead, callback)
 	
 	timer.Remove( timerName )
 	
-	timer.Create( timerName, 0.01, 0, function()
-	
-		if !IsValid(self) || stable == nil || ( !self:ANPlusAlive() && stopdead ) || ( ANPlus_ASS_CurAudio > #stable.sound ) then
+	timer.Create( timerName, 0, 0, function()	
+		
+		if !IsValid(self) || stable == nil || ( ANPlus_ASS_CurAudio > #stable.sound ) then
 		
 			timer.Remove(timerName)
-			ANPlus_ASS_CurSound = 1
 			
+			ANPlus_ASS_CurSound = 1			
 			if isfunction(callback) then			
 				callback()				
 			end
@@ -1189,13 +1194,13 @@ function metaENT:ANPlusEmitSoundSentence(stable, stopdead, callback)
 				
 				local curAudio = stable.sound[ANPlus_ASS_CurAudio]
 				local curRand = math.random( #curAudio )
-				local dur = nil
-				local snd = nil
+				local dur = nil	
+				local snd = nil			
 				local sndtab = nil
-				
+
 				if istable(curAudio) then
 					
-					sndtab = curAudio[curRand]
+					sndtab = isnumber( curAudio[ 2 ] ) && curAudio[ 1 ] || curAudio[curRand]
 	
 				end
 
@@ -1230,7 +1235,7 @@ function metaENT:ANPlusEmitSoundSentence(stable, stopdead, callback)
 					snd = curAudio
 					
 				end
-				
+
 				self.m_sASSCurSentence = snd
 				self:EmitSound( snd, stable.level, stable.pitch, stable.volume, stable.channel )
 				
@@ -1258,7 +1263,7 @@ function metaENT:ANPlusStopSoundSentence(fullstop)
 end
 
 function metaENT:ANPlusCreateVar(var, val, label, desc, min, max, deci, updateCallback)
-	self[var] = self[var] || val
+	self[var] = self[var] == nil && val
 	if var && label then
 		local addtab = { ['Variable'] = var, ['Label'] = label, ['Description'] = desc, ['Min'] = min, ['Max'] = max, ['Decimals'] = deci }
 		table.insert( self['m_tSaveDataMenu'], addtab )
@@ -1267,4 +1272,58 @@ function metaENT:ANPlusCreateVar(var, val, label, desc, min, max, deci, updateCa
 			table.Merge( self['m_tSaveDataUpdateFuncs'], addtab )
 		end
 	end
+end
+
+function metaENT:ANPlusSetVar(var, val)
+	if self[var] == nil then return end
+	self[var] = val
+	if (SERVER) then self:ANPlusAddSaveData( var, val ) end
+end
+
+function metaENT:ANPlusGetRagdoll()
+	return (SERVER) && self.m_pSRagdollEntity || (CLIENT) && self.m_pCRagdollEntity
+end
+
+function metaENT:ANPlusGetLastFiredBullet()
+	return self.m_tLastFiredBullet
+end
+
+function ANPlusFindClosestEntity(pos, tab, filterFunc)
+	local distClosestSqr = math.huge
+	local distClosest
+	local entClosest
+	if !tab || !istable(tab) then return end
+	for _, v in pairs( tab ) do	
+		if v && IsValid(v) then
+			local filter = isfunction(filterFunc) && filterFunc(v) || !isfunction(filterFunc) && true
+			local distSqr, dist = ANPlusGetRangeVector( v:GetPos(), pos )
+				if distSqr < distClosestSqr && filter then	
+					distClosestSqr = distSqr
+					distClosest = dist
+					entClosest = v
+				end
+			end
+		end
+	return entClosest, distClosestSqr, distClosest
+end
+
+function metaPLAYER:ANPlusControlled(ent)
+	if ent == nil then
+		return self.m_pANPControlledENT
+	elseif IsValid(ent) then
+		self.m_pANPControlledENT = ent
+	elseif isbool( ent ) && ent == false then
+		self.m_pANPControlledENT = nil
+	end
+end
+
+function metaENT:ANPlusSetColorFade(color, delta)
+	color = color || self:GetColor()
+	delta = delta || 1
+	local fx = EffectData()
+	fx:SetEntity( self )
+	fx:SetMagnitude( delta ) -- Delta
+	fx:SetStart( color:ToVector() * 255 ) -- Color
+	fx:SetColor( color.a || 255 ) -- Alpha
+	util.Effect( "anp_fade", fx, true, true )
 end

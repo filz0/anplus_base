@@ -180,9 +180,9 @@ ANPlus = {
 		end
 	end,
 	
-	AddClientConVar = function(command, defaultValue, help, min, max)
+	AddClientConVar = function(command, defaultValue, help, min, max, flags)
 		if !ConVarExists( command ) && (CLIENT) then
-			CreateClientConVar( command, defaultValue, true, true, help || "", min, max )
+			CreateClientConVar( command, defaultValue, flags || true, true, help || "", min, max )
 		end
 	end,
 	
@@ -286,7 +286,7 @@ properties.Add( "anplus_editmenu", {
 		if ( !IsValid( ent ) ) then return false end
 		if ( ent:IsPlayer() ) then return false end
 		if ( !ent:IsANPlus( true ) ) then return false end
-		if ( !ent['m_tSaveDataMenu'] ) then return false end
+		if ( !ent['m_tSaveDataMenu'] || table.Count( ent['m_tSaveDataMenu'] ) == 0 ) then return false end
 		if ( !gamemode.Call( "CanProperty", ply, "anplus_editmenu", ent ) ) then return false end
 		
 		return true
@@ -311,6 +311,51 @@ properties.Add( "anplus_editmenu", {
 		
 	end 
 } )
+
+properties.Add( "anplus_controller", {
+	MenuLabel = "ANP Controller", -- Name to display on the context menu
+	Order = 60001, -- The order to display this property relative to other properties
+	MenuIcon = "vgui/anp_ico.png", -- The icon to display next to the property
+
+	Filter = function( self, ent, ply ) -- A function that determines whether an entity is valid for this property
+		if ( !IsValid( ent ) ) then return false end
+		if ( ent:IsPlayer() ) then return false end
+		--if ( !ent:IsANPlus( true ) ) then return false end
+		--if ( !ent['m_tSaveDataMenu'] || table.Count( ent['m_tSaveDataMenu'] ) == 0 ) then return false end
+		if ( !GetConVar( "developer" ):GetBool() ) then return false end
+		if ( !gamemode.Call( "CanProperty", ply, "anplus_editmenu", ent ) ) then return false end
+		
+		return true
+	end,
+	Action = function( self, ent ) -- The action to perform upon using the property ( Clientside )
+		local ply = LocalPlayer()
+		self:MsgStart()
+			net.WriteEntity( ent )
+		self:MsgEnd()
+		
+		ply:DrawViewModel( false )
+		ply.m_pANPControlledENT = ent
+
+	end,
+	Receive = function( self, length, ply ) -- The action to perform upon using the property ( Serverside )
+		local ent = net.ReadEntity()
+
+		if ( !properties.CanBeTargeted( ent, ply ) ) then return end
+		if ( !self:Filter( ent, ply ) ) then return end
+		ply:ANPlusControlled( ent )		
+		ply:Spectate(OBS_MODE_CHASE)
+		ply:SpectateEntity( ent )
+		ply:SetNoTarget( true )
+		ply:DrawShadow( false )
+		ply:SetNoDraw( true )
+		ply:SetMoveType( MOVETYPE_OBSERVER )
+		ply:DrawViewModel( false )
+		ply:DrawWorldModel( false )
+		ply:StripWeapons()
+		--ent:SetMaxLookDistance( 1 )
+	end 
+} )
+
 
 
 

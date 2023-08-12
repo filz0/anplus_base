@@ -102,6 +102,17 @@ hook.Add( "HUDPaint", "ANPlusLoad_TestDummyDMGStuff", function()
 		
 	end
 	
+	if IsValid(ply:ANPlusControlled()) then
+		local ent = ply:ANPlusControlled()
+		local wep = ent:GetActiveWeapon()
+		if IsValid(wep) then
+			
+			draw.RoundedBox( 8, 900 * ANPlusGetFixedScreenW(), 942 * ANPlusGetFixedScreenH(), 90 * ANPlusGetFixedScreenW(), 100 * ANPlusGetFixedScreenH(), Color( 0, 0, 0, 155 ) ) 
+			draw.SimpleText( wep:Clip1(), "HudNumbers", 940 * ANPlusGetFixedScreenW(), 942 * ANPlusGetFixedScreenH(), Color( 255, 255, 255, 255 ), 1, 1 )	
+			
+		end
+	end
+	
 end)
 
 hook.Add( "PopulateNPCs", "ANPlusLoad_PopulateNPCs", function(pnlContent, tree, node)
@@ -109,9 +120,8 @@ hook.Add( "PopulateNPCs", "ANPlusLoad_PopulateNPCs", function(pnlContent, tree, 
 	for i = 1, #ANPRemoveFromSpawnList do
 		local npcToRemove = ANPRemoveFromSpawnList[ i ]
 		if npcData[ npcToRemove ] then
-			print("REMOVED NPC", npcData[ npcToRemove ])
+			print( "ANP REMOVED NPC", npcData[ npcToRemove ]['Name'] )
 			npcData[ npcToRemove ] = nil
-			--npcToRemove = nil
 		end
 	end
 end)
@@ -121,34 +131,12 @@ hook.Add( "PopulateEntities", "ANPlusLoad_PopulateEntities", function(pnlContent
 	for i = 1, #ANPRemoveFromSpawnList do
 		local entToRemove = ANPRemoveFromSpawnList[ i ]
 		if entData[ entToRemove ] then
+			print( "ANP REMOVED ENTITY", entData[ entToRemove ]['PrintName'] )
 			entData[ entToRemove ] = nil
-			--entToRemove = nil
 		end
 	end
 end)
 
-hook.Add( "PopulateNPCs", "ANPlusLoad_PopulateNPCs", function(pnlContent, tree, node)
-	local npcData = list.GetForEdit( "NPC" )
-	for i = 1, #ANPRemoveFromSpawnList do
-		local npcToRemove = ANPRemoveFromSpawnList[ i ]
-		if npcData[ npcToRemove ] then
-			print("REMOVED NPC", npcData[ npcToRemove ])
-			npcData[ npcToRemove ] = nil
-			--npcToRemove = nil
-		end
-	end
-end)
-
-hook.Add( "PopulateEntities", "ANPlusLoad_PopulateEntities", function(pnlContent, tree, node)
-	local entData = list.GetForEdit( "SpawnableEntities" )
-	for i = 1, #ANPRemoveFromSpawnList do
-		local entToRemove = ANPRemoveFromSpawnList[ i ]
-		if entData[ entToRemove ] then
-			entData[ entToRemove ] = nil
-			--entToRemove = nil
-		end
-	end
-end)
 --[[
 local metaPLAYER = FindMetaTable("Player")
 

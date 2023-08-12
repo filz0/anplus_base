@@ -21,19 +21,6 @@ function ENT:ANPlusSetAttackDelay(val)
 	return self:SetSaveValue( "m_flShotDelay", val )
 end
 
-function ENT:ANPlusSetIK(bool)
-	
-	if IsValid(self) then
-	
-		net.Start("anplus_set_ik")
-		net.WriteEntity(self)
-		net.WriteBool(bool)
-		net.Broadcast()
-	
-	end
-	
-end
-
 function ENT:ANPlusUpdateWeaponProficency( wep, dataTab )
 	dataTab = self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['WeaponProficiencyTab'] || dataTab
 	if IsValid(self) && IsValid(wep) && dataTab then
@@ -398,7 +385,7 @@ local seqDataTab = {
 self:ANPlusCreateScriptedSequence(seqDataTab)
 */
 
-function ENT:ANPlusCreateScriptedSequence(seqDataTab, faceEnt, faceSpeed, callback, postCallback)
+function ENT:ANPlusCreateScriptedSequence(seqDataTab, faceEnt, faceSpeed)
 	
 	if !IsValid(self) || !self:ANPlusAlive() then return end
 	--if IsValid(self.m_pScriptedSequence) then self.m_pScriptedSequence:Remove() end
@@ -428,18 +415,15 @@ function ENT:ANPlusCreateScriptedSequence(seqDataTab, faceEnt, faceSpeed, callba
 	if seqDataTab['Delay'] then self.m_pScriptedSequence:Fire( "BeginSequence", "", seqDataTab['Delay'] ) end
 	self:DeleteOnRemove( self.m_pScriptedSequence )
 	
-	self.m_pScriptedSequence.pSSLuaRun = ents.Create( "lua_run" )
-	local lrName = self:ANPlusGetName() .. "_LuaRun_" .. self.m_pScriptedSequence.pSSLuaRun:EntIndex()
-	self.m_pScriptedSequence.pSSLuaRun:SetName( lrName )
-	self.m_pScriptedSequence.pSSLuaRun:Spawn()
-	self.m_pScriptedSequence:DeleteOnRemove( self.m_pScriptedSequence.pSSLuaRun )
-	
-	if isfunction( callback ) then self.m_pScriptedSequence.callback = callback end
-	if isfunction( postCallback ) then self.m_pScriptedSequence.postCallback = postCallback end
-	
-	self.m_pScriptedSequence:Fire( "AddOutput", "OnBeginSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnStartScriptedSequence' ):0:-1" )
-	self.m_pScriptedSequence:Fire( "AddOutput", "OnEndSequence " .. lrName .. ":RunPassedCode:hook.Run( 'ANPOnEndScriptedSequence' ):0:-1" )
-	
+	self.m_pScriptedSequence:ANPlusCreateOutputHook( "OnBeginSequence", "ANPlusScriptedSequenceStart" )
+	self.m_pScriptedSequence:ANPlusCreateOutputHook( "OnEndSequence", "ANPlusScriptedSequenceEnd" )
+	--[[
+	local callback = callback
+	local postCallback = postCallback
+
+	if isfunction( callback ) then hook.Add( "ANPlusScriptedSequenceStart", self.m_pScriptedSequence, callback() ) end
+	if isfunction( postCallback ) then hook.Add( "ANPlusScriptedSequenceEnd", self.m_pScriptedSequence, postCallback() ) end
+	]]--
 	timer.Create( "ANP_SS_PLAYBACKRATE" .. self:EntIndex(), 0, 0, function() 
 		if !IsValid(self) || !self:IsCurrentSchedule( SCHED_AISCRIPT ) then return end
 		self:ANPlusSetNextFlinch( 1 ) -- Don't flinch during SS
@@ -832,7 +816,7 @@ function ENT:ANPlusDoDeathAnim(dmginfo, act, speed, movementVel, atHPLevel, dmgM
 	local dmgt = dmginfo:GetDamageType()
 	local atHPLevel = atHPLevel || 1
 	local targethp = math.Approach( self:Health(), atHPLevel, dmg ) == atHPLevel
-	if act && ( !dmgMin || ( dmgMin && dmg >= dmgMin ) ) && ( !dmgMax || ( dmgMax && dmg <= dmgMax ) ) && targethp && !self.m_bDeathAnimPlay && ANPlusPercentageChance( chance ) then
+	if act && ( !dmgMin || dmgMin == 0 || ( dmgMin && dmg >= dmgMin ) ) && ( !dmgMax || dmgMax == 0 || ( dmgMax && dmg <= dmgMax ) ) && targethp && !self.m_bDeathAnimPlay && ANPlusPercentageChance( chance ) then
 		if isfunction( preCallback ) then
 			preCallback( self )
 		end

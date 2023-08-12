@@ -217,7 +217,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self:ANPlusUpdateWeaponProficency( self:GetActiveWeapon(), data['WeaponProficiencyTab'] )						
 						self:SetMaxLookDistance( data['LookDistance'] || GetConVar( "anplus_look_distance_override" ):GetFloat() ) 
 						--if data['LookDistance'] then self:Fire( "SetMaxLookDistance", data['LookDistance'], 0.1 ) end	
-						if data['EnableInverseKinematic'] then self:ANPlusSetIK( data['EnableInverseKinematic'] ) end	
+						if (CLIENT) && data['EnableInverseKinematic'] then self:SetIK( data['EnableInverseKinematic'] ) end	
 						--if data['AllowActivityTranslation'] && !IsValid(self:GetWeapon( "ai_translate_act" )) then self:Give( "ai_translate_act" ) end									
 						self.m_tbANPlusRelationsMem = {}				
 						self.m_fANPlusCurMemoryLast = 0
@@ -252,7 +252,6 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					local hpMul = GetConVar( "anplus_hp_mul" ):GetFloat()
 					self:SetHealth( ( data['Health'] || self:Health() ) * hpMul )				
 					self:SetMaxHealth( ( data['Health'] || self:Health() ) * hpMul )
-					
 					if data['InputsAndOutputs'] then
 						for i = 1, #data['InputsAndOutputs'] do
 							local fireTab = data['InputsAndOutputs'][ i ]
@@ -266,7 +265,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self:SetKeyValue( tostring( _ ), v )		
 					end
 				end
-			
+				
 				self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )			
 
 				self.m_fANPlusVelLast = 0
@@ -290,7 +289,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
 					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
 				end	
-				
+
 				hook.Add( "Think", self, self.ANPlusNPCThink )
 				
 				if (SERVER) then
@@ -413,7 +412,7 @@ function ENT:ANPlusShell( att, bone, type, scale, angVec )
 
 end
   
-function ENT:ANPlusFireBullet(bullet, hShotChan, pos, delay, burstCount, burstReset, fireSND, distFireSND, callback) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
+function ENT:ANPlusFireBullet(bullet, target, hShotChan, muzzlePos, delay, burstCount, burstReset, fireSND, distFireSND, callback) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
 
 	if !bullet then return end
 	
@@ -421,8 +420,8 @@ function ENT:ANPlusFireBullet(bullet, hShotChan, pos, delay, burstCount, burstRe
 	self.m_fANPCurBulletBurst = self.m_fANPCurBulletBurst || burstCount
 	if bullet && ( delay && CurTime() - self.m_fANPBulletLast >= delay ) && ( !burstCount || ( burstCount > 0 && self.m_fANPCurBulletBurst > 0 ) ) then
 
-		local target = IsValid(self:GetEnemy()) && self:GetEnemy() || IsValid(self:GetTarget()) && self:GetTarget() || false
-		local muzzlePos = target && self:ANPlusInRange( target, 16384 ) && pos || self:WorldSpaceCenter()	
+		local target = self:IsNPC() && IsValid(self:GetEnemy()) && self:GetEnemy() || self:IsNPC() && IsValid(self:GetTarget()) && self:GetTarget() || target || false
+		muzzlePos = target && self:ANPlusInRange( target, 16384 ) && muzzlePos || self:WorldSpaceCenter()	
 		local targetPos = target && ( ( ( isbool( hShotChan ) && hShotChan == true && target:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && target:ANPlusGetHitGroupBone( 1 ) ) || target:ANPlusGetHitGroupBone( 2 ) || target:BodyTarget( muzzlePos ) || target:WorldSpaceCenter() || target:GetPos() )
 		local direction = targetPos && ( targetPos - muzzlePos ):GetNormalized() || self:GetAimVector()
 		

@@ -3,11 +3,6 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
 local ENT = FindMetaTable("Entity")
-local scrWidth = 1920
-local scrHeight = 1080
-
-local multX = ScrW() / scrWidth
-local multY = ScrH() / scrHeight
 
 net.Receive("anplus_add_fakename_language", function()
 	local name = net.ReadString()
@@ -31,19 +26,6 @@ net.Receive("anplus_fix_bones", function()
 	
 end)
 
-net.Receive("anplus_set_ik", function()
-
-	local ent = net.ReadEntity()
-	local bool = net.ReadBool()
-	
-	if IsValid(ent) then
-	
-		ent:SetIK(bool)
-		
-	end
-
-end)
-
 net.Receive("anplus_holo_eff", function()
 
 	local ent = net.ReadEntity()
@@ -61,32 +43,6 @@ net.Receive("anplus_holo_eff", function()
 		util.Effect( "anp_holo_blip", fx, true )	
 		
 	--end
-
-end)
-
-net.Receive("anplus_client_effect", function()
-
-	local ent = net.ReadEntity()
-	local effTab = net.ReadTable()		
-	if IsValid(ent) then		
-		local fx = EffectData()
-		fx:SetEntity( ent )
-		fx:SetStart( effTab.SetStart || Vector( 0, 0, 0 ) )
-		fx:SetOrigin( effTab.SetOrigin || Vector( 0, 0, 0 ) )
-		fx:SetNormal( effTab.SetNormal || Vector( 0, 0, 0 ) )
-		fx:SetMagnitude( effTab.SetMagnitude || 1 )
-		fx:SetScale( effTab.SetScale || 1 )
-		fx:SetRadius( effTab.SetRadius || 1 )
-		fx:SetAngles( effTab.SetAngles || Angle( 0, 0, 0 ) )
-		fx:SetAttachment( effTab.SetAttachment || 0 )
-		fx:SetColor( effTab.SetColor || 0 )
-		fx:SetDamageType( effTab.SetDamageType || 0 )
-		fx:SetFlags( effTab.SetFlags || 0 )
-		fx:SetHitBox( effTab.SetHitBox || 0 )		
-		fx:SetMaterialIndex( effTab.SetMaterialIndex || 0 )
-		fx:SetSurfaceProp( effTab.SetSurfaceProp || -1 )
-		util.Effect( effTab.Effect, fx, true )				
-	end
 
 end)
 
@@ -109,30 +65,27 @@ net.Receive("anplus_data_tab", function()
 	end
 end)
 
---[[
-net.Receive("anplus_data_tab", function()
 
-	local npc = net.ReadEntity()
-	local tab = net.ReadTable()
-	
-	for i = 1, #ANPlusLoadGlobal do
-		
-		local dataTab = ANPlusLoadGlobal[ i ]
+net.Receive("anplus_client_particle_start", function()
 
-		if ( dataTab && dataTab['Name'] == tab['CurName'] ) then
-			
-			local addTab = { ['Functions'] = dataTab['Functions'] }
-			table.Merge( tab, addTab )
-
+	local ent = net.ReadEntity()
+	local effect = net.ReadString()
+	local partAttachment = net.ReadFloat()
+	local entAttachment = net.ReadFloat()
+	local offset = net.ReadVector()
+	local stop = net.ReadBool()
+	if IsValid(ent) then
+		if !stop then 
+			CreateParticleSystem( ent, effect, partAttachment, entAttachment, offset )
+		else
+			if entAttachment == 0 || entAttachment == -1 then
+				ent:StopParticlesNamed( effect )
+			else
+				ent:StopParticlesWithNameAndAttachment( effect, entAttachment )
+			end
 		end
-		
 	end
-	
-	npc.ANPlusIDName = ANPlusIDCreate( tab['CurName'] )
-	npc.ANPlusDataCur = tab
-
 end)
-]]--
 
 net.Receive("anplus_paint_decal", function()
 	local ent = net.ReadEntity()
@@ -239,7 +192,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 			timer.Simple( colCat:GetAnimTime() + 0.1, function()
 				if !dFrame then return end
 				local w, h = colCat:GetSize()
-				h = h + 10 < 75 && 75 || h + 10 >= 75 && h + 35
+				h = h + 10 < 55 && 95 || h + 10 >= 55 && h + 35
 				dFrame:SetSize( 225, h )
 			end )
 		elseif bool == false then		
@@ -310,7 +263,8 @@ function ENT:ANPlusCustomConfigMenu(tab)
 		
 		for _, var in pairs( tab ) do 
 			if var then
-				ent[ var['Variable'] ] = var['ValueNew'] || ent[ var['Variable'] ]
+				ent[ var['Variable'] ] = var['ValueNew'] || var['ValueNew'] != false && ent[ var['Variable'] ]
+				
 				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	
 					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var['Variable'], ply)			
 				end

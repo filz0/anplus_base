@@ -144,10 +144,6 @@ hook.Add( "Initialize", "ANPlusLoad_GamemodeInitialize", function()
 	 
 end)
 
-function metaENT:ANPlusGetName()
-	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Name'] || self:GetName()
-end
-
 function metaENT:ANPlusSetKillfeedName(name)
 	if !name || name == "" then name = nil end
 	if self:ANPlusGetDataTab() then
@@ -198,7 +194,7 @@ end
 function metaENT:ANPlusRandomTeleport( entTab, iType, poscorrection, callback )	
 	local v = ANPlusAIGetNodes( iType ) && ANPlusAIGetNodes( iType )[ math.random( 1, #ANPlusAIGetNodes( iType ) ) ] || false	
 	if v && v['type'] == iType && !ANPlusAINodeOccupied( v['pos'] ) && ( ( !entTab && v['pos'] != self:GetPos() ) || ( entTab && v['pos'] != self:GetPos() && !ANPIsAnyoneLookingAtPos( self, entTab, v['pos'] ) ) ) then
-		
+
 		self:SetPos( v['pos'] + ( poscorrection || Vector( 0, 0, 0 ) ) )
 			
 		if isfunction( callback ) then	
@@ -238,22 +234,33 @@ function metaENT:ANPlusCapabilitiesHas(cap)
 end
 
 function metaENT:ANPlusDisableCollisions(ent)	
-	self.anpnocollidetab = self.anpnocollidetab || {}
-	if !IsValid(ent) then return end -- self.anpnocollidetab end	
-	if !table.HasValue( self.anpnocollidetab, ent ) then		
+	self.m_tANPCollisionTab = self.m_tANPCollisionTab || {}
+	if !IsValid(ent) then return end -- self.m_tANPCollisionTab end	
+	if !table.HasValue( self.m_tANPCollisionTab, ent ) then		
 		constraint.NoCollide( self, ent, 0, 0 )		
-		table.insert( self.anpnocollidetab, ent )		
+		table.insert( self.m_tANPCollisionTab, ent )		
 	end		
 end
 
-function metaENT:ANPlusClientEffect( effTab )
-	if !IsValid(self) || !effTab then return end	
-	net.Start("anplus_client_effect")
+function metaENT:ANPlusClientParticleSystem(stop, effect, partAttachment, entAttachment, offset)
+	net.Start("anplus_client_particle_start")
 	net.WriteEntity( self )
-	net.WriteTable( effTab )
+	net.WriteString( effect )
+	net.WriteFloat( partAttachment )
+	net.WriteFloat( entAttachment || 0 )
+	net.WriteVector( offset || Vector( 0, 0, 0 ) )
+	net.WriteBool( stop )
 	net.Broadcast()	
 end
-
+--[[
+function metaENT:ANPlusStopClientParticleSystem(effect, entAttachment)
+	net.Start("anplus_client_particle_stop")
+	net.WriteEntity( self )
+	net.WriteString( effect )
+	net.WriteFloat( entAttachment || -1 )
+	net.Broadcast()	
+end
+]]--
 /*
 local effTab = {} -- Template (remove things that you ain't gonna use)
 	effTab.Effect =
@@ -977,16 +984,9 @@ function metaENT:ANPlusDealBlastDamage(target, dmginfo, pos, radius, cooldown, c
 
 end
 
-function metaENT:ANPlusCreateOutputHook(entOutput, eventName, callback)
-	--[[
-	self['anp_luarun_id' .. eventName] = ents.Create( "lua_run" )
-	local name = eventName .. self['anp_luarun_id' .. eventName]:EntIndex() .. self:EntIndex()
-	self['anp_luarun_id' .. eventName]:SetName( eventName .. self['anp_luarun_id' .. eventName]:EntIndex() .. self:EntIndex() )
-	self['anp_luarun_id' .. eventName]:Spawn()
-	]]--
+function metaENT:ANPlusCreateOutputHook(entOutput, eventName)
 	if !IsValid(ANP_LUA_RUN_ENT) then print( "ANPlus lua run not found! Abording..." ) return end
 	self:Fire( "AddOutput", entOutput .. " anp_lua_run:RunPassedCode:hook.Run( '" .. eventName .. "' ):0:-1" )
-	--hook.Add( eventName, eventName .. "_hook", callback )
 end
 
 function metaENT:ANPlusIsRagdoll()
@@ -995,6 +995,7 @@ end
 
 function metaENT:ANPlusAddSaveData(key, val)
 	if key then
+		val = isbool(val) && tostring(val) -- False valuse do not save, idk either...
 		duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveData'] = { [ key ] = val } } )
 	end
 end

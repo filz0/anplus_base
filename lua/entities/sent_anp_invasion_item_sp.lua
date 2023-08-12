@@ -64,8 +64,9 @@ if (SERVER) then
 ]]--////////////////////////////////////////////////////////////////////////////////////////////////
 	function ENT:Use(ply)
 		if !ply:IsPlayer() || !self:GetNWBool( "ANP_INV_SP_DRAW" ) then return end	
+		PrintTable(list.Get( "NPC" ))
 		net.Start( "ANP_SpawnerMenu" )
-		net.WriteTable( list.Get( "NPC" ) ) -- Cuz on client it's missing half of the data >:(
+		--net.WriteTable( list.Get( "NPC" ) ) -- Cuz on client it's missing half of the data >:(
 		net.WriteTable( self.SettingTab )
 		net.Send( ply )	
 		net.Receive("ANP_SpawnerUpdate", function(_, ply)
@@ -124,7 +125,7 @@ if (SERVER) then
 ]]--////////////////////////////////////////////////////////////////////////////////////////////////	
 local function GetNPCInShape(self, npc, npcData)
 	if !npc:IsNPC() then return end
-	npc:SetName( npcData['Name'] )
+	npc:ANPlusNPCApply( npcData['Name'] )
 	if npcData['Health'] then
 		npc:SetHealth( npcData['Health'] )
 		npc:SetMaxHealth( npcData['Health'] )
@@ -134,7 +135,7 @@ local function GetNPCInShape(self, npc, npcData)
 			npc:SetKeyValue( tostring( _ ), v )			
 		end
 	end
-	if npcData['Weapons'] && !npcData['CustomWeapon'] then 
+	if list.Get( "NPC" )[npcData['ID']] && list.Get( "NPC" )[npcData['ID']]['Weapons'] && !npcData['CustomWeapon'] then 
 		local wep = npcData['Weapons'][ math.random( 1, #npcData['Weapons'] ) ]
 		npc:Give( wep )
 	elseif npcData['CustomWeapon'] then
@@ -245,12 +246,12 @@ if (CLIENT) then
 	local function ANP_Spawner_Menu()
 		
 		local ply = LocalPlayer()
-		local npcList = net.ReadTable()
+		local npcList = list.Get( "NPC" )
 		local tab = net.ReadTable()	
 		if !tab then return end
 		local newtab = tab || {}
 		local datatab = {}
-		
+
 		ANPlusUISound( "ANP.UI.Open" )
 
 		local dFrame = vgui.Create( "DFrame" )
@@ -429,7 +430,7 @@ if (CLIENT) then
 				for _, npc in pairs( npcList ) do 
 					if npc['Name'] == l1v1 && npc['Class'] == l1v2 then
 						local npcTab = table.Copy( npc )
-						local addTab = { ['Wave'] = waveSelect:GetValue(), ['Delay'] = respawnDelay:GetValue() }
+						local addTab = { ['Wave'] = waveSelect:GetValue(), ['Delay'] = respawnDelay:GetValue(), ['ID'] = _ }
 						table.Merge( npcTab, addTab )
 						if l2v1 then
 							for _, wep in pairs( list.Get( "NPCUsableWeapons" ) ) do 
