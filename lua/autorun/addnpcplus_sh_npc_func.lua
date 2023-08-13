@@ -124,6 +124,10 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						--if data['SurroundingBounds'] && data['SurroundingBounds']['BoundsType'] then self:SetSurroundingBoundsType( data['SurroundingBounds']['BoundsType'] ) end
 						
 						if modelTab['PhysicsInit'] then self:PhysicsInit( modelTab['PhysicsInit'] ) end
+						if (SERVER) then
+							if modelTab['PhysicsInitBox'] then self:PhysicsInitBox( modelTab['PhysicsInitBox']['Min'], modelTab['PhysicsInitBox']['Max'], modelTab['PhysicsInitBox']['SurfaceProp'] || "default" ) end
+							if modelTab['PhysicsInitSphere'] then self:PhysicsInitSphere( modelTab['PhysicsInitSphere']['Radius'], modelTab['PhysicsInitSphere']['SurfaceProp'] || "default" ) end
+						end
 						self:SetMoveType( modelTab['SetMoveType'] || self:GetMoveType() )
 						self:SetMoveCollide( modelTab['SetMoveCollide'] || self:GetMoveCollide() )
 						self:SetCollisionGroup( modelTab['SetCollisionGroup'] || self:GetCollisionGroup() )
@@ -135,9 +139,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						end
 						
 						local physCheck = self:GetPhysicsObject()
-						if !IsValid(physCheck) || self:GetSolid() != SOLID_VPHYSICS then
-							--self:SetCycle( 0 )
-							--self:ResetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
+						if IsValid(physCheck) && IsValid(self.m_pMyPlayer) then
+							physCheck:Wake()
 						end
 						
 						if modelTab['BodyGroups'] then

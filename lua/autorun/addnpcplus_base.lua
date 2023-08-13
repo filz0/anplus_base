@@ -71,6 +71,13 @@ ANPlus = {
 					local addSFs = 1024 --bit.bor( 512, 1024 )
 					tab['SpawnFlags'] = tab['SpawnFlags'] + addSFs
 				end
+			elseif listType == "SpawnableEntities" then
+				if tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ] then
+					local getModel = tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ]
+					tab['KeyValues'] = tab['KeyValues'] || {}
+					local addTab = { model = getModel }
+					table.Merge( tab['KeyValues'], addTab )	
+				end
 			end
 			
 			tab['KeyValues'] = tab['KeyValues'] || {}
@@ -83,7 +90,7 @@ ANPlus = {
 				list.Set( listType, id, {
 					Name 		= tab['Name'], 
 					Class 		= tab['Class'], 
-					--Model 		= tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ] || nil, 
+					Model 		= tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ] || false, 
 					Health 		= tab['Health'], 
 					Category 	= tab['Category'], 
 					KeyValues 	= tab['KeyValues'], 
@@ -100,8 +107,7 @@ ANPlus = {
 			elseif listType == "SpawnableEntities" then
 				list.Set( listType, id, {
 					PrintName 		= tab['Name'], 
-					ClassName 		= tab['Class'], 
-					--Model 			= id, 
+					ClassName 		= tab['Class'], 					 
 					Health 			= tab['Health'], 
 					Category 		= tab['Category'], 
 					KeyValues 		= tab['KeyValues'],  

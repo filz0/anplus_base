@@ -457,6 +457,15 @@ ANPlus.AddNPC( {
 				['HullType']		= 0,					-- Hull type. https://wiki.facepunch.com/gmod/Enums/HULL          
    
 			},
+			['PhysicsInitBox']	= { 
+				['Min']				= Vector( -5, -5, -5 ), 
+				['Max']				= Vector( 5, 5, 5 ), 
+				['SurfaceProp']		= "default",
+			},
+			['PhysicsInitSphere']	= { 
+				['Radius']			= 10, 
+				['SurfaceProp']		= "default",
+			},
 		},
 			---   
 	},
@@ -633,6 +642,14 @@ ANPlus.AddNPC( {
 		------------------------------------------------------------ OnNPCRenderOverride - This function runs when NPC is drawn.
 		['OnNPCRenderOverride'] = function(self, flags)	-- ( CLIENT )	
 			self:DrawModel()
+		end,
+					
+		------------------------------------------------------------ OnNPCPreDrawEffects - Similar to OnNPCPreDrawEffects but way better for drawing things like sprites and beams.
+		['OnNPCPreDrawEffects'] = function(self) -- ( CLIENT )	
+		end,
+		
+		------------------------------------------------------------ OnNPCPostDrawEffects - Similar to OnNPCPostDrawEffects but way better for drawing things like sprites and beams.
+		['OnNPCPostDrawEffects'] = function(self) -- ( CLIENT )	
 		end,
 		
 		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
