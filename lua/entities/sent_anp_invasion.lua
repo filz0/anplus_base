@@ -520,7 +520,6 @@ end
 		GetNPCInShape( self, npc, npcData )
 		npc:Spawn()
 		npc:Activate()
-		npc:ANPlusNPCApply( npcData['Name'] )
 		local fx = EffectData()
 			fx:SetEntity( npc )
 		util.Effect( "inv_spawn", fx, true )

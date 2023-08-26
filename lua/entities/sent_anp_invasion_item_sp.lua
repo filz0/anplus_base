@@ -158,8 +158,7 @@ local function GetNPCInShape(self, npc, npcData)
 		if npc != self.ent then return end
 		if IsValid(npc:GetActiveWeapon()) then npc:GetActiveWeapon():Remove() end
 	end
-	
-	npc:ANPlusNPCApply( npcData['Name'] )
+
 	npc:DropToFloor()
 end
 --[[\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
