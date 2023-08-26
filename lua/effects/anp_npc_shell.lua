@@ -133,4 +133,4 @@ function EFFECT:Render()
 	self.Entity:DrawModel()
 
 end
-effects.Register( EFFECT, "anp_shell" ) 
+effects.Register( EFFECT, "anp_npc_shell" ) 

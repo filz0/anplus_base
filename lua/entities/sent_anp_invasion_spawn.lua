@@ -3,7 +3,8 @@ DEFINE_BASECLASS( "base_gmodentity" )
 
 ENT.PrintName		= "[ANP] Invasion NPC Spawnpoint"
 ENT.Author			= "FiLzO"
-ENT.Purpose			= "Used as a spawnpoint of Invasion NPCs." ..
+ENT.Purpose			= "[ANPlus Invasion NPC Spawnpoint]" ..
+					"\n Used as a spawnpoint of Invasion NPCs." ..
 					"\n Place it somewhere where NPCs won't get stuck." ..
 					"\n Arrow indicates the way NPC will face after spawning."
 ENT.Category		= "ANP[BASE]"

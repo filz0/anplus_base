@@ -83,7 +83,7 @@ local function ANPlusOnLoad(ply, ent, data)
 	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!	
 
 		if data['m_tSaveData'] then
-
+		
 			for var, val in pairs( data['m_tSaveData'] ) do 
 				if val then		
 					val = isstring(val) && ( val == "true" || val == "false" ) && tobool(val) || val

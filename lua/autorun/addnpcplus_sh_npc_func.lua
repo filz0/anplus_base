@@ -87,17 +87,13 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				
 				if data['Models'] then
 									
-					local modelTab = ANPlusRandTab( data['Models'] )
-					local CurModel = ( modelTab && util.IsValidModel( modelTab[ 1 ] ) && modelTab[ 1 ] ) || self:GetModel() || "models/weapons/shell.mdl"
-					local CurSkin = ( modelTab && modelTab['Skin'] && istable( modelTab['Skin'] ) && util.SharedRandom( "anp_skin_rng", modelTab['Skin'][ 1 ], modelTab['Skin'][ 2 ] ) ) || modelTab['Skin'] || 0
+					local modelTab = self.m_tANPModelTab || ANPlusRandTab( data['Models'] )			
+					local CurModel = self.m_tANPCurModel || ( modelTab && util.IsValidModel( modelTab[ 1 ] ) && modelTab[ 1 ] ) || self:GetModel() || "models/weapons/shell.mdl"
+					local CurSkin = self.m_tANPCurSkin || ( modelTab && modelTab['Skin'] && istable( modelTab['Skin'] ) && util.SharedRandom( "anp_skin_rng", modelTab['Skin'][ 1 ], modelTab['Skin'][ 2 ] ) ) || modelTab['Skin'] || 0							
 					local CurColor = ( modelTab && modelTab['Color'] ) || Color( 255, 255, 255, 255 )
-					local CurMaterial = ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && util.SharedRandom( "anp_mat_rng", modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""
+					local CurMaterial = self.m_tANPCurMaterial || ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && util.SharedRandom( "anp_mat_rng", modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""					
 					local CurBoneEdit = ( modelTab && modelTab['BoneEdit'] ) || nil
 					local CurScale, CurScaleDelta = modelTab['Scale'] && modelTab['Scale'][ 1 ] / 100 || 1, modelTab['scale'] && modelTab['scale'][ 2 ] || 0				
-					--data['CurBGS'] = {}			
-					local CurBGS = {}
-					--data['CurSMS'] = {}		
-					local CurSMS = {}
 					
 					if (SERVER) then
 						
@@ -105,6 +101,10 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						local CurColBoundsMin, CurColBoundsMax = ( sColMin || modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( sColMax || modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Max'] || colBoundsMax )								
 						local CurHull = sHull || modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['HullType'] || hull
 						self:ANPlusAddSaveData( "m_tColTab", { CurColBoundsMin, CurColBoundsMax, hull } )
+						self:ANPlusAddSaveData( "m_tANPModelTab", modelTab )
+						self:ANPlusAddSaveData( "m_sANPCurModel", CurModel )
+						self:ANPlusAddSaveData( "m_fANPCurSkin", CurSkin )
+						self:ANPlusAddSaveData( "m_sANPCurMaterial", CurMaterial )
 						
 						for i = 1, #data['Models'] do
 							if self:GetModel() != data['Models'][ i ][ 1 ] then							
@@ -143,65 +143,35 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 							physCheck:Wake()
 						end
 						
-						if modelTab['BodyGroups'] then
-				
-							for i = 1, #modelTab['BodyGroups'] do
-				
-								local curBG = modelTab['BodyGroups'][ i ]
-								--local curBGR = curBG && istable( curBG ) && curBG[ 1 ] && math.random( curBG[ 1 ], curBG[ 2 ] ) || curBG || self:GetBodygroup( i )					
-								local curBGR = curBG && istable( curBG ) && curBG[ 1 ] && math.random( curBG[ 1 ], curBG[ 2 ] ) || curBG || self:GetBodygroup( i )					
-								self:SetBodygroup( i, curBGR )
-					
-							end
-							
-						end
-				
-						if modelTab['SubMaterials'] then
+						if !self.m_bANPVisualSet then
 						
-							for i = 1, #modelTab['SubMaterials'] do
-
-								local curSM = modelTab['SubMaterials'][ i ]
-								--local curSMR = curSM && istable( curSM ) && curSM[ 1 ] && curSM[ math.random( 1, #curSM ) ] || curSM || self:GetMaterials()[ i ]	
-								local curSMR = curSM && istable( curSM ) && curSM[ 1 ] && ANPlusRandTab( curSM ) || curSM || self:GetMaterials()[ i ]	
-								self:SetSubMaterial( i - 1, curSMR )
+							if modelTab['BodyGroups'] then
 					
+								for i = 1, #modelTab['BodyGroups'] do
+					
+									local curBG = modelTab['BodyGroups'][ i ]					
+									local curBGR = curBG && istable( curBG ) && curBG[ 1 ] && math.random( curBG[ 1 ], curBG[ 2 ] ) || curBG || self:GetBodygroup( i )					
+									self:SetBodygroup( i, curBGR )
+						
+								end
+								
 							end
-							--
+					
+							if modelTab['SubMaterials'] then
 							
-						--
+								for i = 1, #modelTab['SubMaterials'] do
+
+									local curSM = modelTab['SubMaterials'][ i ]
+									local curSMR = curSM && istable( curSM ) && curSM[ 1 ] && ANPlusRandTab( curSM ) || curSM || self:GetMaterials()[ i ]	
+									self:SetSubMaterial( i - 1, curSMR )
+						
+								end
+
+							end
+							self:ANPlusAddSaveData( "m_bANPVisualSet", true )
 						end
 						
-					end
-					
-					--if table.Count( data['CurBGS'] ) <= 0 then
-
-						for i = 1, #self:GetBodyGroups() do		
-							CurBGS[ i ] = self:GetBodygroup( i )	
-						end
-			 
-						local addTab = { ['CurBGS'] = CurBGS }
-						table.Merge( data, addTab )
-				
-					--end
-					--if table.Count( data['CurSMS'] ) <= 0 then
-				
-						for i = 0, #self:GetMaterials() do			
-							CurSMS[ i + 1 ] = self:GetSubMaterial( i ) || self:GetMaterials()[ i ]	
-						end
-
-						local addTab = { ['CurSMS'] = CurSMS }
-						table.Merge( data, addTab )
-		
-					--end
-					local addTab = { ['CurModel'] = self:GetModel() }
-					table.Merge( data, addTab )			
-					local addTab = { ['CurSkin'] = self:GetSkin() }
-					table.Merge( data, addTab )		
-					local addTab = { ['CurColor'] = self:GetColor() }
-					table.Merge( data, addTab )			
-					local addTab = { ['CurMaterial'] = self:GetMaterial() }
-					table.Merge( data, addTab )		
-					
+					end					
 
 				end
 				
@@ -210,10 +180,12 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
 						if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end														
 						if !data['ForceDefaultWeapons'] && !IsValid(self:GetActiveWeapon()) && self:ANPlusCapabilitiesHas( 2097152 ) then
-							if self.m_sNewWeapon then
-								self:Give( self.m_sNewWeapon ) 
-							elseif self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
-								self:Give( self:GetKeyValues()['additionalequipment'] ) 	
+							if !self.m_bANPlusEntity then
+								if self.m_sNewWeapon then
+									self:Give( self.m_sNewWeapon ) 
+								elseif self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
+									self:Give( self:GetKeyValues()['additionalequipment'] ) 	
+								end
 							end
 						end
 						if data['ForceDefaultWeapons'] && data['DefaultWeapons'] then self:ANPlusForceDefaultWeapons( data['DefaultWeapons'] ) end
@@ -253,7 +225,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					end
 					
 					local hpMul = GetConVar( "anplus_hp_mul" ):GetFloat()
-					self:SetHealth( ( data['Health'] || self:Health() ) * hpMul )				
+					if !self.m_bANPlusEntity then self:SetHealth( ( data['Health'] || self:Health() ) * hpMul )	end		
 					self:SetMaxHealth( ( data['Health'] || self:Health() ) * hpMul )
 					if data['InputsAndOutputs'] then
 						for i = 1, #data['InputsAndOutputs'] do
@@ -297,6 +269,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				
 				if (SERVER) then
 					self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) 
+					self:ANPlusAddSaveData( "m_bANPlusEntity", true )
 				end				
 				if (CLIENT) then
 					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCRenderOverride'] != nil then
@@ -311,8 +284,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						hook.Add( "PostDrawEffects", self, self.ANPlusNPCPostDrawEffects )
 					end
 				end
-
-				self.ANPlusEntity = true
+				
 			end
 		
 		else
@@ -363,7 +335,8 @@ function ENT:ANPlusShootEffect(att, flags, scale, effect, muzzleSmokeDelay, muzz
 		util.Effect( effect, fx )	
 	end
 	
-	if muzzleSmokeDelay && !IsValid(self.m_pMuzzleSmoke) then
+	if muzzleSmokeDelay then
+		if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
 		muzzleSmokeDelay = muzzleSmokeDelay == -1 && ( self.Primary.PreFireReset || self.Primary.Delay * 2 + self:GetNPCCurRestTime() ) || muzzleSmokeDelay
 		muzzleSmokeDur = muzzleSmokeDur || 1
 		timer.Create( "ANPlusSmokeEffectTimer" .. self:EntIndex(), muzzleSmokeDelay, 1, function()			
@@ -414,7 +387,17 @@ function ENT:ANPlusShell( att, bone, type, scale, angVec )
 	util.Effect( "anp_shell", fx )	
 
 end
-  
+
+function ENT:ANPlusHitEffect(effect, tr, scale)	
+	if tr && tr.Hit && !tr.HitSky then 	
+		local fx = EffectData()
+		fx:SetOrigin( tr.HitPos )
+		fx:SetNormal( tr.HitNormal )
+		fx:SetScale( scale || 1 )
+		util.Effect( effect, fx )	
+	end
+end
+
 function ENT:ANPlusFireBullet(bullet, target, hShotChan, muzzlePos, delay, burstCount, burstReset, fireSND, distFireSND, callback) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
 
 	if !bullet then return end

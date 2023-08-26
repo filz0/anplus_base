@@ -242,25 +242,6 @@ function metaENT:ANPlusDisableCollisions(ent)
 	end		
 end
 
-function metaENT:ANPlusClientParticleSystem(stop, effect, partAttachment, entAttachment, offset)
-	net.Start("anplus_client_particle_start")
-	net.WriteEntity( self )
-	net.WriteString( effect )
-	net.WriteFloat( partAttachment )
-	net.WriteFloat( entAttachment || 0 )
-	net.WriteVector( offset || Vector( 0, 0, 0 ) )
-	net.WriteBool( stop )
-	net.Broadcast()	
-end
---[[
-function metaENT:ANPlusStopClientParticleSystem(effect, entAttachment)
-	net.Start("anplus_client_particle_stop")
-	net.WriteEntity( self )
-	net.WriteString( effect )
-	net.WriteFloat( entAttachment || -1 )
-	net.Broadcast()	
-end
-]]--
 /*
 local effTab = {} -- Template (remove things that you ain't gonna use)
 	effTab.Effect =
@@ -689,7 +670,7 @@ end
 
 function ANPlusCreateLaser(texture, spawnEnd, color, width, sfs, kvs)
 	ent = ents.Create( "env_laser" )
-	ent:SetKeyValue( "texture", texture )
+	ent:SetKeyValue( "texture", texture || "sprites/laserbeam.spr" )
 	ent:SetKeyValue( "width", width || 1 )
 	ent:SetColor( color || Color( 255, 255, 255 ) )
 	ent:SetKeyValue( "renderamt", color.a || 255 )
@@ -995,7 +976,7 @@ end
 
 function metaENT:ANPlusAddSaveData(key, val)
 	if key then
-		val = isbool(val) && tostring(val) -- False valuse do not save, idk either...
+		val = isbool(val) && tostring(val) || val -- False valuse do not save, idk either...
 		duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveData'] = { [ key ] = val } } )
 	end
 end

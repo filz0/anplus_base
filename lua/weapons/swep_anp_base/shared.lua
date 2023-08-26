@@ -279,7 +279,7 @@ function SWEP:PrimaryAttack()
 	if (SERVER) && self.FireLoopSound && !self.FireLoopSound:IsPlaying() then self.FireLoopSound:Play() end
 	
 	if IsValid(self:GetOwner()) then self:GetOwner():ANPlusRestartGesture( self.Primary.AttackGesture || self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1], true, true ) end
-	self:ANPlusRemoveMuzzleSmoke()
+	--self:ANPlusRemoveMuzzleSmoke()
 	local hShot = ANPlusPercentageChance( self.m_fHChance )
 	
 	self:ANPlusNPCFire(hShot)
@@ -373,7 +373,8 @@ function SWEP:ANPlusWeaponShootEffect(att, flags, scale, effect, muzzleSmokeDela
 		util.Effect( effect, fx )	
 	end
 	
-	if muzzleSmokeDelay && !IsValid(self.m_pMuzzleSmoke) then
+	if muzzleSmokeDelay then
+		if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
 		muzzleSmokeDelay = muzzleSmokeDelay == -1 && ( self.Primary.PreFireReset || self.Primary.Delay * 2 + self:GetNPCCurRestTime() ) || muzzleSmokeDelay
 		muzzleSmokeDur = muzzleSmokeDur || 1
 		timer.Create( "ANPlusSmokeEffectTimer" .. self:EntIndex(), muzzleSmokeDelay, 1, function()			
@@ -384,9 +385,9 @@ function SWEP:ANPlusWeaponShootEffect(att, flags, scale, effect, muzzleSmokeDela
 	end	
 end
 
-function SWEP:ANPlusRemoveMuzzleSmoke()
-	if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
-end
+--function SWEP:ANPlusRemoveMuzzleSmoke()
+--	if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
+--end
 
 function SWEP:ANPlusWeaponFireEntity(entity, hShotChan, entPreCallback, entPostCallback, callback)
 	

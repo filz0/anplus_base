@@ -712,6 +712,29 @@ function ANPlusEmitUISound(ply, snd, vol)
 	end
 end
 
+function metaENT:ANPlusClientParticleSystem(stop, effect, partAttachment, entAttachment, offset)
+	if (SERVER) then
+		net.Start("anplus_client_particle_start")
+		net.WriteEntity( self )
+		net.WriteString( effect )
+		net.WriteFloat( partAttachment )
+		net.WriteFloat( entAttachment || 0 )
+		net.WriteVector( offset || Vector( 0, 0, 0 ) )
+		net.WriteBool( stop )
+		net.Broadcast()	
+	elseif (CLIENT) then
+		if !stop then 
+			CreateParticleSystem( self, effect, partAttachment, entAttachment, offset )
+		else
+			if entAttachment == 0 || entAttachment == -1 then
+				self:StopParticlesNamed( effect )
+			else
+				self:StopParticlesWithNameAndAttachment( effect, entAttachment )
+			end
+		end
+	end
+end
+
 function metaENT:ANPlusHaloEffect(color, size, lenght)	
 	if (SERVER)	then
 		net.Start( "anplus_holo_eff" ) 
@@ -749,7 +772,7 @@ function ANPlusSendNotify(ply, snd, text, type, length)
 	end
 end
 
-function ANPlusScreenMsg(ply, x, y, size, dur, text, font, color)	
+function ANPlusScreenMsg(ply, id, x, y, size, dur, text, font, color)	
 	if (SERVER) then
 		net.Start("anplus_screenmsg_ply")
 		net.WriteFloat( dur || 0 )
@@ -759,6 +782,7 @@ function ANPlusScreenMsg(ply, x, y, size, dur, text, font, color)
 		net.WriteString( font || "DermaDefault" )
 		net.WriteColor( color || Color( 255, 255, 255 ) )
 		net.WriteString( text )
+		net.WriteString( id || "defmsg" )
 		if isbool( ply ) then
 			net.Broadcast()
 		elseif ply:IsPlayer() then
@@ -766,18 +790,18 @@ function ANPlusScreenMsg(ply, x, y, size, dur, text, font, color)
 		end	
 	elseif (CLIENT) then		
 		local ply = LocalPlayer()
-		if IsValid(ply.anp_ScreenMSG) then ply.anp_ScreenMSG:Remove() end
-		if text == "" then return end	
-		ply.anp_ScreenMSG = vgui.Create( "DLabel" )
-		ply.anp_ScreenMSG:SetPos( x * ANPlusGetFixedScreenW(), y * ANPlusGetFixedScreenH() )
-		ply.anp_ScreenMSG:SetSize( ScrW(), size * ANPlusGetFixedScreenH() )
-		ply.anp_ScreenMSG:SetText( text )
-		ply.anp_ScreenMSG:SetTextColor( color )
-		ply.anp_ScreenMSG:SetFont( font )
-		ply.anp_ScreenMSG:SetWrap( false )
-		ply.anp_ScreenMSG:ParentToHUD()	
-		timer.Create( "CHATMODmsgRemove" .. ply:EntIndex(), dur, 1, function()	
-			if IsValid(ply.anp_ScreenMSG) then ply.anp_ScreenMSG:Remove() end	
+		if IsValid(ply[ 'm_msgSCRN_ANPid_' .. id ]) then ply[ 'm_msgSCRN_ANPid_' .. id ]:Remove() end
+		if !text || text == "" then return end	
+		ply[ 'm_msgSCRN_ANPid_' .. id ] = vgui.Create( "DLabel" )
+		ply[ 'm_msgSCRN_ANPid_' .. id ]:SetPos( x * ANPlusGetFixedScreenW(), y * ANPlusGetFixedScreenH() )
+		ply[ 'm_msgSCRN_ANPid_' .. id ]:SetSize( ScrW(), size * ANPlusGetFixedScreenH() )
+		ply[ 'm_msgSCRN_ANPid_' .. id ]:SetText( text )
+		ply[ 'm_msgSCRN_ANPid_' .. id ]:SetTextColor( color )
+		ply[ 'm_msgSCRN_ANPid_' .. id ]:SetFont( font )
+		ply[ 'm_msgSCRN_ANPid_' .. id ]:SetWrap( false )
+		ply[ 'm_msgSCRN_ANPid_' .. id ]:ParentToHUD()	
+		timer.Create( "ANP_SCRN_MSG_REM_ID" .. id .. ply:EntIndex(), dur, 1, function()	
+			if IsValid(ply[ 'm_msgSCRN_ANPid_' .. id ]) then ply[ 'm_msgSCRN_ANPid_' .. id ]:Remove() end	
 		end)		
 	end
 end

@@ -97,7 +97,7 @@ function EFFECT:RenderFixed()
 	local endDistanceTr 	= tracerDelayTr * self.StartTime
 	local startDistance 	= endDistance - self.TracerLength
 	local startDistanceB 	= endDistance
-	local startDistanceTr 	= 10
+	local startDistanceTr 	= 3
 	
 	startDistance 			= math.max( 0, startDistance )
 	startDistanceB 			= math.max( 0, startDistanceB )

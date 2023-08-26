@@ -75,15 +75,7 @@ net.Receive("anplus_client_particle_start", function()
 	local offset = net.ReadVector()
 	local stop = net.ReadBool()
 	if IsValid(ent) then
-		if !stop then 
-			CreateParticleSystem( ent, effect, partAttachment, entAttachment, offset )
-		else
-			if entAttachment == 0 || entAttachment == -1 then
-				ent:StopParticlesNamed( effect )
-			else
-				ent:StopParticlesWithNameAndAttachment( effect, entAttachment )
-			end
-		end
+		ent:ANPlusClientParticleSystem(stop, effect, partAttachment, entAttachment, offset)
 	end
 end)
 
@@ -129,8 +121,9 @@ net.Receive("anplus_screenmsg_ply", function()
 	local size = net.ReadFloat()
 	local font = net.ReadString()
 	local color = net.ReadColor()
-	local text = net.ReadString() || ""	
-	ANPlusScreenMsg( nil, x, y, size, dur, text, font, color)
+	local text = net.ReadString()	
+	local id = net.ReadString()	
+	ANPlusScreenMsg( nil, id, x, y, size, dur, text, font, color)
 end)
 
 net.Receive("anplus_savedata_net", function()	

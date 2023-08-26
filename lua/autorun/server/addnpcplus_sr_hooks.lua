@@ -125,16 +125,12 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 			
 				if npc:ANPlusGetDataTab()['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
 				
-				if npc:ANPlusGetDataTab()['CurBGS'] then			
-					for i = 1, #npc:ANPlusGetDataTab()['CurBGS'] do
-						rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurBGS'][ i ] )		
-					end				
+				for i = 1, #npc:GetBodyGroups() do		
+					rag:SetBodygroup( i, npc:GetBodygroup( i ) )
 				end
-					
-				if npc:ANPlusGetDataTab()['CurSMS'] then
-					for i = 0, #npc:ANPlusGetDataTab()['CurSMS'] do
-						rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurSMS'][ i + 1 ] )					
-					end					
+				
+				for i = 0, #npc:GetMaterials() do				
+					rag:SetSubMaterial( i, npc:GetSubMaterial( i ) || npc:GetMaterials()[ i ] )
 				end
 				
 				if npc:ANPlusGetDataTab()['CurBones'] then
@@ -174,22 +170,6 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 	if IsValid(npc) then
 		if npc:IsANPlus() then
 			if npc:ANPlusGetDataTab() && npc:ANPlusGetDataTab()['CurModel'] then
-				
-				local CurBGS = {}				
-				for i = 1, #npc:GetBodyGroups() do		
-					CurBGS[ i ] = npc:GetBodygroup( i )	
-				end
-					
-				local addTab = { ['CurBGS'] = CurBGS }
-				table.Merge( npc:ANPlusGetDataTab(), addTab )
-				
-				local CurSMS = {}			
-				for i = 0, #npc:GetMaterials() do		
-					CurSMS[ i + 1 ] = npc:GetSubMaterial( i ) || npc:GetMaterials()[ i ]
-				end
-					
-				local addTab = { ['CurSMS'] = CurSMS }
-				table.Merge( npc:ANPlusGetDataTab(), addTab )
 				
 				local CurBones = {}			
 				for i = 0, npc:GetBoneCount() do

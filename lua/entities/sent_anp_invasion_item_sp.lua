@@ -3,8 +3,14 @@ DEFINE_BASECLASS( "base_gmodentity" )
 
 ENT.PrintName		= "[ANP] Invasion Item Spawner"
 ENT.Author			= "FiLzO"
-ENT.Purpose			= "Used as a Weapon/Ammo/Entity/NPC spawner." ..
-					"\n Can be set to spawn different things on chosen waves."
+if (CLIENT) then
+	local USE_KEY = string.upper( input.LookupBinding( "use", false ) )
+	ENT.Purpose			= "[ANPlus Invasion Item Spawner]" ..
+						"\n Used as a Weapon/Ammo/Entity/Ally or Extra Enemy NPC spawner." ..
+						"\n Use your USE (" .. USE_KEY .. ") key on it to access its settings." ..
+						"\n Duplicator tools may be used to copy/paste this entity with settings preserved." ..
+						"\n Can be set to spawn different things on chosen waves."
+end
 ENT.Category		= "ANP[BASE]"
 
 ENT.Spawnable		= true
@@ -64,7 +70,6 @@ if (SERVER) then
 ]]--////////////////////////////////////////////////////////////////////////////////////////////////
 	function ENT:Use(ply)
 		if !ply:IsPlayer() || !self:GetNWBool( "ANP_INV_SP_DRAW" ) then return end	
-		PrintTable(list.Get( "NPC" ))
 		net.Start( "ANP_SpawnerMenu" )
 		--net.WriteTable( list.Get( "NPC" ) ) -- Cuz on client it's missing half of the data >:(
 		net.WriteTable( self.SettingTab )
@@ -125,31 +130,36 @@ if (SERVER) then
 ]]--////////////////////////////////////////////////////////////////////////////////////////////////	
 local function GetNPCInShape(self, npc, npcData)
 	if !npc:IsNPC() then return end
-	npc:ANPlusNPCApply( npcData['Name'] )
+	
+	local npcListData = list.Get( "NPC" )[ npcData['ID'] ] || list.Get( "NPC" )[ npcData['Name'] ] || list.Get( "NPC" )[ npcData['Class'] ]
+		
 	if npcData['Health'] then
 		npc:SetHealth( npcData['Health'] )
 		npc:SetMaxHealth( npcData['Health'] )
 	end
-	if npcData['KeyValues'] then
-		for _, v in pairs( npcData['KeyValues'] ) do
+	if npcListData['KeyValues'] then
+		for _, v in pairs( npcListData['KeyValues'] ) do
 			npc:SetKeyValue( tostring( _ ), v )			
 		end
 	end
-	if list.Get( "NPC" )[npcData['ID']] && list.Get( "NPC" )[npcData['ID']]['Weapons'] && !npcData['CustomWeapon'] then 
-		local wep = npcData['Weapons'][ math.random( 1, #npcData['Weapons'] ) ]
-		npc:Give( wep )
+	
+	if !npcData['CustomWeapon'] && npcListData && npcListData['Weapons'] then 
+		local wep = npcListData['Weapons'][ math.random( 1, #npcListData['Weapons'] ) ]
+		if wep then npc:Give( wep ) end
 	elseif npcData['CustomWeapon'] then
 		npc:Give( npcData['CustomWeapon']['Class'] )
 	end
-	if npcData['SpawnFlags'] then npc:SetKeyValue( "spawnflags", npcData['SpawnFlags'] ) end
-	if npcData['Model'] then npc:SetModel( npcData['Model'] ) end
-	if npcData['Skin'] then npc:SetSkin( npcData['Skin'] ) end
+	
+	if npcListData['SpawnFlags'] then npc:SetKeyValue( "spawnflags", npcListData['SpawnFlags'] ) end
+	if npcListData['Model'] then npc:SetModel( npcListData['Model'] ) end
+	if npcListData['Skin'] then npc:SetSkin( npcListData['Skin'] ) end
 	
 	npc.ANPInvasionOnDeath = function(npc, att, inf)
 		if npc != self.ent then return end
 		if IsValid(npc:GetActiveWeapon()) then npc:GetActiveWeapon():Remove() end
 	end
 	
+	npc:ANPlusNPCApply( npcData['Name'] )
 	npc:DropToFloor()
 end
 --[[\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\

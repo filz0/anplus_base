@@ -12,24 +12,12 @@ hook.Add("CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", functi
 
 			if npc:ANPlusGetDataTab()['CurFakeModel'] then rag:ANPlusFakeModel( npc:ANPlusGetDataTab()['CurFakeModel']['Model'], npc:ANPlusGetDataTab()['CurFakeModel']['VisualTab'] ) end
 			
-			if npc:ANPlusGetDataTab()['CurBGS'] then
-			
-				for i = 1, #npc:ANPlusGetDataTab()['CurBGS'] do
-				
-					rag:SetBodygroup( i, npc:ANPlusGetDataTab()['CurBGS'][ i ] )
-
-				end
-				
+			for i = 1, #npc:GetBodyGroups() do		
+				rag:SetBodygroup( i, npc:GetBodygroup( i ) )
 			end
 				
-			if npc:ANPlusGetDataTab()['CurSMS'] then
-
-				for i = 0, #npc:ANPlusGetDataTab()['CurSMS'] do
-
-					rag:SetSubMaterial( i, npc:ANPlusGetDataTab()['CurSMS'][ i + 1 ] )
-					
-				end
-					
+			for i = 0, #npc:GetMaterials() do				
+				rag:SetSubMaterial( i, npc:GetSubMaterial( i ) || npc:GetMaterials()[ i ] )
 			end
 			
 			if npc:ANPlusGetDataTab()['CurBones'] then

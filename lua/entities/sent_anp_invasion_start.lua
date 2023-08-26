@@ -3,7 +3,14 @@ DEFINE_BASECLASS( "base_gmodentity" )
 
 ENT.PrintName		= "[ANP] Invasion Start"
 ENT.Author			= "FiLzO"
-ENT.Purpose			= "Use it to start the Invasion."
+
+if (CLIENT) then
+	local USE_KEY = string.upper( input.LookupBinding( "use", false ) )
+	ENT.Purpose			= "[ANP Invasion Start Button]" ..
+						"\n Used to start the Invasion." ..
+						"\n Use your USE (" .. USE_KEY .. ") key on it to start the invasion."
+end
+
 ENT.Category		= "ANP[BASE]"
 
 ENT.Spawnable		= true

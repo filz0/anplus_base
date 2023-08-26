@@ -3,8 +3,13 @@ DEFINE_BASECLASS( "base_gmodentity" )
 
 ENT.PrintName		= "[ANP] Invasion"
 ENT.Author			= "FiLzO"
-ENT.Purpose			= "[ANPlus Invasion Mini-Gamemode]" ..
-					"\n Use to access Invasion settings."
+if (CLIENT) then
+	local USE_KEY = string.upper( input.LookupBinding( "use", false ) )
+	ENT.Purpose			= "[ANPlus Invasion Mini-Gamemode]" ..
+						"\n Use your USE (" .. USE_KEY .. ") key on it" ..
+						"\n to access the Invasion settings." ..
+						"\n Duplicator tools may be used to copy/paste this entity with settings preserved."
+end					
 ENT.Category		= "ANP[BASE]"
 
 ENT.Spawnable		= true
@@ -344,7 +349,7 @@ if (SERVER) then
 		
 		if tonumber( self.SettingTab['CurRound'] ) == 1 then
 			ANPlusEmitUISound( true, "anp/invasion/announcer/team_under_attack.mp3" )
-			ANPlusScreenMsg( true, 750, 200, 100, 2, "( Enemy Attack Inbound )", "anp_inv_big", Color( 255, 255, 255 ) )
+			ANPlusScreenMsg( true, "anp_invasion", 750, 200, 100, 2, "( Enemy Attack Inbound )", "anp_inv_big", Color( 255, 255, 255 ) )
 			if self.SettingTab['StripEQ'] then
 				for _, ply in pairs( player.GetAll() ) do					
 					ply:StripWeapons()			
@@ -354,7 +359,7 @@ if (SERVER) then
 		else
 			ANPlusEmitUISound( true, "anp/invasion/announcer/EndOfRound.mp3" )
 			ANPlusEmitUISound( true, "anp/invasion/announcer/round_won.mp3", 20 )
-			ANPlusScreenMsg( true, 800, 200, 100, 2, "( End Of Round )", "anp_inv_big", Color( 255, 255, 255 ) )
+			ANPlusScreenMsg( true, "anp_invasion", 800, 200, 100, 2, "( End Of Round )", "anp_inv_big", Color( 255, 255, 255 ) )
 		end
 		
 		for _, ply in pairs( player.GetAll() ) do
@@ -367,7 +372,7 @@ if (SERVER) then
 		timer.Create( "ANP_INV_COUNTDOWN" .. self:EntIndex(), 1, self.SettingTab['PrepTime'], function()
 			if !IsValid(self) then return end
 			
-			ANPlusScreenMsg( true, 875, 200, 100, 1, "( " .. string.ToMinutesSeconds( countDown ) .. " )", "anp_inv_big", Color( 255, 255, 255 ) )
+			ANPlusScreenMsg( true, "anp_invasion", 875, 200, 100, 1, "( " .. string.ToMinutesSeconds( countDown ) .. " )", "anp_inv_big", Color( 255, 255, 255 ) )
 			
 			if tonumber( countDown ) == 30 then		
 				ANPlusEmitUISound( true, "anp/invasion/announcer/30_seconds_remain.mp3" )
@@ -453,29 +458,35 @@ if (SERVER) then
 |||||
 ]]--////////////////////////////////////////////////////////////////////////////////////////////////	
 local function GetNPCInShape(self, npc, npcData)
-
-	if npc:IsNPC() && !IsValid(npc:GetActiveWeapon()) && list.Get( "NPC" )[npcData['ID']] && list.Get( "NPC" )[npcData['ID']]['Weapons'] && !npcData['CustomWeapon'] then 
-		local wep = npcData['Weapons'][ math.random( 1, #npcData['Weapons'] ) ]
-		if wep then npc:Give( wep ) end
-	elseif !IsValid(npc:GetActiveWeapon()) && npcData['CustomWeapon'] then
-		npc:Give( npcData['CustomWeapon']['Class'] )
+	local npcListData = list.Get( "NPC" )[ npcData['ID'] ] || list.Get( "NPC" )[ npcData['Name'] ] || list.Get( "NPC" )[ npcData['Class'] ]
+	
+	if npc:IsNPC() && !IsValid(npc:GetActiveWeapon()) then
+		
+		if !npcData['CustomWeapon'] && npcListData && npcListData['Weapons'] then 
+			local wep = npcListData['Weapons'][ math.random( 1, #npcListData['Weapons'] ) ]
+			if wep then npc:Give( wep ) end
+		elseif npcData['CustomWeapon'] then
+			npc:Give( npcData['CustomWeapon']['Class'] )
+		end
+		
 	end
+	
 	if npcData['Health'] then
 		npc:SetHealth( npcData['Health'] )
 		npc:SetMaxHealth( npcData['Health'] )
 	end
-	if npcData['KeyValues'] then
-		for _, v in pairs( npcData['KeyValues'] ) do
+	if npcListData['KeyValues'] then
+		for _, v in pairs( npcListData['KeyValues'] ) do
 			npc:SetKeyValue( tostring( _ ), v )			
 		end
 	end
-	if npcData['SpawnFlags'] then
+	if npcListData['SpawnFlags'] then
 		--local newsflags = bit.band( npcData['SpawnFlags'], bit.bnot( 8 ) ) -- Stop dropping health dang it.
 		--npc:SetKeyValue( "spawnflags", newsflags ) 
-		npc:SetKeyValue( "spawnflags", npcData['SpawnFlags'] ) 
+		npc:SetKeyValue( "spawnflags", npcListData['SpawnFlags'] ) 
 	end
-	if npcData['Model'] then npc:SetModel( npcData['Model'] ) end
-	if npcData['Skin'] then npc:SetSkin( npcData['Skin'] ) end
+	if npcListData['Model'] then npc:SetModel( npcListData['Model'] ) end
+	if npcListData['Skin'] then npc:SetSkin( npcListData['Skin'] ) end
 	
 	npc.ANPInvasionOnDeath = function(npc, att, inf)
 		if !table.HasValue( self.ActiveNPCTab, npc ) then return end
