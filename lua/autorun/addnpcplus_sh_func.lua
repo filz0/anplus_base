@@ -81,7 +81,9 @@ end
 local function ANPlusOnLoad(ply, ent, data)
 	
 	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!	
-
+		
+		duplicator.DoGeneric( ent, data )
+		
 		if data['m_tSaveData'] then
 		
 			for var, val in pairs( data['m_tSaveData'] ) do 
@@ -100,7 +102,11 @@ local function ANPlusOnLoad(ply, ent, data)
 
 		ent:ANPlusIgnoreTillSet()
 		ent:ANPlusNPCApply(data['CurName'])
-		
+
+		if ent:ANPlusIsWiremodCompEnt() then
+			ent.IsWire = true
+		end
+
 		if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'] != nil then		
 			ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'](ply, ent, data)		
 		end	

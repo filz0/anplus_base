@@ -240,7 +240,7 @@ ANPlus.AddNPC( {
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- ( CLIENT & SERVER ) -- ply is valid only when PlayerSpawnedNPC gets called.
 		end,
-		
+
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
 		['SetUseType'] = SIMPLE_USE,
 		['OnNPCUse'] = function(self, activator, caller, type)		
@@ -254,8 +254,38 @@ ANPlus.AddNPC( {
 		['OnNPCFollow'] = function(self, ent, state)
 		end, 
 		
+		------------------------------------------------------------ OnNPCPreSave - Called before the duplicator copies the NPC.
+		['OnNPCPreSave'] = function(self)	
+		end,
+		
+		------------------------------------------------------------ OnNPCPostSave - Called after the duplicator finished copying the NPC.
+		['OnNPCPostSave'] = function(self)	
+		end,
+		
+		------------------------------------------------------------ OnNPCSaveTableFinish - Called after duplicator finishes saving the NPC, allowing you to modify the save data.
+		['OnNPCSaveTableFinish'] = function(self, dupeData)	
+		end,
+		
+		------------------------------------------------------------ OnNPCRestore - Called when the NPC is reloaded from a Source Engine save (not the Sandbox saves or dupes) or on a changelevel (for example Half-Life 2 campaign level transitions).
+		['OnNPCRestore'] = function(self)	
+		end,
+		
 		------------------------------------------------------------ OnNPCLoad - This function is called when NPC gets loaded via GMod Save system or the Duplicator tool and has some save data using ENT:ANPlusStoreEntityModifier(dataTab).
 		['OnNPCLoad'] = function(ply, self, dataTab)	
+		end,
+		
+		------------------------------------------------------------ OnNPCPostLoad - This function is called after NPC gets loaded via GMod Save system or the Duplicator tool and has some save data using ENT:ANPlusStoreEntityModifier(dataTab).
+		['OnNPCPostLoad'] = function(ply, self, createdEntities)	
+		end,
+		
+		------------------------------------------------------------ OnNPCWiremodInput - Called when NPC gets a Wiremod input.
+		['WiremodInputs'] = nil, -- { "Input1", "Input2" }
+		['OnNPCWiremodInput'] = function(self, key, value)
+		end,
+		
+		------------------------------------------------------------ OnNPCWiremodOutput - Called when NPC gets a Wiremod output.
+		['WiremodOutputs'] = nil, -- { "Output1", "Output2" }
+		['OnNPCWiremodOutput'] = function(self, key)		
 		end,
 		
 		------------------------------------------------------------ OnNPCStateChange - This function runs once, every time NPC's state changes.
@@ -554,8 +584,38 @@ ANPlus.AddNPC( {
 		['OnNPCThink'] = function(self) -- ( CLIENT & SERVER )   	
 		end, 
 		
+		------------------------------------------------------------ OnNPCPreSave - Called before the duplicator copies the NPC.
+		['OnNPCPreSave'] = function(self)	
+		end,
+		
+		------------------------------------------------------------ OnNPCPostSave - Called after the duplicator finished copying the NPC.
+		['OnNPCPostSave'] = function(self)	
+		end,
+		
+		------------------------------------------------------------ OnNPCSaveTableFinish - Called after duplicator finishes saving the NPC, allowing you to modify the save data.
+		['OnNPCSaveTableFinish'] = function(self, dupeData)	
+		end,
+		
+		------------------------------------------------------------ OnNPCRestore - Called when the NPC is reloaded from a Source Engine save (not the Sandbox saves or dupes) or on a changelevel (for example Half-Life 2 campaign level transitions).
+		['OnNPCRestore'] = function(self)	
+		end,
+		
 		------------------------------------------------------------ OnNPCLoad - This function is called when NPC gets loaded via GMod Save system or the Duplicator tool and has some save data using ENT:ANPlusStoreEntityModifier(dataTab).
 		['OnNPCLoad'] = function(ply, self, dataTab)	
+		end,
+		
+		------------------------------------------------------------ OnNPCPostLoad - This function is called after NPC gets loaded via GMod Save system or the Duplicator tool and has some save data using ENT:ANPlusStoreEntityModifier(dataTab).
+		['OnNPCPostLoad'] = function(ply, self, createdEntities)	
+		end,
+		
+		------------------------------------------------------------ OnNPCWiremodInput - Called when NPC gets a Wiremod input.
+		['WiremodInputs'] = nil, -- { "Input1", "Input2" }
+		['OnNPCWiremodInput'] = function(self, key, value)
+		end,
+		
+		------------------------------------------------------------ OnNPCWiremodOutput - Called when NPC gets a Wiremod output.
+		['WiremodOutputs'] = nil, -- { "Output1", "Output2" }
+		['OnNPCWiremodOutput'] = function(self, key)		
 		end,
 		
 		------------------------------------------------------------ OnNPCHandleAnimationEvent - This function can utilize lua animation events. You can set what happens at the specified animation frame. Originally created by Silverlan. ENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame and animation event ID

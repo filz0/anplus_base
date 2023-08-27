@@ -1351,3 +1351,12 @@ function metaENT:ANPlusSetColorFade(color, delta)
 	fx:SetColor( color.a || 255 ) -- Alpha
 	util.Effect( "anp_fade", fx, true, true )
 end
+
+function metaENT:ANPlusIsWiremodCompEnt()
+	if WireLib && self:IsANPlus(true) then
+		if self:ANPlusGetDataTab()['Functions'] && ( self:ANPlusGetDataTab()['Functions']['WiremodInputs'] || self:ANPlusGetDataTab()['Functions']['WiremodOutputs'] ) then
+			return true
+		end
+	end
+	return false
+end

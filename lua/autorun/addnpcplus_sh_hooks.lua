@@ -6,6 +6,7 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ||||| Here We are checking spawned entities if they are a part of this base. If so, apply valid data table.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
+
 	timer.Simple( 0, function() 
 		if !IsValid(ent) then return end 
 		
@@ -160,12 +161,17 @@ hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)
 				if ent:IsNPC() && ent:ANPlusGetDataTab()['UseANPSquadSystem'] then 
 					ent:ANPlusRemoveFromCSquad( ent:ANPlusGetSquadName() )
 				end
+				if ent:ANPlusIsWiremodCompEnt() then
+					WireLib.Remove( ent )
+				end
 			end
-		elseif (CLIENT) then
+		--elseif (CLIENT) then		
 		end
 		
-		if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
-			ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'](ent)	
+		if ent:IsANPlus(true) then
+			if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'] != nil then
+				ent:ANPlusGetDataTab()['Functions']['OnNPCRemove'](ent)	
+			end			
 		end
 		
 	end	
@@ -262,7 +268,7 @@ local function QTrace(spos, epos, filterTab)
 	return tr
 end
 
-hook.Add("SetupMove", "ANPlusLoad_SetupMove", function(ply, mvd, cmd)
+hook.Add( "SetupMove", "ANPlusLoad_SetupMove", function(ply, mvd, cmd)
 	if ply.m_pANPControlledENT && IsValid(ply.m_pANPControlledENT) && ply.m_pANPControlledENT:ANPlusAlive() then
 		local ent = ply:ANPlusControlled()	
 		ply.m_bANPControlling = true
