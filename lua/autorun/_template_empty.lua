@@ -279,12 +279,12 @@ ANPlus.AddNPC( {
 		end,
 		
 		------------------------------------------------------------ OnNPCWiremodInput - Called when NPC gets a Wiremod input.
-		['WiremodInputs'] = nil, -- { "Input1", "Input2" }
+		--self:ANPlusWiremodSetInputs( add bool, inputs table, descs table )
 		['OnNPCWiremodInput'] = function(self, key, value)
 		end,
 		
 		------------------------------------------------------------ OnNPCWiremodOutput - Called when NPC gets a Wiremod output.
-		['WiremodOutputs'] = nil, -- { "Output1", "Output2" }
+		--self:ANPlusWiremodSetOutputs( add bool, outputs table, descs table )
 		['OnNPCWiremodOutput'] = function(self, key)		
 		end,
 		
@@ -609,12 +609,12 @@ ANPlus.AddNPC( {
 		end,
 		
 		------------------------------------------------------------ OnNPCWiremodInput - Called when NPC gets a Wiremod input.
-		['WiremodInputs'] = nil, -- { "Input1", "Input2" }
+		--self:ANPlusWiremodSetInputs( add bool, inputs table, descs table )
 		['OnNPCWiremodInput'] = function(self, key, value)
 		end,
 		
 		------------------------------------------------------------ OnNPCWiremodOutput - Called when NPC gets a Wiremod output.
-		['WiremodOutputs'] = nil, -- { "Output1", "Output2" }
+		--self:ANPlusWiremodSetOutputs( add bool, outputs table, descs table )
 		['OnNPCWiremodOutput'] = function(self, key)		
 		end,
 		

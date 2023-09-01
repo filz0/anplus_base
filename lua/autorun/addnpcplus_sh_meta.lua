@@ -1287,7 +1287,7 @@ function metaENT:ANPlusStopSoundSentence(fullstop)
 end
 
 function metaENT:ANPlusCreateVar(var, val, label, desc, min, max, deci, updateCallback)
-	self[var] = self[var] == nil && val
+	self[var] = self[var] || self[var] == nil && val
 	if var && label then
 		local addtab = { ['Variable'] = var, ['Label'] = label, ['Description'] = desc, ['Min'] = min, ['Max'] = max, ['Decimals'] = deci }
 		table.insert( self['m_tSaveDataMenu'], addtab )
@@ -1353,8 +1353,8 @@ function metaENT:ANPlusSetColorFade(color, delta)
 end
 
 function metaENT:ANPlusIsWiremodCompEnt()
-	if WireLib && self:IsANPlus(true) then
-		if self:ANPlusGetDataTab()['Functions'] && ( self:ANPlusGetDataTab()['Functions']['WiremodInputs'] || self:ANPlusGetDataTab()['Functions']['WiremodOutputs'] ) then
+	if WireLib then
+		if ( self.Inputs || self.Outputs ) && self.IsWire then
 			return true
 		end
 	end

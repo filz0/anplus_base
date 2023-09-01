@@ -12,6 +12,12 @@ if !ANPlusLoaded then return end
 --util.PrecacheSound( string soundName )
 ------------------------------------------------------------
 
+hook.Add( "ANPCitadelChargerOnEmpty", "ANP_LMAO_TEST", function()
+	local activator, self = ACTIVATOR, CALLER
+	
+	if self:ANPlusIsWiremodCompEnt() then WireLib.TriggerOutput( self, "OnEmpty", 1 ) end
+end )
+
 local ENTTab = {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
 	['Category'] 				= "Half-Life 2",
@@ -23,7 +29,7 @@ local ENTTab = {
 	['Models'] = {
 		--- 
 		{ "", 
-			['PhysicsInit'] = SOLID_VPHYSICS,
+			['PhysicsInit'] = SOLID_VPHYSICS, 
 		},
 		---   
 	},
@@ -37,7 +43,7 @@ local ENTTab = {
 	['OnFloor'] 				= false,
 ----------------------------------------------------------------- Position offset from the crosshair.
 	['Offset'] 					= nil,
------------------------------------------------------------------ Rotates NPC after the spawn. (eg. ['Rotate'] = Angle( 0, 180, 0 ))
+----------------------------------------------------------------- Rotates NPC after the spawn. (eg. ['Rotate'] = Angle( 0, 180,  0 ))
 	['Rotate']					= nil,
 ----------------------------------------------------------------- Set if your NPC should drop to the floor on spawn (seems to be only working on NPCs that do not possess any physics).
 	['NoDrop'] 					= false, 
@@ -88,11 +94,14 @@ local ENTTab = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
+			
+			self:ANPlusCreateVar( "m_iMaxJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat(), "Max Charge", "Total charge of suit points.", 1, 99999, 0, function(self, val) self:SetSaveValue( "m_iMaxJuice", val ) end )
+			self:ANPlusCreateVar( "m_iJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat(), "Charge", "Current charge of suit points.", 1, 99999, 0, function(self, val) self:SetSaveValue( "m_iJuice", val ) end )
+			
 			if (CLIENT) then return end
-			self:SetSaveValue( "m_iMaxJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
-			self:SetSaveValue( "m_iJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat() )
 			self.m_sBatteryModel = "models/items/battery.mdl"
-			--PrintTable(self:GetTable())
+			self:ANPlusCreateOutputHook( "OnEmpty", "ANPCitadelChargerOnEmpty" ) 
+			self:ANPlusWiremodSetOutputs( false, { "OnEmpty" }, { "Called when charger gets empty." } )
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
@@ -104,6 +113,16 @@ local ENTTab = {
 				self:StopSound( "anp/suitcharger_egg/suitchargeok1.wav" )
 				self:StopSound( "anp/suitcharger_egg/suitcharge1.wav" )
 			end)
+		end,
+		
+		------------------------------------------------------------ OnNPCWiremodInput - Called when NPC gets a Wiremod input.
+		--self:ANPlusWiremodSetInputs( add bool, inputs table, descs table )
+		['OnNPCWiremodInput'] = function(self, key, value)
+		end,
+		
+		------------------------------------------------------------ OnNPCWiremodOutput - Called when NPC gets a Wiremod output.
+		--self:ANPlusWiremodSetOutputs( add bool, outputs table, descs table )
+		['OnNPCWiremodOutput'] = function(self, key)		
 		end,
 		
 		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.

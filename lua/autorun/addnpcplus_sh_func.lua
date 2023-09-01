@@ -87,8 +87,8 @@ local function ANPlusOnLoad(ply, ent, data)
 		if data['m_tSaveData'] then
 		
 			for var, val in pairs( data['m_tSaveData'] ) do 
-				if val then		
-					val = isstring(val) && ( val == "true" || val == "false" ) && tobool(val) || val
+				if val then							
+					val = isstring(val) && ( val == "true" || val == "false" ) && tobool(val) || val					
 					ent[ var ] = val	
 				end
 			end

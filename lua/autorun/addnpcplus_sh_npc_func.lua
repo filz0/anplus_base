@@ -84,7 +84,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				
 				local addTab = { ['CurName'] = data['Name'] }
 				table.Merge( data, addTab )	
-				
+
 				if data['Models'] then
 									
 					local modelTab = self.m_tANPModelTab || ANPlusRandTab( data['Models'] )			
@@ -105,10 +105,15 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self:ANPlusAddSaveData( "m_sANPCurModel", CurModel )
 						self:ANPlusAddSaveData( "m_fANPCurSkin", CurSkin )
 						self:ANPlusAddSaveData( "m_sANPCurMaterial", CurMaterial )
-						
+
 						for i = 1, #data['Models'] do
-							if self:GetModel() != data['Models'][ i ][ 1 ] then							
+							if self:GetModel() != data['Models'][ i ][ 1 ] then										
 								self:SetModel( CurModel )
+								timer.Simple( 0, function()
+									if IsValid(self) then
+										self:SetModel( CurModel )
+									end
+								end )
 							end
 						end
 						
@@ -255,8 +260,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
 				self:ANPlusApplyDataTab( data )					
 				
-				self['m_tSaveDataMenu'] = self['m_tSaveDataMenu'] || {}
-				self['m_tSaveDataUpdateFuncs'] = self['m_tSaveDataUpdateFuncs'] || {}
+				self['m_tSaveDataMenu'] = {}
+				self['m_tSaveDataUpdateFuncs'] = {}
 				
 				if isfunction( postCallback ) then
 					postCallback( self )
@@ -266,9 +271,17 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
 				end	
 
-				hook.Add( "Think", self, self.ANPlusNPCThink )
-				
 				if (SERVER) then
+				
+					for i = 1, #self['m_tSaveDataMenu'] do
+						local sDataVar = self['m_tSaveDataMenu'][ i ]
+						local func = self['m_tSaveDataUpdateFuncs']
+						if sDataVar && sDataVar['Variable'] && func[ sDataVar['Variable'] ] then
+							local var = sDataVar['Variable']
+							func[ var ](self, self[ var ])
+						end
+					end
+					
 					self:ANPlusSetKillfeedName( data['KillfeedName'] ) 
 					self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) 					
 					---------WIREMOD--------------
@@ -278,22 +291,12 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						
 						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCWiremodInput'] != nil then
 							
-							if self:ANPlusGetDataTab()['Functions']['WiremodInputs'] then
-								self.Inputs = WireLib.CreateInputs( self, self:ANPlusGetDataTab()['Functions']['WiremodInputs'] ) 
-								--self:ANPlusAddSaveData( "Inputs", self:ANPlusGetDataTab()['Functions']['WiremodInputs'] )
-							end
-							
 							function self:TriggerInput(key, value)
 								self:ANPlusGetDataTab()['Functions']['OnNPCWiremodInput'](self, key, value)	
 							end
 							
 						end
 						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCWiremodOutput'] != nil then
-							
-							if !self.Outputs && self:ANPlusGetDataTab()['Functions']['WiremodOutputs'] then
-								self.Outputs = WireLib.CreateOutputs( self, self:ANPlusGetDataTab()['Functions']['WiremodOutputs'] ) 
-								--self:ANPlusAddSaveData( "Outputs", self:ANPlusGetDataTab()['Functions']['WiremodOutputs'] )
-							end
 							
 							function self:TriggerOutputs(key)
 								self:ANPlusGetDataTab()['Functions']['OnNPCWiremodOutput'](self, key)
@@ -340,9 +343,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					end
 									
 					function self:PostEntityPaste(ply, ent, createdEntities)
-
-						if self:ANPlusIsWiremodCompEnt() then
-							
+						if self:ANPlusIsWiremodCompEnt() then						
 							local function EntityLookup(createdEntities)
 								return function(id, default)
 									if id == nil then return default end
@@ -354,24 +355,28 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 
 							if self.EntityMods and self.EntityMods.WireDupeInfo then								
 								WireLib.ApplyDupeInfo( ply, self, self.EntityMods.WireDupeInfo, EntityLookup(createdEntities) )
-							end
+							end						
 						end
+						
 						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCPostLoad'] != nil then
 							self:ANPlusGetDataTab()['Functions']['OnNPCPostLoad'](ply, self, createdEntities)
-						end
+						end					
 					end
-					
-					function self:OnRestore()
+					--[[
+					function self:OnRestore()				
 						if self:ANPlusIsWiremodCompEnt() then
 							WireLib.Restored( self )
 						end
 						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCRestore'] != nil then -- Does it work?
 							self:ANPlusGetDataTab()['Functions']['OnNPCRestore'](self)
-						end
+						end			
 					end
-					
+					]]--
 					self:ANPlusAddSaveData( "m_bANPlusEntity", true )
-				end				
+				end	
+				
+				hook.Add( "Think", self, self.ANPlusNPCThink )
+				
 				if (CLIENT) then
 					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCRenderOverride'] != nil then
 						function self:RenderOverride(flags)

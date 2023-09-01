@@ -980,3 +980,23 @@ function metaENT:ANPlusAddSaveData(key, val)
 		duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveData'] = { [ key ] = val } } )
 	end
 end
+
+function metaENT:ANPlusWiremodSetInputs(add, inputs, descs)
+	if WireLib then
+		if self.Inputs && add then
+			WireLib.AdjustInputs( self, inputs, descs )
+		else
+			WireLib.CreateInputs( self, inputs, descs )
+		end
+	end
+end
+
+function metaENT:ANPlusWiremodSetOutputs(add, outputs, descs)
+	if WireLib then
+		if self.Outputs && add then
+			WireLib.AdjustOutputs( self, outputs, descs )
+		else
+			WireLib.CreateOutputs( self, outputs, descs )
+		end
+	end
+end
