@@ -12,10 +12,29 @@ if !ANPlusLoaded then return end
 --util.PrecacheSound( string soundName )
 ------------------------------------------------------------
 
-hook.Add( "ANPCitadelChargerOnEmpty", "ANP_LMAO_TEST", function()
-	local activator, self = ACTIVATOR, CALLER
-	
+hook.Add( "ANPCitadelChargerOutRemainingCharge", "ANPBaseCCharger_OutRemainingCharge", function()
+	local activator, self = ACTIVATOR, CALLER	
+	if self:ANPlusIsWiremodCompEnt() then WireLib.TriggerOutput( self, "OutRemainingCharge", 1 ) end
+end )
+
+hook.Add( "ANPCitadelChargerOnHalfEmpty", "ANPBaseCCharger_OnHalfEmpty", function()
+	local activator, self = ACTIVATOR, CALLER	
+	if self:ANPlusIsWiremodCompEnt() then WireLib.TriggerOutput( self, "OnHalfEmpty", 1 ) end
+end )
+
+hook.Add( "ANPCitadelChargerOnEmpty", "ANPBaseCCharger_", function()
+	local activator, self = ACTIVATOR, CALLER	
 	if self:ANPlusIsWiremodCompEnt() then WireLib.TriggerOutput( self, "OnEmpty", 1 ) end
+end )
+
+hook.Add( "ANPCitadelChargerOnFull", "ANPBaseCCharger_OnFull", function()
+	local activator, self = ACTIVATOR, CALLER	
+	if self:ANPlusIsWiremodCompEnt() then WireLib.TriggerOutput( self, "OnFull", 1 ) end
+end )
+
+hook.Add( "ANPCitadelChargerOnPlayerUse", "ANPBaseCCharger_OnPlayerUse", function()
+	local activator, self = ACTIVATOR, CALLER	
+	if self:ANPlusIsWiremodCompEnt() then WireLib.TriggerOutput( self, "OnPlayerUse", 1 ) end
 end )
 
 local ENTTab = {
@@ -100,8 +119,49 @@ local ENTTab = {
 			
 			if (CLIENT) then return end
 			self.m_sBatteryModel = "models/items/battery.mdl"
+			self:ANPlusCreateOutputHook( "OutRemainingCharge", "ANPCitadelChargerOutRemainingCharge" ) 
+			self:ANPlusCreateOutputHook( "OnHalfEmpty", "ANPCitadelChargerOnHalfEmpty" ) 
 			self:ANPlusCreateOutputHook( "OnEmpty", "ANPCitadelChargerOnEmpty" ) 
-			self:ANPlusWiremodSetOutputs( false, { "OnEmpty" }, { "Called when charger gets empty." } )
+			self:ANPlusCreateOutputHook( "OnFull", "ANPCitadelChargerOnFull" ) 
+			self:ANPlusCreateOutputHook( "OnPlayerUse", "ANPCitadelChargerOnPlayerUse" ) 
+			
+			self:ANPlusWiremodSetInputs( false, 
+			{ -- Inputs
+			"SetCharge",
+			"Recharge"
+			}, 
+			
+			{ -- Descriptions
+			"Set charge and total charge to a specific amount..",
+			"Sets charge to maximum"
+			},
+			
+			{ -- Functions (each input should have one)
+			function(self, key, val)
+				self:Fire( key, val, 0 )
+			end,
+			function(self, key, val)
+				self:Fire( key, val, 0 )
+			end,
+			} )
+			
+			self:ANPlusWiremodSetOutputs( false, 			
+			{ -- Outputs
+			"OutRemainingCharge",
+			"OnHalfEmpty",
+			"OnEmpty",
+			"OnFull",
+			"OnPlayerUse",
+			},
+			
+			{ -- Descriptions
+			"Fired once for every single point of power given to the suit. This means it will not fire when the charger is depleted or when the suit is at full power.",
+			"Fired when the 'charge left' reaches 50% of its max.",
+			"Fired when the charger is empty.",
+			"Fired when player gets recharged to the max.",
+			"Fired when the player tries to +use the charger.",
+			} )
+			
 		end,
 		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
@@ -109,47 +169,17 @@ local ENTTab = {
 		['OnNPCUse'] = function(self, activator, caller, type)	
 			timer.Create( "ANP_TEMP_SUITCHARGER_DRIPEEG_STOP" .. self:EntIndex(), 0.1, 1, function()
 				if !IsValid(self) then return end
-				self.m_bFireThatEgg = false
+				self.m_bFireThatEEgg = false
 				self:StopSound( "anp/suitcharger_egg/suitchargeok1.wav" )
 				self:StopSound( "anp/suitcharger_egg/suitcharge1.wav" )
 			end)
 		end,
-		
-		------------------------------------------------------------ OnNPCWiremodInput - Called when NPC gets a Wiremod input.
-		--self:ANPlusWiremodSetInputs( add bool, inputs table, descs table )
-		['OnNPCWiremodInput'] = function(self, key, value)
-		end,
-		
-		------------------------------------------------------------ OnNPCWiremodOutput - Called when NPC gets a Wiremod output.
-		--self:ANPlusWiremodSetOutputs( add bool, outputs table, descs table )
-		['OnNPCWiremodOutput'] = function(self, key)		
-		end,
-		
-		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
-		['OnNPCThink'] = function(self)     	
-		end, 
-		
-		------------------------------------------------------------ OnNPCLoad - This function is called when NPC gets loaded via GMod Save system or the Duplicator tool and has some save data using ENT:ANPlusStoreEntityModifier(dataTab).
-		['OnNPCLoad'] = function(ply, self, dataTab)	
-		end,
-		
-		------------------------------------------------------------ OnNPCHandleAnimationEvent - This function can utilize lua animation events. You can set what happens at the specified animation frame. Originally created by Silverlan. ENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame and animation event ID
-		['OnNPCHandleAnimationEvent'] = function(self, seq, ev)
-		end, 
 		
 		------------------------------------------------------------ OnNPCInput - Almost anything that happens to this NPC/Entity will go through here. Great for detecting inputs.
 		['OnNPCInput'] = function(self, input, activator, caller, data)	
 			if input == "Recharge" then
 				self:ANPlusHaloEffect( Color( 255, 155, 0 ), 3, 1 )
 			end
-		end,
-		
-		------------------------------------------------------------ OnNPCEventHandle - This hook allows you to do a lot of things, from changing footstep sounds to... A lot of things...
-		['OnNPCEventHandle'] = function(self, ...)				
-		end,
-		
-		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like the Combine Soldier throwing a grenade).
-		['OnNPCCreateEntity'] = function(self, ent)	-- SHARED ( CLIENT & SERVER )					
 		end,
 		
 		------------------------------------------------------------ OnNPCPhysicsCollide - Called when the entity collides with anything. The move type and solid type must be VPHYSICS for the hook to be called.
@@ -161,61 +191,12 @@ local ENTTab = {
 			end
 		end,
 		
-		------------------------------------------------------------ OnNPCFireBullets - This function runs when NPC fires a bullet (best used with turrets). https://wiki.facepunch.com/gmod/GM:EntityFireBullets
-		['OnNPCFireBullets'] = function(self, weapon, data) -- SHARED ( CLIENT & SERVER )		
-			return true
-		end,
-		
-		------------------------------------------------------------ OnNPCKeyValue - This function runs whenever keyvalues/inputs/outpust run, are called or whatever.
-		['OnNPCKeyValue'] = function(self, key, value) -- SHARED ( CLIENT & SERVER )			
-		end,
-		
-		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.
-		['OnNPCWaterLevelChanged'] = function(self, old, new)
-		end,
-		
-		------------------------------------------------------------ OnPhysgunPickup - This function runs when NPC gets picked up by the Player PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.
-		['OnNPCOnPhysgunPickup'] = function(ply, self)
-		end,
-		
-		------------------------------------------------------------ OnNPCOnPhysgunFreeze - This function runs when Player is trying to freeze this NPC with the PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.
-		['OnNPCOnPhysgunFreeze'] = function(ply, self)
-		end,
-		
-		------------------------------------------------------------ OnNPCGravGunOnPickedUp - This function runs when NPC gets picked up by the Player GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
-		['OnNPCGravGunOnPickedUp'] = function(ply, self)		
-		end,
-		
-		------------------------------------------------------------ OnNPCGravGunOnDropped - This function runs when NPC gets dropped by the Player GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
-		['OnNPCGravGunOnDropped'] = function(ply, self)		
-		end,
-		
-		------------------------------------------------------------ OnGravGunPunt - This function runs when NPC gets punted (GravGun primary attack) by a Player.
-		['OnNPCGravGunPunt'] = function(ply, self)		
-		end,
-			
-		------------------------------------------------------------ OnNPCTakeDamage - This function runs whenever NPC gets damaged.
-		['OnNPCTakeDamage'] = function(self, dmginfo)
-		end,
-		
-		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
-		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)		
-		end,
-		
-		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
-		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)		
-		end,
-		
-		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
-		['OnNPCDamageOnEntity'] = function(self, ent, dmginfo)	
-		end,
-		
 		------------------------------------------------------------ OnNPCEmitSound - This function runs whenever NPC emits any sounds (no scripted sequences).
 		['OnNPCEmitSound'] = function(self, data) -- SHARED ( CLIENT & SERVER )
 			if data['SoundName'] == "items/suitchargeok1.wav" && ANPlusPercentageChance( 3 ) then
-				self.m_bFireThatEgg = true
+				self.m_bFireThatEEgg = true
 			end
-			if self.m_bFireThatEgg then
+			if self.m_bFireThatEEgg then
 				if data['SoundName'] == "items/suitchargeok1.wav" then data['SoundName'] = "anp/suitcharger_egg/suitchargeok1.wav" end			
 				if data['SoundName'] == "items/suitcharge1.wav" then data['SoundName'] = "anp/suitcharger_egg/suitcharge1.wav" end
 				return true
@@ -341,53 +322,19 @@ local NPCTab = {
 ----------------------------------------------------------------- This table lets you override/edit sounds made by your NPC.	
 	['SoundModification'] 		= nil,
 ----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
-	['Functions'] = {
-	
+	['Functions'] = {	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
 			self:SetNoDraw( false )
 			if (CLIENT) then return end
 			self:ANPMuteSound( true )   
 			
-		end,	
-		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
-		['OnNPCUse'] = function(self, activator, caller, type)		
-		end,		
+		end,			
 		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
 		['OnNPCThink'] = function(self)     
 			if (CLIENT) then return end
 			self:StopMoving()
-		end,		
-		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like combine throwing a grenade).
-		['OnNPCCreateEntity'] = function(self, ent)	-- SHARED ( CLIENT & SERVER )		
-		end,		
-		------------------------------------------------------------ OnNPCWeaponSwitch - This function runs whenever this NPC equips a new weapon.
-		['OnNPCWeaponSwitch'] = function(self, oldWep, newWep) 	
-		end,		
-		------------------------------------------------------------ OnNPCFireBullets - This function runs when NPC fires a bullet (best used with turrets). https://wiki.facepunch.com/gmod/GM:EntityFireBullets
-		['OnNPCFireBullets'] = function(self, data) -- SHARED ( CLIENT & SERVER )		
-		end,		
-		------------------------------------------------------------ OnNPCKilledPlayer - This function runs whenever this NPC kills a player.
-		['OnNPCKilledPlayer'] = function(ply, inflictor, self) 	
-		end,		
-		------------------------------------------------------------ OnNPCKilledNPC - This function runs whenever this NPC kills another NPC.
-		['OnNPCKilledNPC'] = function(self, npc, inflictor)		
-		end,		
-		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.
-		['OnNPCWaterLevelChanged'] = function(self, old, new)
-		end,		
-		------------------------------------------------------------ OnPhysgunPickup - This function runs when NPC gets picked up by the Player's PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.
-		['OnNPCOnPhysgunPickup'] = function(ply, self)
-		end,		
-		------------------------------------------------------------ OnNPCGravGunOnPickedUp - This function runs when NPC gets picked up by the Player's GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
-		['OnNPCGravGunOnPickedUp'] = function(ply, self)		
-		end,		
-		------------------------------------------------------------ OnNPCGravGunOnDropped - This function runs when NPC gets dropped by the Player's GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
-		['OnNPCGravGunOnDropped'] = function(ply, self)		
-		end,		
-		------------------------------------------------------------ OnGravGunPunt - This function runs when NPC gets punted (GravGun primary attack) by a Player.
-		['OnNPCGravGunPunt'] = function(ply, self)		
-		end,			
+		end,					
 		------------------------------------------------------------ OnNPCTakeDamage - This function runs whenever NPC gets damaged.
 		['OnNPCTakeDamage'] = function(self, dmginfo)
 			self:SetNWFloat( "ANP_TestDummyDamage", dmginfo:GetDamage() )  
@@ -395,26 +342,7 @@ local NPCTab = {
 		------------------------------------------------------------ OnNPCScaleDamage - This function runs whenever NPC gets damaged. Can also be used to detect which body part was hit.
 		['OnNPCScaleDamage'] = function(self, hitgroup, dmginfo)	
 			self:SetNWFloat( "ANP_TestDummyHitBox", hitgroup )    
-		end,		
-		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
-		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)		
-		end,		
-		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
-		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)		
-		end,	
-		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
-		['OnNPCDamageOnEntity'] = function(self, ent, dmginfo)	
-		end,		
-		------------------------------------------------------------ OnNPCDeath - This function runs whenever NPC dies.
-		['OnNPCDeath'] = function(self, attacker, inflictor)
-		end,		
-		------------------------------------------------------------ OnRagdollCreated - This function runs when the ragdoll of our NPC gets created.
-		['OnNPCRagdollCreated'] = function(self, ragdoll)	-- SHARED ( CLIENT & SERVER )	
-		end,		
-		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
-		['OnNPCRemove'] = function(self)	
-		end,	
-		
+		end,					
 		},	
 	} 	
  
@@ -642,8 +570,7 @@ local NPCTab = {
 	}, 
 ]]--
 ----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
-	['Functions'] = {
-		
+	['Functions'] = {		
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
 			if (CLIENT) then return end
@@ -652,8 +579,7 @@ local NPCTab = {
 			self.anp_HealLast = 0
 			self.anp_HealDelay = 3
 		
-		end,
-		
+		end,		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
 		['OnNPCUse'] = function(self, activator, caller, type)
 
@@ -661,15 +587,9 @@ local NPCTab = {
 			self:EmitSound( "vo/npc/male01/health05.wav", 75, 50, 1, CHAN_VOICE, 0, 0 )
 			self:ANPlusPlayActivity( self:ANPlusTranslateSequence("heal"), 1, false, activator, 4 )   
 		
-		end,
-		
-		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
-		['OnNPCThink'] = function(self)     	
-		end,
-		
+		end,		
 		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like combine throwing a grenade).
-		['OnNPCCreateEntity'] = function(self, ent)	-- SHARED ( CLIENT & SERVER )
-		
+		['OnNPCCreateEntity'] = function(self, ent)	-- SHARED ( CLIENT & SERVER )	
 			if (SERVER) && ent:GetClass() == "crossbow_bolt" then 
 				
 				ent:SetVelocity( ent:GetForward() * 1200 )
@@ -692,40 +612,7 @@ local NPCTab = {
 			
 			end
 		
-		end,
-		
-		------------------------------------------------------------ OnNPCWeaponSwitch - This function runs whenever this NPC equips a new weapon.
-		['OnNPCWeaponSwitch'] = function(self, oldWep, newWep) 	
-		end,
-		
-		------------------------------------------------------------ OnNPCKilledPlayer - This function runs whenever this NPC kills a player.
-		['OnNPCKilledPlayer'] = function(ply, inflictor, self) 	
-		end,
-		
-		------------------------------------------------------------ OnNPCKilledNPC - This function runs whenever this NPC kills another NPC.
-		['OnNPCKilledNPC'] = function(self, npc, inflictor)		
-		end,
-		
-		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.
-		['OnNPCWaterLevelChanged'] = function(self, old, new)
-		end,
-		
-		------------------------------------------------------------ OnPhysgunPickup - This function runs when NPC gets picked up by the Player's PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.
-		['OnNPCOnPhysgunPickup'] = function(ply, self)
-		end,
-		
-		------------------------------------------------------------ OnNPCGravGunOnPickedUp - This function runs when NPC gets picked up by the Player's GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
-		['OnNPCGravGunOnPickedUp'] = function(ply, self)		
-		end,
-		
-		------------------------------------------------------------ OnNPCGravGunOnDropped - This function runs when NPC gets dropped by the Player's GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
-		['OnNPCGravGunOnDropped'] = function(ply, self)		
-		end,
-		
-		------------------------------------------------------------ OnGravGunPunt - This function runs when NPC gets punted (GravGun primary attack) by a Player.
-		['OnNPCGravGunPunt'] = function(ply, self)		
-		end,
-			
+		end,			
 		------------------------------------------------------------ OnNPCTakeDamage - This function runs whenever NPC gets damaged.
 		['OnNPCTakeDamage'] = function(self, dmginfo)
 			
@@ -738,45 +625,18 @@ local NPCTab = {
 			
 			end
 		
-		end,
-		
-		------------------------------------------------------------ OnNPCScaleDamage - This function runs whenever NPC gets damaged. Can also be used to detect which body part was hit.
-		['OnNPCScaleDamage'] = function(self, hitgroup, dmginfo)	
-		end,
-		
+		end,	
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
-		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)	
-		
-			npc:Ignite(2,2)
-		
-		end,
-		
+		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)		
+			npc:Ignite(2,2)	
+		end,		
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
-		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)	
-		
-			ply:Ignite(2,2)
-		
-		end,
-		
-		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
-		['OnNPCDamageOnEntity'] = function(self, ent, dmginfo)	
-		end,
-		
-		------------------------------------------------------------ OnNPCDeath - This function runs when NPC dies.
-		['OnNPCDeath'] = function(self, attacker, inflictor)
-		end,
-		
-		------------------------------------------------------------ OnRagdollCreated - This function runs when ragdoll of our NPC gets created.
-		['OnNPCRagdollCreated'] = function(self, ragdoll)	-- SHARED ( CLIENT & SERVER )	
-		end,
-		
-		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
-		['OnNPCRemove'] = function(self)	
-		end,
-		
-		},
+		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)			
+			ply:Ignite(2,2)		
+		end,		
+	},
 	
-	}  
+}  
  
 ----------------------------------------------------------------- This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
 ANPlus.AddNPC( NPCTab ) 
@@ -984,8 +844,7 @@ local NPCTab = {
 	}, 
 ]]--
 ----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
-	['Functions'] = {
-	
+	['Functions'] = {	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
 		['OnNPCSpawn'] = function(self, ply) -- Player is valid only when PlayerSpawnedNPC gets called.
 			if (CLIENT) then return end
@@ -998,8 +857,7 @@ local NPCTab = {
 			
 			self:SetSaveValue( "m_bRPGAvoidPlayer", false )
 		
-		end,
-		
+		end,		
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
 		['OnNPCUse'] = function(self, activator, caller, type)
 			
@@ -1008,11 +866,6 @@ local NPCTab = {
 			self:ANPlusPlayActivity( self:ANPlusTranslateSequence("heal"), 1, false, activator, 4 )   
 		
 		end,
-		
-		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
-		['OnNPCThink'] = function(self)
-		end, 
-		
 		------------------------------------------------------------ OnNPCCreateEntity - This function runs whenever this NPC spawns/creates (server side) something (like combine throwing a grenade).
 		['OnNPCCreateEntity'] = function(self, ent)	-- SHARED ( CLIENT & SERVER )
 		
@@ -1038,73 +891,20 @@ local NPCTab = {
 			
 			end
 		
-		end,
-		
-		------------------------------------------------------------ OnNPCKilledPlayer - This function runs whenever this NPC kills a player.
-		['OnNPCKilledPlayer'] = function(ply, inflictor, self) 	
-		end,
-		
-		------------------------------------------------------------ OnNPCKilledNPC - This function runs whenever this NPC kills another NPC.
-		['OnNPCKilledNPC'] = function(self, npc, inflictor)		
-		end,
-		
-		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.
-		['OnNPCWaterLevelChanged'] = function(self, old, new)
-		end,
-		
-		------------------------------------------------------------ OnPhysgunPickup - This function runs when NPC gets picked up by Player's PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.
-		['OnNPCOnPhysgunPickup'] = function(ply, self)
-		end,
-		
-		------------------------------------------------------------ OnNPCGravGunOnPickedUp - This function runs when NPC gets picked up by Player's GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
-		['OnNPCGravGunOnPickedUp'] = function(ply, self)		
-		end,
-		
-		------------------------------------------------------------ OnNPCGravGunOnDropped - This function runs when NPC gets dropped by Player's GravityGun. It won't work if ['AllowGravGunPickUp'] is set to false.
-		['OnNPCGravGunOnDropped'] = function(ply, self)		
-		end,
-		
-		------------------------------------------------------------ OnGravGunPunt - This function runs when NPC gets punted (GravGun primary attack) by a Player.
-		['OnNPCGravGunPunt'] = function(ply, self)		
-		end,
-			
-		------------------------------------------------------------ OnNPCTakeDamage - This function runs whenever NPC gets damaged.
-		['OnNPCTakeDamage'] = function(self, dmginfo)	
-		end,
-		
+		end,	
 		------------------------------------------------------------ OnNPCScaleDamage - This function runs whenever NPC gets damaged. Can also be used to detect which body part was hit.
 		['OnNPCScaleDamage'] = function(self, hitgroup, dmginfo)	
-			end,
-		
+			end,		
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
-		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)	
-		
-				npc:Ignite(2,2)
-		
-		end,
-		
+		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)			
+			npc:Ignite(2,2)		
+		end,		
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
-		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)	
-		
-				ply:Ignite(2,2)
-		
-		end,
-		
-		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
-		['OnNPCDamageOnEntity'] = function(self, ent, dmginfo)	
-		end,
-		
-		------------------------------------------------------------ OnNPCDeath - This function runs whenever NPC dies.
-		['OnNPCDeath'] = function(self, attacker, inflictor)
-		end,
-		
-		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
-		['OnNPCRemove'] = function(self)	
-		end,
-		
-		},
-	
-	}  
+		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)			
+			ply:Ignite(2,2)	
+		end,	
+	},	
+}  
  
 ----------------------------------------------------------------- This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
 ANPlus.AddNPC( NPCTab ) 

@@ -285,25 +285,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					self:ANPlusSetKillfeedName( data['KillfeedName'] ) 
 					self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) 					
 					---------WIREMOD--------------
-					if WireLib then
-					
-						self.IsWire = true
-						
-						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCWiremodInput'] != nil then
-							
-							function self:TriggerInput(key, value)
-								self:ANPlusGetDataTab()['Functions']['OnNPCWiremodInput'](self, key, value)	
-							end
-							
-						end
-						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCWiremodOutput'] != nil then
-							
-							function self:TriggerOutputs(key)
-								self:ANPlusGetDataTab()['Functions']['OnNPCWiremodOutput'](self, key)
-							end
-							
-						end	
-						
+					if WireLib && ( self.Inputs || self.Outputs ) then				
+						self.IsWire = true						
 					end
 					---------WIREMOD--------------
 	

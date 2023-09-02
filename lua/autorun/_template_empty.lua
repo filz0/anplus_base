@@ -278,16 +278,6 @@ ANPlus.AddNPC( {
 		['OnNPCPostLoad'] = function(ply, self, createdEntities)	
 		end,
 		
-		------------------------------------------------------------ OnNPCWiremodInput - Called when NPC gets a Wiremod input.
-		--self:ANPlusWiremodSetInputs( add bool, inputs table, descs table )
-		['OnNPCWiremodInput'] = function(self, key, value)
-		end,
-		
-		------------------------------------------------------------ OnNPCWiremodOutput - Called when NPC gets a Wiremod output.
-		--self:ANPlusWiremodSetOutputs( add bool, outputs table, descs table )
-		['OnNPCWiremodOutput'] = function(self, key)		
-		end,
-		
 		------------------------------------------------------------ OnNPCStateChange - This function runs once, every time NPC's state changes.
 		['OnNPCStateChange'] = function(self, newState, oldState)
 		end,
@@ -606,16 +596,6 @@ ANPlus.AddNPC( {
 		
 		------------------------------------------------------------ OnNPCPostLoad - This function is called after NPC gets loaded via GMod Save system or the Duplicator tool and has some save data using ENT:ANPlusStoreEntityModifier(dataTab).
 		['OnNPCPostLoad'] = function(ply, self, createdEntities)	
-		end,
-		
-		------------------------------------------------------------ OnNPCWiremodInput - Called when NPC gets a Wiremod input.
-		--self:ANPlusWiremodSetInputs( add bool, inputs table, descs table )
-		['OnNPCWiremodInput'] = function(self, key, value)
-		end,
-		
-		------------------------------------------------------------ OnNPCWiremodOutput - Called when NPC gets a Wiremod output.
-		--self:ANPlusWiremodSetOutputs( add bool, outputs table, descs table )
-		['OnNPCWiremodOutput'] = function(self, key)		
 		end,
 		
 		------------------------------------------------------------ OnNPCHandleAnimationEvent - This function can utilize lua animation events. You can set what happens at the specified animation frame. Originally created by Silverlan. ENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame and animation event ID

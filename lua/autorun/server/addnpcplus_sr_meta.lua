@@ -981,12 +981,26 @@ function metaENT:ANPlusAddSaveData(key, val)
 	end
 end
 
-function metaENT:ANPlusWiremodSetInputs(add, inputs, descs)
+function metaENT:ANPlusWiremodSetInputs(add, inputs, descs, funcs) -- each input should have a function.
 	if WireLib then
 		if self.Inputs && add then
 			WireLib.AdjustInputs( self, inputs, descs )
 		else
 			WireLib.CreateInputs( self, inputs, descs )
+		end
+		self.InputFuncs = self.InputFuncs || {}
+		for i = 1, #inputs do
+			local input = inputs[ i ]
+			local func = funcs[ i ]
+			local addTab = { [input] = func }
+			table.Merge( self.InputFuncs, addTab )
+		end
+		function self:TriggerInput(key, val)	
+			for funcName, FireInputFunc in pairs( self.InputFuncs ) do	
+				if FireInputFunc && key == funcName then
+					FireInputFunc(self, key, val)
+				end
+			end			
 		end
 	end
 end
