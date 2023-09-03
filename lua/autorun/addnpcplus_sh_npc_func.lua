@@ -88,24 +88,20 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				if data['Models'] then
 									
 					local modelTab = self.m_tANPModelTab || ANPlusRandTab( data['Models'] )			
-					local CurModel = self.m_tANPCurModel || ( modelTab && util.IsValidModel( modelTab[ 1 ] ) && modelTab[ 1 ] ) || self:GetModel() || "models/weapons/shell.mdl"
-					local CurSkin = self.m_tANPCurSkin || ( modelTab && modelTab['Skin'] && istable( modelTab['Skin'] ) && util.SharedRandom( "anp_skin_rng", modelTab['Skin'][ 1 ], modelTab['Skin'][ 2 ] ) ) || modelTab['Skin'] || 0							
+					local CurModel = self.m_sANPCurModel || ( modelTab && util.IsValidModel( modelTab[ 1 ] ) && modelTab[ 1 ] ) || self:GetModel() || "models/weapons/shell.mdl"
+					local CurSkin = self.m_fANPCurSkin || ( modelTab && modelTab['Skin'] && istable( modelTab['Skin'] ) && util.SharedRandom( "anp_skin_rng", modelTab['Skin'][ 1 ], modelTab['Skin'][ 2 ] ) ) || modelTab['Skin'] || 0							
 					local CurColor = ( modelTab && modelTab['Color'] ) || Color( 255, 255, 255, 255 )
-					local CurMaterial = self.m_tANPCurMaterial || ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && util.SharedRandom( "anp_mat_rng", modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""					
+					local CurMaterial = self.m_sANPCurMaterial || ( modelTab && modelTab['Material'] && istable( modelTab['Material'] ) && util.SharedRandom( "anp_mat_rng", modelTab['Material'][ 1 ], #modelTab['Material'] ) ) || modelTab['Material'] || ""					
 					local CurBoneEdit = ( modelTab && modelTab['BoneEdit'] ) || nil
 					local CurScale, CurScaleDelta = modelTab['Scale'] && modelTab['Scale'][ 1 ] / 100 || 1, modelTab['scale'] && modelTab['scale'][ 2 ] || 0				
-					
+
 					if (SERVER) then
 						
 						local sColMin, sColMax, sHull = self['m_tColTab'] && self['m_tColTab'][ 1 ], self['m_tColTab'] && self['m_tColTab'][ 2 ], self['m_tColTab'] && self['m_tColTab'][ 3 ]
 						local CurColBoundsMin, CurColBoundsMax = ( sColMin || modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Min'] || colBoundsMin ), ( sColMax || modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['Max'] || colBoundsMax )								
 						local CurHull = sHull || modelTab && modelTab['CollisionBounds'] && modelTab['CollisionBounds']['HullType'] || hull
 						self:ANPlusAddSaveData( "m_tColTab", { CurColBoundsMin, CurColBoundsMax, hull } )
-						self:ANPlusAddSaveData( "m_tANPModelTab", modelTab )
-						self:ANPlusAddSaveData( "m_sANPCurModel", CurModel )
-						self:ANPlusAddSaveData( "m_fANPCurSkin", CurSkin )
-						self:ANPlusAddSaveData( "m_sANPCurMaterial", CurMaterial )
-
+						self:ANPlusAddSaveData( "m_tANPModelTab", modelTab )					
 						for i = 1, #data['Models'] do
 							if self:GetModel() != data['Models'][ i ][ 1 ] then										
 								self:SetModel( CurModel )
@@ -121,18 +117,18 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self:SetColor( CurColor )
 						self:SetMaterial( CurMaterial )
 						self:SetBloodColor( modelTab['BloodColor'] || self:GetBloodColor() )
-						self:ANPlusEditBone( CurBoneEdit )
-
-						self:SetCollisionBounds( CurColBoundsMin, CurColBoundsMax )
+						self:ANPlusEditBone( CurBoneEdit )										
 						if modelTab['Scale'] then self:SetModelScale( CurScale, CurScaleDelta ) end
+						
+						self:SetCollisionBounds( CurColBoundsMin, CurColBoundsMax )
 						--self:SetSurroundingBounds( data['SurroundingBounds'] && data['SurroundingBounds']['Min'] || min2, data['SurroundingBounds'] && data['SurroundingBounds']['Max'] || max2 )
 						--if data['SurroundingBounds'] && data['SurroundingBounds']['BoundsType'] then self:SetSurroundingBoundsType( data['SurroundingBounds']['BoundsType'] ) end
 						
 						if modelTab['PhysicsInit'] then self:PhysicsInit( modelTab['PhysicsInit'] ) end
-						if (SERVER) then
-							if modelTab['PhysicsInitBox'] then self:PhysicsInitBox( modelTab['PhysicsInitBox']['Min'], modelTab['PhysicsInitBox']['Max'], modelTab['PhysicsInitBox']['SurfaceProp'] || "default" ) end
-							if modelTab['PhysicsInitSphere'] then self:PhysicsInitSphere( modelTab['PhysicsInitSphere']['Radius'], modelTab['PhysicsInitSphere']['SurfaceProp'] || "default" ) end
-						end
+						--if (SERVER) then
+						if modelTab['PhysicsInitBox'] then self:PhysicsInitBox( modelTab['PhysicsInitBox']['Min'], modelTab['PhysicsInitBox']['Max'], modelTab['PhysicsInitBox']['SurfaceProp'] || "default" ) end
+						if modelTab['PhysicsInitSphere'] then self:PhysicsInitSphere( modelTab['PhysicsInitSphere']['Radius'], modelTab['PhysicsInitSphere']['SurfaceProp'] || "default" ) end
+						--end
 						self:SetMoveType( modelTab['SetMoveType'] || self:GetMoveType() )
 						self:SetMoveCollide( modelTab['SetMoveCollide'] || self:GetMoveCollide() )
 						self:SetCollisionGroup( modelTab['SetCollisionGroup'] || self:GetCollisionGroup() )
@@ -144,7 +140,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						end
 						
 						local physCheck = self:GetPhysicsObject()
-						if IsValid(physCheck) && IsValid(self.m_pMyPlayer) then
+						if !self.m_bANPVisualSet && IsValid(physCheck) && IsValid(self.m_pMyPlayer) then
 							physCheck:Wake()
 						end
 						
@@ -212,7 +208,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						if data['UseANPSquadSystem'] then self:ANPlusAddToCSquad( self:ANPlusGetSquadName() ) end
 					end
 					self.m_fANPUseLast = 0
-					self:SetUseType(SIMPLE_USE)
+					--self:SetUseType(SIMPLE_USE)
 					
 					if self:GetSequenceList() then
 						self.m_tbAnimationFrames = {}
@@ -230,10 +226,10 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					end
 					
 					local hpMul = GetConVar( "anplus_hp_mul" ):GetFloat()
-					if !self.m_bANPlusEntity then
-						self:SetHealth( ( data['Health'] || self:Health() ) * hpMul ) 
-						self:SetMaxHealth( ( data['Health'] || self:Health() ) * hpMul )
-					end		
+					local hp = ( self.m_tANPHealth && self.m_tANPHealth[ 1 ] || data['Health'] || self:Health() )
+					local hpMax = ( self.m_tANPHealth && self.m_tANPHealth[ 2 ] || data['Health'] || self:Health() )
+					self:SetHealth( hp * hpMul ) 
+					self:SetMaxHealth( hpMax * hpMul )	
 					
 					if data['InputsAndOutputs'] then
 						for i = 1, #data['InputsAndOutputs'] do
@@ -270,18 +266,20 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
 					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
 				end	
-
-				if (SERVER) then
 				
-					for i = 1, #self['m_tSaveDataMenu'] do
-						local sDataVar = self['m_tSaveDataMenu'][ i ]
-						local func = self['m_tSaveDataUpdateFuncs']
-						if sDataVar && sDataVar['Variable'] && func[ sDataVar['Variable'] ] then
-							local var = sDataVar['Variable']
-							func[ var ](self, self[ var ])
+				if (SERVER) then
+					--[[
+					if !self.m_bANPlusEntity then
+						for i = 1, #self['m_tSaveDataMenu'] do
+							local sDataVar = self['m_tSaveDataMenu'][ i ]
+							local func = self['m_tSaveDataUpdateFuncs']
+							if sDataVar && sDataVar['Variable'] && func[ sDataVar['Variable'] ] then
+								local var = sDataVar['Variable']
+								func[ var ](self, self[ var ])
+							end
 						end
 					end
-					
+					]]--
 					self:ANPlusSetKillfeedName( data['KillfeedName'] ) 
 					self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) 					
 					---------WIREMOD--------------
@@ -307,6 +305,10 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					end
 					
 					function self:PostEntityCopy()
+						self:ANPlusAddSaveData( "m_tANPHealth", { self:Health(), self:GetMaxHealth() } )
+						self:ANPlusAddSaveData( "m_sANPCurModel", self:GetModel() )
+						self:ANPlusAddSaveData( "m_fANPCurSkin", self:GetSkin() )
+						self:ANPlusAddSaveData( "m_sANPCurMaterial", self:GetMaterial() )
 						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCPostSave'] != nil then
 							self:ANPlusGetDataTab()['Functions']['OnNPCPostSave'](self)
 						end
@@ -324,7 +326,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 							self:ANPlusGetDataTab()['Functions']['OnNPCSaveTableFinish'](self, dupeData)
 						end
 					end
-									
+					
 					function self:PostEntityPaste(ply, ent, createdEntities)
 						if self:ANPlusIsWiremodCompEnt() then						
 							local function EntityLookup(createdEntities)

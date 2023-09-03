@@ -1301,7 +1301,7 @@ end
 function metaENT:ANPlusSetVar(var, val)
 	if self[var] == nil then return end
 	self[var] = val
-	if (SERVER) then self:ANPlusAddSaveData( var, val ) end
+	if (SERVER) then self:ANPlusAddSaveData( var, val, func ) end
 end
 
 function metaENT:ANPlusGetRagdoll()

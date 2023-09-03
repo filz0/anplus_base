@@ -692,6 +692,10 @@ ANPlus.AddNPC( {
 		['OnNPCPostDrawEffects'] = function(self) -- ( CLIENT )	
 		end,
 		
+		------------------------------------------------------------ OnNPCBreak - Called when entity breaks. Used for non-NPC entities.
+		['OnNPCBreak'] = function(self, attacker) -- ( CLIENT & SERVER )	
+		end,
+		
 		------------------------------------------------------------ OnNPCRemove - This function runs whenever NPC gets removed.
 		['OnNPCRemove'] = function(self) -- ( CLIENT & SERVER )
 		end,

@@ -79,10 +79,10 @@ function ENT:ANPlusNPCThink()
 end
 
 local function ANPlusOnLoad(ply, ent, data)
-	
+
 	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!	
 		
-		duplicator.DoGeneric( ent, data )
+		--duplicator.DoGeneric( ent, data )
 		
 		if data['m_tSaveData'] then
 		
@@ -90,14 +90,17 @@ local function ANPlusOnLoad(ply, ent, data)
 				if val then							
 					val = isstring(val) && ( val == "true" || val == "false" ) && tobool(val) || val					
 					ent[ var ] = val	
+					if data['m_tSaveDataUpdateFuncs'] && data['m_tSaveDataUpdateFuncs'][ var ] then
+						data['m_tSaveDataUpdateFuncs'][ var ](ent, val)
+					end
 				end
 			end
-
+			
 			net.Start("anplus_savedata_net")
 			net.WriteEntity( ent )
 			net.WriteTable( data['m_tSaveData'] )
 			net.Broadcast()
-			
+			ent:Spawn()
 		end
 
 		ent:ANPlusIgnoreTillSet()

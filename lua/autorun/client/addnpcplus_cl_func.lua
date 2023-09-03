@@ -220,15 +220,12 @@ function ENT:ANPlusCustomConfigMenu(tab)
 					var['ValueNew'] = nVal
 				end				
 			elseif isstring( ent[ var['Variable'] ] ) then
-				count = count + 1				
-				local val = colCatSP:ANPlus_CreateTextEntry( 5, ( count * height ) - 20, 200, 15, ent[ var['Variable'] ], Color( 200, 200, 200, 255 ), false, var['Description'] || "" )
-				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'], Color( 200, 200, 200, 255 ) )
+				count = count + 1	
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'] .. ":", Color( 200, 200, 200, 255 ) )
+				count = count + 1
+				local val = colCatSP:ANPlus_CreateTextEntry( 5, ( count * height ) - 20, 205, 15, ent[ var['Variable'] ], Color( 200, 200, 200, 255 ), false, var['Description'] || "" )				
 				function val:OnEnter( sVal )
 					var['ValueNew'] = sVal
-				end	
-				function val:OnGetFocus()
-					valLab:SetWidth( 1 )
-					val:SetText( ent[ var['Variable'] ] )
 				end	
 				function val:OnLoseFocus()
 					valLab:SetWidth( 200 )

@@ -76,6 +76,7 @@ ANPlus = {
 					local getModel = tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ]
 					tab['KeyValues'] = tab['KeyValues'] || {}
 					local addTab = { model = getModel }
+					print(getModel)
 					table.Merge( tab['KeyValues'], addTab )	
 				end
 			end
@@ -232,14 +233,16 @@ if (SERVER) then
 
 ANP_LUA_RUN_ENT = nil
 
-local function SetupMapLua()
-	ANP_LUA_RUN_ENT = ents.Create( "lua_run" )
-	ANP_LUA_RUN_ENT:SetName( "anp_lua_run" )
-	ANP_LUA_RUN_ENT:Spawn()
+function ANPMapLuaCreate()
+	--if !ANP_LUA_RUN_ENT then
+		ANP_LUA_RUN_ENT = ents.Create( "lua_run" )
+		ANP_LUA_RUN_ENT:SetName( "anp_lua_run" )
+		ANP_LUA_RUN_ENT:Spawn()
+	--end
 end
 
-hook.Add( "InitPostEntity", "ANP_LUA_RUN_ENT", SetupMapLua )
-hook.Add( "PostCleanupMap", "ANP_LUA_RUN_ENT", SetupMapLua )
+hook.Add( "InitPostEntity", "ANP_LUA_RUN_ENT", ANPMapLuaCreate )
+hook.Add( "PostCleanupMap", "ANP_LUA_RUN_ENT", ANPMapLuaCreate )
 
 end
 

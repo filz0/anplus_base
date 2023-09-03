@@ -12,6 +12,263 @@ if !ANPlusLoaded then return end
 --util.PrecacheSound( string soundName )
 ------------------------------------------------------------
 
+--if !duplicator.IsAllowed( "item_item_crate" ) then duplicator.Allow( "item_item_crate" ) end
+--[[
+item_item_crate turned out to be unusable due to its spawn function
+
+	if ( NULL_STRING == m_strItemClass )
+	{
+		Warning( "CItem_ItemCrate(%i):  CRATE_SPECIFIC_ITEM with NULL ItemClass string (deleted)!!!\n", entindex() );
+		UTIL_Remove( this );
+		return;
+	}
+which makes it delete itself cuz duplicator can't apply required KeyValue fast enough.
+]]--
+
+ANPlus.AddNPC( {
+----------------------------------------------------------------- Category at which you'll be able to find your NPC.
+	['Category'] 				= "Half-Life 2",
+----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
+	['Name'] 					= "Item Crate", 
+----------------------------------------------------------------- If set, this name will be used in the killfeed instead keeping the Name/ID alone.
+	['KillfeedName'] 			= "Item Crate",	
+----------------------------------------------------------------- Entity class of your NPC aka base NPC       
+	['Class'] 					= "prop_physics",
+----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
+	['Models'] 					= { 
+		{ "models/Items/item_item_crate.mdl",  
+			['BodyGroups'] 	 	= nil, 
+			['Skin'] 		 	= nil,			-- This table represents skin of this model. In this case, it will be randomized between 0 and 2.
+			['Material']	 	= nil,				-- This value will set a new material for your NPC with this model applied.
+			['SubMaterials'] 	= nil,  
+		},
+	},
+----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
+	['AdminOnly'] 				= false, 
+----------------------------------------------------------------- Displays author of this Entity.
+	['Author']					= "filz0",
+----------------------------------------------------------------- Sets if NPC should only be spawnable on the ceiling.
+	['OnCeiling'] 				= false,
+----------------------------------------------------------------- Sets if NPC should only be spawnable on the floor.
+	['OnFloor'] 				= false,
+----------------------------------------------------------------- Position offset from the crosshair.
+	['Offset'] 					= nil,
+----------------------------------------------------------------- Rotates NPC after the spawn. (eg. ['Rotate'] = Angle( 0, 180, 0 ))
+	['Rotate']					= nil,
+----------------------------------------------------------------- Set if your NPC should drop to the floor on spawn (seems to be only working on NPCs that do not possess any physics).
+	['NoDrop'] 					= false, 
+----------------------------------------------------------------- NPC health and max health.	
+	['Health'] 					= 20,
+----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
+	['KeyValues'] 				= { ItemClass = "item_dynamic_resupply", ItemCount = 3 },
+----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
+	['SpawnFlags'] 				= 0, 
+----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
+	['InputsAndOutputs'] 		= nil,    
+----------------------------------------------------------------- Allow or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
+	['AllowPhysgunPickup'] 		= true, 
+----------------------------------------------------------------- Allow or disallow GravGun pickup on your NPC. Might not work on all NPCs. If set to false, it will disable all GravGun-related functions!	
+	['AllowGravGunPickUp'] 		= false,
+----------------------------------------------------------------- Increase or decrease NPC's damage output. The lowest is -100 (%) and it can go as high as you wish (be reasonable).
+	['DamageDealtScale'] 		= 0, --%, 0 is default.
+----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
+	['ActivityOther'] 			= false,
+----------------------------------------------------------------- This table lets you override/edit sounds made by your NPC.	
+	['SoundModification'] 		= nil,
+----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
+	['Functions'] = {	
+		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
+		['OnNPCSpawn'] = function(self, ply) -- ( CLIENT & SERVER ) -- Player is valid only when PlayerSpawnedNPC gets called.
+			self:ANPlusCreateVar( "m_sItemClass", "item_dynamic_resupply", "Item Class", "Class of an item to spawn when broken." )
+			self:ANPlusCreateVar( "m_sItemKeyValues", "SpawnFlags = 4", "Item KeyValues", "KeyValues that will be applied to the spawned item/s. ( SpawnFlags = 2, Model=models/cool/cool.mdl, etc )" )
+			self:ANPlusCreateVar( "m_sItemInputs", "CalculateType ; 0 ; 0", "Item Inputs", "KeyValues that will be applied to the spawned item/s. ( InputName ; Value ; Delay, InputName2;Value;Delay, etc )" )
+			self:ANPlusCreateVar( "m_fItemCount", 1, "Item Count", "Amount of items to spawn.", 1, 10, 0 )
+			if (SERVER) then
+				--BoxSetup(self, self.m_fAmmoType)
+				--self:ANPlusCreateOutputHook( "OnUsed", "ANPAmmoCrateOnUsed" ) 
+				--self:ANPlusWiremodSetOutputs( false, 			
+				--{ -- Outputs
+				--"OnUsed"
+				--},
+				--
+				--{ -- Descriptions
+			--	"Fires when +used by the player."
+			--	} )
+			
+			end
+		end,
+		
+		------------------------------------------------------------ OnNPCBreak - Called when entity breaks. Used for non-NPC entities.
+		['OnNPCBreak'] = function(self, attacker) -- ( CLIENT & SERVER )	
+			if self.m_sItemClass && isstring(self.m_sItemClass) && self.m_sItemClass != "" then
+				for i = 1, self.m_fItemCount do
+					
+					anpEnt = ANPlusLoadGlobal[self.m_sItemClass]
+				
+					local drop = ents.Create( anpEnt && anpEnt['Class'] || self.m_sItemClass )
+					
+					if ( !IsValid( drop ) ) then print( "Item Crate's loot didn't spawn or its class was invalid." ) return nil end
+					
+					local tr = util.TraceLine( {
+						start = self:GetPos(),
+						endpos = self:GetPos() + Vector( 0, 0, -self:GetModelRadius() || -5 ),
+						filter = self,
+						ignoreworld = false,
+						mask = MASK_SHOT_HULL
+						} 		
+					)
+									
+					local pos = tr.Hit && tr.HitPos || self:GetPos() + self:OBBCenter()
+					
+					drop:SetPos( pos )							
+					
+					local phyObj = drop:GetPhysicsObject()
+					local ang = ( drop:IsNPC() || !IsValid(phyObj) ) && Angle( 0, self:GetAngles().y, 0 ) || Angle( math.random( -20, 20 ), math.random( 0, 360 ), math.random( -20, 20 ) )
+					
+					drop:SetAngles( ang )	
+					
+					if IsValid(phyObj) then
+						local vel = VectorRand( -10, 10 )
+						phyObj:SetVelocity( vel )
+					end
+					
+					if self.m_sItemKeyValues && isstring(self.m_sItemKeyValues) && self.m_sItemKeyValues != "" then
+						
+						local kvs = string.find( self.m_sItemKeyValues:lower(), ", " ) && string.Split( self.m_sItemKeyValues, ", " ) || string.find( self.m_sItemKeyValues:lower(), "," ) && string.Split( self.m_sItemKeyValues, "," ) || self.m_sItemKeyValues
+
+						if istable(kvs) then
+							for i = 1, #kvs do
+								local val = kvs[ i ]
+								if val then 
+									val = string.find( val:lower(), " = " ) && string.Split( val, " = " ) || string.find( val:lower(), "=" ) && string.Split( val, "=" )
+									drop:SetKeyValue( tostring( val[ 1 ] ), tostring( val[ 2 ] ) )
+								end
+							end
+						else
+							kvs = string.find( kvs:lower(), " = " ) && string.Split( kvs, " = " ) || string.find( kvs:lower(), "=" ) && string.Split( kvs, "=" )
+							drop:SetKeyValue( tostring( kvs[ 1 ] ), tostring( kvs[ 2 ] ) )
+						end
+					end
+					
+					if self.m_sItemInputs && isstring(self.m_sItemInputs) && self.m_sItemInputs != "" then
+						
+						local inp = string.find( self.m_sItemInputs:lower(), ", " ) && string.Split( self.m_sItemInputs, ", " ) || string.find( self.m_sItemInputs:lower(), "," ) && string.Split( self.m_sItemInputs, "," ) || self.m_sItemInputs
+
+						if istable(inp) then
+							for i = 1, #inp do
+								local val = inp[ i ]
+								if val then 
+									val = string.find( val:lower(), " ; " ) && string.Split( val, " ; " ) || string.find( val:lower(), ";" ) && string.Split( val, ";" )
+									drop:Fire( istable(val) && tostring( val[ 1 ] ) || val, istable(val) && tostring( val[ 2 ] ) || "", istable(val) && tonumber( val[ 3 ] ) || 0 )
+								end
+							end
+						else
+							inp = string.find( inp:lower(), " ; " ) && string.Split( inp, " ; " ) || string.find( inp:lower(), ";" ) && string.Split( inp, ";" ) || inp							
+							drop:Fire( istable(inp) && tostring( inp[ 1 ] ) || inp, istable(inp) && tostring( inp[ 2 ] ) || "", istable(inp) && tonumber( inp[ 3 ] ) || 0 )
+						end
+					end
+					
+					drop:Spawn()
+					drop:Activate()
+					
+					drop:ANPlusNPCApply( anpEnt && anpEnt['Name'] )
+				end
+			end
+		end,
+		
+		------------------------------------------------------------ OnNPCTakeDamage - This function runs whenever NPC gets damaged.
+		['OnNPCTakeDamage'] = function(self, dmginfo)
+		end,
+		
+	},
+	
+}, "SpawnableEntities" )
+
+if !duplicator.IsAllowed( "item_ammo_crate" ) then duplicator.Allow( "item_ammo_crate" ) end
+
+local function BoxSetup(self, val)
+	self:SetKeyValue( "AmmoType", val )
+	self:SetSaveValue( "m_nAmmoType", val )
+	self:SetSaveValue( "m_nAmmoIndex", val )
+	self:Spawn()
+	self:PhysicsInit( SOLID_VPHYSICS )
+end
+
+hook.Add( "ANPAmmoCrateOnUsed", "ANPBaseAmmoCrate_OnUsed", function()
+	local activator, self = ACTIVATOR, CALLER	
+	if self:ANPlusIsWiremodCompEnt() then WireLib.TriggerOutput( self, "OnUsed", 1 ) end
+end )
+
+ANPlus.AddNPC( {
+----------------------------------------------------------------- Category at which you'll be able to find your NPC.
+	['Category'] 				= "Half-Life 2",
+----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
+	['Name'] 					= "Ammo Crate", 
+----------------------------------------------------------------- If set, this name will be used in the killfeed instead keeping the Name/ID alone.
+	['KillfeedName'] 			= "Ammo Crate",	
+----------------------------------------------------------------- Entity class of your NPC aka base NPC       
+	['Class'] 					= "item_ammo_crate",
+----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
+	['Models'] 					= nil,
+----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
+	['AdminOnly'] 				= false, 
+----------------------------------------------------------------- Displays author of this Entity.
+	['Author']					= "filz0",
+----------------------------------------------------------------- Sets if NPC should only be spawnable on the ceiling.
+	['OnCeiling'] 				= false,
+----------------------------------------------------------------- Sets if NPC should only be spawnable on the floor.
+	['OnFloor'] 				= false,
+----------------------------------------------------------------- Position offset from the crosshair.
+	['Offset'] 					= nil,
+----------------------------------------------------------------- Rotates NPC after the spawn. (eg. ['Rotate'] = Angle( 0, 180, 0 ))
+	['Rotate']					= nil,
+----------------------------------------------------------------- Set if your NPC should drop to the floor on spawn (seems to be only working on NPCs that do not possess any physics).
+	['NoDrop'] 					= false, 
+----------------------------------------------------------------- NPC health and max health.	
+	['Health'] 					= false,
+----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
+	['KeyValues'] 				= {},
+----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
+	['SpawnFlags'] 				= 0, 
+----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
+	['InputsAndOutputs'] 		= nil,    
+----------------------------------------------------------------- Allow or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
+	['AllowPhysgunPickup'] 		= true, 
+----------------------------------------------------------------- Allow or disallow GravGun pickup on your NPC. Might not work on all NPCs. If set to false, it will disable all GravGun-related functions!	
+	['AllowGravGunPickUp'] 		= false,
+----------------------------------------------------------------- Increase or decrease NPC's damage output. The lowest is -100 (%) and it can go as high as you wish (be reasonable).
+	['DamageDealtScale'] 		= 0, --%, 0 is default.
+----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
+	['ActivityOther'] 			= false,
+----------------------------------------------------------------- This table lets you override/edit sounds made by your NPC.	
+	['SoundModification'] 		= nil,
+----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
+	['Functions'] = {	
+		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
+		['OnNPCSpawn'] = function(self, ply) -- ( CLIENT & SERVER ) -- Player is valid only when PlayerSpawnedNPC gets called.
+			self:ANPlusCreateVar( "m_fAmmoType", 0, "AmmoType", "Total charge of suit points.", 0, 9, 0, function(self, val) BoxSetup(self, val) end )
+			if (SERVER) then
+				BoxSetup(self, self.m_fAmmoType)
+				self:ANPlusCreateOutputHook( "OnUsed", "ANPAmmoCrateOnUsed" ) 
+				self:ANPlusWiremodSetOutputs( false, 			
+				{ -- Outputs
+				"OnUsed"
+				},
+				
+				{ -- Descriptions
+				"Fires when +used by the player."
+				} )
+			end
+		end,
+		
+		------------------------------------------------------------ OnNPCTakeDamage - This function runs whenever NPC gets damaged.
+		['OnNPCTakeDamage'] = function(self, dmginfo)
+		end,
+		
+	},
+	
+}, "SpawnableEntities" )
+
 hook.Add( "ANPCitadelChargerOutRemainingCharge", "ANPBaseCCharger_OutRemainingCharge", function()
 	local activator, self = ACTIVATOR, CALLER	
 	if self:ANPlusIsWiremodCompEnt() then WireLib.TriggerOutput( self, "OutRemainingCharge", 1 ) end
@@ -117,50 +374,53 @@ local ENTTab = {
 			self:ANPlusCreateVar( "m_iMaxJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat(), "Max Charge", "Total charge of suit points.", 1, 99999, 0, function(self, val) self:SetSaveValue( "m_iMaxJuice", val ) end )
 			self:ANPlusCreateVar( "m_iJuice", GetConVar( "sk_suitcharger_citadel" ):GetFloat(), "Charge", "Current charge of suit points.", 1, 99999, 0, function(self, val) self:SetSaveValue( "m_iJuice", val ) end )
 			
-			if (CLIENT) then return end
-			self.m_sBatteryModel = "models/items/battery.mdl"
-			self:ANPlusCreateOutputHook( "OutRemainingCharge", "ANPCitadelChargerOutRemainingCharge" ) 
-			self:ANPlusCreateOutputHook( "OnHalfEmpty", "ANPCitadelChargerOnHalfEmpty" ) 
-			self:ANPlusCreateOutputHook( "OnEmpty", "ANPCitadelChargerOnEmpty" ) 
-			self:ANPlusCreateOutputHook( "OnFull", "ANPCitadelChargerOnFull" ) 
-			self:ANPlusCreateOutputHook( "OnPlayerUse", "ANPCitadelChargerOnPlayerUse" ) 
-			
-			self:ANPlusWiremodSetInputs( false, 
-			{ -- Inputs
-			"SetCharge",
-			"Recharge"
-			}, 
-			
-			{ -- Descriptions
-			"Set charge and total charge to a specific amount..",
-			"Sets charge to maximum"
-			},
-			
-			{ -- Functions (each input should have one)
-			function(self, key, val)
-				self:Fire( key, val, 0 )
-			end,
-			function(self, key, val)
-				self:Fire( key, val, 0 )
-			end,
-			} )
-			
-			self:ANPlusWiremodSetOutputs( false, 			
-			{ -- Outputs
-			"OutRemainingCharge",
-			"OnHalfEmpty",
-			"OnEmpty",
-			"OnFull",
-			"OnPlayerUse",
-			},
-			
-			{ -- Descriptions
-			"Fired once for every single point of power given to the suit. This means it will not fire when the charger is depleted or when the suit is at full power.",
-			"Fired when the 'charge left' reaches 50% of its max.",
-			"Fired when the charger is empty.",
-			"Fired when player gets recharged to the max.",
-			"Fired when the player tries to +use the charger.",
-			} )
+			if (SERVER) then
+				self:SetSaveValue( "m_iMaxJuice", self.m_iMaxJuice )
+				self:SetSaveValue( "m_iJuice", self.m_iJuice )
+				self.m_sBatteryModel = "models/items/battery.mdl"
+				self:ANPlusCreateOutputHook( "OutRemainingCharge", "ANPCitadelChargerOutRemainingCharge" ) 
+				self:ANPlusCreateOutputHook( "OnHalfEmpty", "ANPCitadelChargerOnHalfEmpty" ) 
+				self:ANPlusCreateOutputHook( "OnEmpty", "ANPCitadelChargerOnEmpty" ) 
+				self:ANPlusCreateOutputHook( "OnFull", "ANPCitadelChargerOnFull" ) 
+				self:ANPlusCreateOutputHook( "OnPlayerUse", "ANPCitadelChargerOnPlayerUse" ) 			
+				
+				self:ANPlusWiremodSetInputs( false, 
+				{ -- Inputs
+					"SetCharge",
+					"Recharge"
+				}, 
+				
+				{ -- Descriptions
+					"Set charge and total charge to a specific amount.",
+					"Sets charge to maximum."
+				},
+				
+				{ -- Functions (each input should have one)
+					function(self, key, val)
+						self:Fire( key, val, 0 )
+					end,
+					function(self, key, val)
+						self:Fire( key, val, 0 )
+					end,
+				} )
+				
+				self:ANPlusWiremodSetOutputs( false, 			
+				{ -- Outputs
+					"OutRemainingCharge",
+					"OnHalfEmpty",
+					"OnEmpty",
+					"OnFull",
+					"OnPlayerUse",
+				},
+				
+				{ -- Descriptions
+					"Fired once for every single point of power given to the suit. This means it will not fire when the charger is depleted or when the suit is at full power.",
+					"Fired when the 'charge left' reaches 50% of its max.",
+					"Fired when the charger is empty.",
+					"Fired when player gets recharged to the max.",
+					"Fired when the player tries to +use the charger.",
+				} )
+			end
 			
 		end,
 		

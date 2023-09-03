@@ -476,12 +476,13 @@ net.Receive("anplus_propmenu", function(_, ply)
 
 		for _, var in pairs( tab ) do 
 			if var && var['ValueNew'] != nil then
-				ent[ var['Variable'] ] = var['ValueNew'] || var['ValueNew'] != false && ent[ var['Variable'] ]
-				ent:ANPlusAddSaveData( var['Variable'], ent[ var['Variable'] ] )
+				ent[ var['Variable'] ] = var['ValueNew'] || var['ValueNew'] != false && ent[ var['Variable'] ]			
 
 				if ent['m_tSaveDataUpdateFuncs'] && isfunction( ent['m_tSaveDataUpdateFuncs'][ var['Variable'] ] ) then
 					ent['m_tSaveDataUpdateFuncs'][ var['Variable'] ](ent, var['ValueNew'])
 				end
+				
+				ent:ANPlusAddSaveData( var['Variable'], ent[ var['Variable'] ], ent['m_tSaveDataUpdateFuncs'] && ent['m_tSaveDataUpdateFuncs'][ var['Variable'] ] || nil )
 				
 				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	
 					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var['Variable'], var['ValueNew'], ply)			

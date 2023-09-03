@@ -966,7 +966,7 @@ function metaENT:ANPlusDealBlastDamage(target, dmginfo, pos, radius, cooldown, c
 end
 
 function metaENT:ANPlusCreateOutputHook(entOutput, eventName)
-	if !IsValid(ANP_LUA_RUN_ENT) then print( "ANPlus lua run not found! Abording..." ) return end
+	if !IsValid(ANP_LUA_RUN_ENT) then ANPMapLuaCreate() end
 	self:Fire( "AddOutput", entOutput .. " anp_lua_run:RunPassedCode:hook.Run( '" .. eventName .. "' ):0:-1" )
 end
 
@@ -974,10 +974,13 @@ function metaENT:ANPlusIsRagdoll()
 	return self:GetClass() == "prop_ragdoll" || false
 end
 
-function metaENT:ANPlusAddSaveData(key, val)
+function metaENT:ANPlusAddSaveData(key, val, func)
 	if key then
 		val = isbool(val) && tostring(val) || val -- False valuse do not save, idk either...
 		duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveData'] = { [ key ] = val } } )
+		if isfunction(func) then
+			duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveDataUpdateFuncs'] = { [ key ] = func } } )
+		end
 	end
 end
 

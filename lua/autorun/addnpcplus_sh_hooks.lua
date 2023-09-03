@@ -7,13 +7,13 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 
-	timer.Simple( 0, function() 
-		if !IsValid(ent) then return end 
+	--timer.Simple( 0, function() 
+		--if !IsValid(ent) then return end 
 		
 		timer.Simple( 0, function()
-		
+
 			if !IsValid(ent) then return end	
-			
+
 			if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
 				local npc = ent:GetOwner()		
 				if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'] != nil then
@@ -36,7 +36,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 				
 			end	
 		end )	
-	end )	
+	--end )	
 end )
 
 --[[////////////////////////
@@ -472,3 +472,16 @@ hook.Add( "SetupMove", "ANPlusLoad_SetupMove", function(ply, mvd, cmd)
 	end
 	
 end)
+
+gameevent.Listen( "break_prop" )
+hook.Add( "break_prop", "ANPlusLoad_BreakProp", function( data )
+	local entindex = data.entindex	
+	local userid = data.userid		
+	local ent = ents.GetByIndex( entindex )
+	local attacker = ents.GetByIndex( userid )
+	if IsValid(ent) && ent:IsANPlus(true) then		
+		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCBreak'] != nil then
+			ent:ANPlusGetDataTab()['Functions']['OnNPCBreak'](ent, attacker)		
+		end					
+	end
+end )
