@@ -132,6 +132,12 @@ net.Receive("anplus_savedata_net", function()
 	if IsValid(ent) && data then table.Merge( ent, data ) end
 end)
 
+function ENT:ANPlusNPCHUDPaint()
+	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCHUDPaint'] != nil then
+		self:ANPlusGetDataTab()['Functions']['OnNPCHUDPaint'](self)
+	end
+end
+
 function ENT:ANPlusNPCPreDrawEffects()
 	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCPreDrawEffects'] != nil then
 		self:ANPlusGetDataTab()['Functions']['OnNPCPreDrawEffects'](self)

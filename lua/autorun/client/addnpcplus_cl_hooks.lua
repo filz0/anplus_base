@@ -55,52 +55,52 @@ hook.Add("CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", functi
 
 end)
 
---[[////////////////////////
-||||| Used for the test dummy ANPC.
-]]--\\\\\\\\\\\\\\\\\\\\\\\\
+local dev = GetConVar( "developer" )
+local barDist = GetConVar( "anplus_hpbar_dist" )
+local function CheckDaThing(ent)	
+	--if !IsValid(ent) then return false end
+	if !ent:IsANPlus() then return false end 	
+	if !ent:ANPlusGetDataTab()['HealthBar'] then return false end 
+	local barTab = ent:ANPlusGetDataTab()['HealthBar']
+	local state = ent:GetNWFloat( "m_fANPlusNPCState" )
+	if ( barTab['Mode'] == 2 && state != 3 ) then return false end
+	if ( barTab['Mode'] == 3 && state != 2 ) then return false end
+	if ( barTab['Mode'] == 4 && state != 2 && state != 3 ) then return false end 
+	return true
+end
 
-local hitboxTranslate = {
-	[0] = "Generic",
-	[1] = "Head",
-	[2] = "Chest",
-	[3] = "Stomach",
-	[4] = "LeftArm",
-	[5] = "RightArm",
-	[6] = "LeftLeg",
-	[7] = "RightLeg",
-	[8] = "Gear",
-}
+local hbBarStyle = GetConVar( "anplus_hpbar_style" )
 
-hook.Add( "HUDPaint", "ANPlusLoad_TestDummyDMGStuff", function()
-
+hook.Add( "HUDPaint", "ANPlusLoad_HUDPaint", function()
+	if ( dev:GetFloat() ) > 2 then DrawMaterialOverlay( "effects/anp/grid2.png", 0 ) end
+	
 	local ply = LocalPlayer()
-	local radius = ents.FindInSphere( ply:GetPos(), 300 )
-	for k,v in pairs ( radius ) do	
+	if ANPHealthBarStyles && hbBarStyle:GetString() != "Disable All" then
+		local lookForBosses = ents.FindInSphere( ply:GetPos(), barDist:GetFloat() )	
+		local ent, distSqr, dist = ANPlusFindClosestEntity( ply:GetPos(), lookForBosses, function(ent) if CheckDaThing(ent) then return true end end )
+		local tr = ply:GetEyeTrace()
+		ent = tr && CheckDaThing(tr.Entity) && tr.Entity || ent
+		
+		if IsValid(ent) then
+			local barTab = ent:ANPlusGetDataTab()['HealthBar']
+			local barStyle = ANPHealthBarStyles[barTab['StyleOverride'] || hbBarStyle:GetString()]
 
-		if v:IsNPC() && v:IsANPlus() && v:ANPlusGetDataTab()['CurName'] == "[ANP] Test Dummy" then
-				
-			local vpos = v:GetPos() + Vector(0,0,v:BoundingRadius()*1.85)
-			local vpos2 = v:GetPos() + Vector(0,0,v:BoundingRadius()*2)
-			local vinfopos = vpos:ToScreen()
-			local vinfopos2 = vpos2:ToScreen()
-			
-			draw.SimpleTextOutlined( "Damage: " .. ( v:GetNWFloat( "ANP_TestDummyDamage" ) || 0 ) .. " | HitGroup: " .. ( hitboxTranslate[ v:GetNWFloat( "ANP_TestDummyHitBox" ) ] || "None" ), "Trebuchet18", vinfopos.x, vinfopos.y, v:GetColor(), 1, 1, 1, Color( 0, 0, 0, 255 ) )									
-			
+			if isfunction( barStyle ) then			
+				barStyle(ent)
+			end
 		end
 		
-	end
-	
-	if IsValid(ply:ANPlusControlled()) then
-		local ent = ply:ANPlusControlled()
-		local wep = ent:GetActiveWeapon()
-		if IsValid(wep) then
-			
-			draw.RoundedBox( 8, 900 * ANPlusGetFixedScreenW(), 942 * ANPlusGetFixedScreenH(), 90 * ANPlusGetFixedScreenW(), 100 * ANPlusGetFixedScreenH(), Color( 0, 0, 0, 155 ) ) 
-			draw.SimpleText( wep:Clip1(), "HudNumbers", 940 * ANPlusGetFixedScreenW(), 942 * ANPlusGetFixedScreenH(), Color( 255, 255, 255, 255 ), 1, 1 )	
-			
+		if IsValid(ply:ANPlusControlled()) then
+			local ent = ply:ANPlusControlled()
+			local wep = ent:GetActiveWeapon()
+			if IsValid(wep) then
+				
+				draw.RoundedBox( 8, 900 * ANPlusGetFixedScreenW(), 942 * ANPlusGetFixedScreenH(), 90 * ANPlusGetFixedScreenW(), 100 * ANPlusGetFixedScreenH(), Color( 0, 0, 0, 155 ) ) 
+				draw.SimpleText( wep:Clip1(), "HudNumbers", 940 * ANPlusGetFixedScreenW(), 942 * ANPlusGetFixedScreenH(), Color( 255, 255, 255, 255 ), 1, 1 )	
+				
+			end
 		end
 	end
-	
 end)
 
 hook.Add( "PopulateNPCs", "ANPlusLoad_PopulateNPCs", function(pnlContent, tree, node)
@@ -123,6 +123,22 @@ hook.Add( "PopulateEntities", "ANPlusLoad_PopulateEntities", function(pnlContent
 			entData[ entToRemove ] = nil
 		end
 	end
+end)
+
+hook.Add( "OnSpawnMenuOpen", "ANPlusLoad_OnSpawnMenuOpen", function()
+	local ply = LocalPlayer()
+	net.Start( "anplus_ply_spawnmenu" )
+	net.WriteBool( true )
+	net.SendToServer()
+	ply.m_bSpawnMenuOpen = true
+end)
+
+hook.Add( "OnSpawnMenuClose", "ANPlusLoad_OnSpawnMenuClose", function()
+	local ply = LocalPlayer()
+	net.Start( "anplus_ply_spawnmenu" )
+	net.WriteBool( false )
+	net.SendToServer()
+	ply.m_bSpawnMenuOpen = false
 end)
 
 --[[

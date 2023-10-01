@@ -128,6 +128,13 @@ function metaENT:ANPlusGetAngPosRelated(pos)
 	return x, y, z
 end
 
+function ANPlusNormalizeAngle(ang1, ang2)
+	local pitch = math.Round( math.NormalizeAngle( ang1.p - ang2.p ) * 1000 ) / 1000	
+	local yaw = math.Round( math.NormalizeAngle( ang1.y - ang2.y ) * 1000 ) / 1000	
+	local roll = math.Round( math.NormalizeAngle( ang1.r - ang2.r ) * 1000 ) / 1000
+	return Angle( pitch, yaw, roll )
+end
+
 --[[////////////////////////
 ||||| Used to get Activities from Sequences.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1359,4 +1366,8 @@ function metaENT:ANPlusIsWiremodCompEnt()
 		end
 	end
 	return false
+end
+
+function metaPLAYER:ANPlusIsSpawnMenuOpen()
+	return self.m_bSpawnMenuOpen
 end

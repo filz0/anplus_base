@@ -1,9 +1,16 @@
 ------------------------------------------------------------------------------=#
+--SHARED
+AddCSLuaFile("autorun/addnpcplus_resources.lua")
 AddCSLuaFile("autorun/addnpcplus_replacer.lua")
+AddCSLuaFile("autorun/addnpcplus_sh_func.lua")
 AddCSLuaFile("autorun/addnpcplus_sh_hooks.lua")
 AddCSLuaFile("autorun/addnpcplus_sh_meta.lua")
 AddCSLuaFile("autorun/addnpcplus_sh_npc_func.lua")
-AddCSLuaFile("autorun/addnpcplus_resources.lua")
+--SERVER
+AddCSLuaFile("autorun/server/addnpcplus_sr_func.lua")
+AddCSLuaFile("autorun/server/addnpcplus_sr_hooks.lua")
+AddCSLuaFile("autorun/server/addnpcplus_sr_meta.lua")
+AddCSLuaFile("autorun/server/addnpcplus_sr_npc_func.lua")
 ------------------------------------------------------------------------------=#
 
 ANPlusLoadGlobal = {}
@@ -14,6 +21,7 @@ ANPlusDangerStuffGlobal = {}
 ANPCustomSquads = { base_squad = {} }
 ANPToolMenuGlobal = {}
 ANPRemoveFromSpawnList = {}
+ANPHealthBarStyles = { ['Disable All'] = true }
 
 ANPDefaultGMODWeapons = {
 ['weapon_pistol'] 		= true,
@@ -76,8 +84,21 @@ ANPlus = {
 					local getModel = tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ]
 					tab['KeyValues'] = tab['KeyValues'] || {}
 					local addTab = { model = getModel }
-					print(getModel)
 					table.Merge( tab['KeyValues'], addTab )	
+				end
+			elseif listType == "Vehicles" then
+				if tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ] then
+					local getModel = tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ]
+					tab['KeyValues'] = tab['KeyValues'] || {}
+					local addTab = { model = getModel }
+					table.Merge( tab['KeyValues'], addTab )	
+				end
+				if tab['VehicleScript'] then
+					local addTab = { vehiclescript = tab['VehicleScript'] }
+					tab['KeyValues'] = tab['KeyValues'] || {}
+					table.Merge( tab['KeyValues'], addTab )
+				else 
+					return
 				end
 			end
 			
@@ -89,37 +110,60 @@ ANPlus = {
 			
 			if listType == "NPC" then
 				list.Set( listType, id, {
-					Name 		= tab['Name'], 
-					Class 		= tab['Class'], 
-					Model 		= tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ] || false, 
-					Health 		= tab['Health'], 
-					Category 	= tab['Category'], 
-					KeyValues 	= tab['KeyValues'], 
-					Weapons 	= tab['DefaultWeapons'] || false, 
-					SpawnFlags 	= tab['SpawnFlags'],			
-					AdminOnly 	= tab['AdminOnly'] || false,			
-					OnCeiling 	= tab['OnCeiling'] || false,			
-					OnFloor 	= tab['OnFloor'] || false,			
-					Offset 		= tab['Offset'] || 10,
+					Name 			= tab['Name'], 
+					Class 		 	= tab['Class'], 
+					Model 		 	= tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ] || false, 
+					Health 		 	= tab['Health'], 
+					Category 	 	= tab['Category'], 
+					KeyValues 	 	= tab['KeyValues'] || {}, 
+					Weapons 	 	= tab['DefaultWeapons'] || false, 
+					SpawnFlags 	 	= tab['SpawnFlags'],			
+					AdminOnly 	 	= tab['AdminOnly'] || false,			
+					OnCeiling 	 	= tab['OnCeiling'] || false,			
+					OnFloor 	 	= tab['OnFloor'] || false,			
+					Offset 		 	= tab['Offset'] || 10,
 					--DropToFloor = tab['DropToFloor'] || false,
-					Rotate 		= tab['Rotate'] || false,			
-					NoDrop 		= tab['NoDrop'] || false,	
+					Rotate 		 	= tab['Rotate'] || false,			
+					NoDrop 			= tab['NoDrop'] || false,
+					Author 		 	= tab['Author'] || false,	
+					Information  	= tab['Information'] || false,					
+				})
+			elseif listType == "Vehicles" then
+				list.Set( listType, id, {
+					Name 		 	= tab['Name'], 
+					Class 		 	= tab['Class'], 
+					Model 		 	= tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ] || false, 
+					Health 		 	= tab['Health'], 
+					Category 	 	= tab['Category'], 
+					KeyValues 	 	= tab['KeyValues'] || {}, 
+					SpawnFlags 	 	= tab['SpawnFlags'],			
+					AdminOnly 	 	= tab['AdminOnly'] || false,			
+					OnCeiling 	 	= tab['OnCeiling'] || false,			
+					OnFloor 	 	= tab['OnFloor'] || false,			
+					Offset 		 	= tab['Offset'] || 10,
+					--DropToFloor = tab['DropToFloor'] || false,
+					Rotate 		 	= tab['Rotate'] || false,			
+					NoDrop 		 	= tab['NoDrop'] || false,
+					VC_ExtraSeats 	= tab['ExtraSeats'] || false,
+					Author 		 	= tab['Author'] || false,	
+					Information  	= tab['Information'] || false,					
 				})
 			elseif listType == "SpawnableEntities" then
 				list.Set( listType, id, {
-					PrintName 		= tab['Name'], 
-					ClassName 		= tab['Class'], 					 
-					Health 			= tab['Health'], 
-					Category 		= tab['Category'], 
-					KeyValues 		= tab['KeyValues'],  
-					SpawnFlags 		= tab['SpawnFlags'],			
-					AdminOnly 		= tab['AdminOnly'] || false,			
-					OnCeiling 		= tab['OnCeiling'] || false,			
-					OnFloor 		= tab['OnFloor'] || false,			
+					PrintName 	 	= tab['Name'], 
+					ClassName 	 	= tab['Class'], 					 
+					Health 		 	= tab['Health'], 
+					Category 	 	= tab['Category'], 
+					KeyValues 	 	= tab['KeyValues'] || {},  
+					SpawnFlags 	 	= tab['SpawnFlags'],			
+					AdminOnly 	 	= tab['AdminOnly'] || false,			
+					OnCeiling 	 	= tab['OnCeiling'] || false,			
+					OnFloor 	 	= tab['OnFloor'] || false,			
 					NormalOffset 	= tab['Offset'] || 10,			
-					Rotate 			= tab['Rotate'] || false,			
-					NoDrop 			= tab['NoDrop'] || false,	
-					Author 			= tab['Author'] || "",	
+					Rotate 		 	= tab['Rotate'] || false,			
+					NoDrop 		 	= tab['NoDrop'] || false,	
+					Author 		 	= tab['Author'] || "Baka",	
+					Information  	= tab['Information'] || "Amongus",	
 				})
 			end
 		end		
@@ -200,6 +244,12 @@ ANPlus = {
 		end	
 	end,
 	
+	AddHealthBarStyle = function(id, hpbarTab)
+		if id && hpbarTab then
+			ANPHealthBarStyles[ id ] = hpbarTab 
+		end
+	end,
+	
 } 
 
 timer.ANPlusDelayed = function( id, delay, time, repeats, callback ) -- This is stupid and has to go... Far away... Pls don't use.	
@@ -217,6 +267,9 @@ ANPlus.AddConVar( "anplus_random_placement", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE +
 ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply ANPC's health.", 0.1 )
 ANPlus.AddConVar( "anplus_replacer_enabled", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Enable ANPlus Replacer.", 0, 1 )
 ANPlus.AddConVar( "anplus_look_distance_override", 2048, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Set NPC look/sight distance. This command only affect ANPCs that don't have thier look distance changed by thier code.", 0, 32000 )
+ANPlus.AddClientConVar( "anplus_hpbar_enable", 1, "Enable health bars.", 0, 1 )
+ANPlus.AddClientConVar( "anplus_hpbar_dist", 2048, "Enable light effect used by the muzzle effects from this base.", 0 )
+ANPlus.AddClientConVar( "anplus_hpbar_style", "HL2 Default", "Select a style of NPC's health bar if one has it enabled." )
 ANPlus.AddClientConVar( "anplus_swep_muzzlelight", 1, "Enable light effect used by the muzzle effects from this base.", 0, 1 )
 ANPlus.AddClientConVar( "anplus_swep_shell_smoke", 1, "Allow smoke effect to be emitted from fired bullet casings.", 0, 1 )
  
@@ -248,7 +301,18 @@ end
 
 if (CLIENT) then
 
-	local ply = LocalPlayer()
+	--local ply = LocalPlayer()
+	
+	local scrWidth = 1920
+	local scrHeight = 1080
+
+	function ANPlusGetFixedScreenW()
+		return ScrW() / scrWidth
+	end
+
+	function ANPlusGetFixedScreenH()
+		return ScrH() / scrHeight
+	end
 	
 	local function ANPlusMenuDefault_Settings(panel)
 		panel:ClearControls()	
@@ -259,7 +323,28 @@ if (CLIENT) then
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Disable Anti-FriendlyFire", "anplus_ff_disabled" ), "Disable Anti-FriendlyFire feature built-in to the base." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Random Placement", "anplus_random_placement" ), "If enabled, ANPCs spawned by the Players will be placed randomly if possible." )		
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Health Multiplier", "anplus_hp_mul", 1, 10, 2 ), "Multiply health values of ANPCs." )
-		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Look Distance", "anplus_look_distance_override", 0, 32000, 0 ), "Sets the Look Distance of ANPCs. This setting only affect ANPCs which don't have thier look distance already changed in thier code." )
+		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Look Distance", "anplus_look_distance_override", 0, 32000, 0 ), "Sets the Look Distance of ANPCs. This setting only affect ANPCs which don't have thier look distance already changed in thier code." )		
+
+		local hpBarList = vgui.Create( "DComboBox" )
+		--DComboBox:SetPos( 5, 30 )
+		hpBarList:SetConVar( "anplus_hpbar_style" )
+		hpBarList:SetValue( "options" )
+		for id, func in pairs( ANPHealthBarStyles ) do
+			if id && func then
+				hpBarList:AddChoice( id, func )
+			end
+		end
+		hpBarList.OnSelect = function( self, index, value )
+			RunConsoleCommand( "anplus_hpbar_style", value )
+		end
+		
+		local hpBarLabel = vgui.Create( "DLabel" )
+		hpBarLabel:SetText( "Health Bar Style:" )
+		hpBarLabel:SetTextColor( Color( 200, 200, 200 ) )
+		
+		panel:AddItem( hpBarLabel )
+		panel:AddItem( hpBarList )
+		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Health Bar Render Distance", "anplus_hpbar_dist", 0, 4096, 0 ), "Distance at which the special Health Bar will show on Player's screen." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Muzzle Light Effect", "anplus_swep_muzzlelight" ), "If enabled, muzzle effects from this base will emit light." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Casing/Shell Smoke", "anplus_swep_shell_smoke" ), "If enabled, spent casings/shells from this base will generate smoke particle effect." )
 	end
@@ -364,8 +449,6 @@ properties.Add( "anplus_controller", {
 		--ent:SetMaxLookDistance( 1 )
 	end 
 } )
-
-
 
 
 

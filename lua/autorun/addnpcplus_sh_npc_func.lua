@@ -23,7 +23,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end
 			end
 		end
-
+		
 		if name && isstring( name ) then
 		
 			local dataTab = ANPlusLoadGlobal[ name ]	
@@ -39,7 +39,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				
 					self:SetKeyValue( "parentname" , "" ) -- We don't need it anymore
 					
-					if ( !override && dataTab['Class'] != self:GetClass() ) then 
+					if ( !override && dataTab['Class'] && dataTab['Class'] != self:GetClass() ) then 
 						return	
 					elseif ( override && dataTab['Class'] != self:GetClass() ) then				
 						local newSelf = ents.Create( dataTab['Class'] )	
@@ -106,7 +106,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 							if self:GetModel() != data['Models'][ i ][ 1 ] then										
 								self:SetModel( CurModel )
 								timer.Simple( 0, function()
-									if IsValid(self) then
+									if IsValid(self) && self:GetModel() != CurModel then
 										self:SetModel( CurModel )
 									end
 								end )
@@ -267,19 +267,13 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
 				end	
 				
-				if (SERVER) then
-					--[[
-					if !self.m_bANPlusEntity then
-						for i = 1, #self['m_tSaveDataMenu'] do
-							local sDataVar = self['m_tSaveDataMenu'][ i ]
-							local func = self['m_tSaveDataUpdateFuncs']
-							if sDataVar && sDataVar['Variable'] && func[ sDataVar['Variable'] ] then
-								local var = sDataVar['Variable']
-								func[ var ](self, self[ var ])
-							end
-						end
-					end
-					]]--
+				if self:ANPlusGetDataTab()['HealthBar'] then
+					self:SetNWFloat( "m_fANPBossHP", self:Health() )
+					--self:SetNWFloat( "m_fANPBossHPMax", self:GetMaxHealth() )
+				end
+				
+				if (SERVER) then				
+					
 					self:ANPlusSetKillfeedName( data['KillfeedName'] ) 
 					self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) 					
 					---------WIREMOD--------------
@@ -357,12 +351,25 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						end			
 					end
 					]]--
+					
+					if self:IsVehicle() then
+						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCDriverButtonUp'] != nil then
+							hook.Add( "PlayerButtonUp", self, self.ANPlusNPCDriverButtonUp )
+						end
+						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCDriverButtonDown'] != nil then
+							hook.Add( "PlayerButtonDown", self, self.ANPlusNPCDriverButtonDown )
+						end
+					end
+					
 					self:ANPlusAddSaveData( "m_bANPlusEntity", true )
 				end	
 				
-				hook.Add( "Think", self, self.ANPlusNPCThink )
+				hook.Add( "Think", self, self.ANPlusNPCThink )		
 				
-				if (CLIENT) then
+				if (CLIENT) then -- 
+					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCHUDPaint'] != nil then
+						hook.Add( "HUDPaint", self, self.ANPlusNPCHUDPaint )
+					end
 					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCRenderOverride'] != nil then
 						function self:RenderOverride(flags)
 							self:ANPlusGetDataTab()['Functions']['OnNPCRenderOverride'](self, flags)	
@@ -467,7 +474,7 @@ function ENT:ANPlusShell( att, bone, type, scale, angVec )
 	
 	local boneid = isnumber(bone) && bone || isstring(bone) && self:LookupBone( bone || "" ) || nil 
 	local att = isnumber(att) && att > -1 && att || isstring(att) && self:LookupAttachment( att ) || nil 
-	
+
 	local fx = EffectData()
 	fx:SetEntity( self )
 	fx:SetAttachment( att || -1 )
@@ -475,12 +482,12 @@ function ENT:ANPlusShell( att, bone, type, scale, angVec )
 	fx:SetRadius( type || 1 ) 
 	fx:SetScale( scale || 1 )
 	fx:SetStart( angVec || Vector( 0, 0, 0 ) )
-	util.Effect( "anp_shell", fx )	
+	util.Effect( "anp_npc_shell", fx )	
 
 end
 
 function ENT:ANPlusHitEffect(effect, tr, scale)	
-	if tr && tr.Hit && !tr.HitSky then 	
+	if tr && !tr.HitSky then 	
 		local fx = EffectData()
 		fx:SetOrigin( tr.HitPos )
 		fx:SetNormal( tr.HitNormal )

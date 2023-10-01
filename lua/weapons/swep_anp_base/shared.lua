@@ -348,7 +348,7 @@ function SWEP:ANPlusWeaponShell(att, bone, type, scale, angVec)
 	fx:SetRadius( type || 1 )
 	fx:SetScale( scale || 1 )
 	fx:SetStart( angVec || Vector( 0, 0, 0 ) )
-	util.Effect( "anp_shell", fx )	
+	util.Effect( "anp_npc_shell", fx )	
 
 end
 

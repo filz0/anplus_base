@@ -630,7 +630,7 @@ function ENT:ANPlusFaceEntity( ent, speed )
 end
 
 function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, callback, postCallback)
-	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() ) then return end
+	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() || self:ANPlusPlayingDeathAnim() ) then return end
 	local actSeq = self:SelectWeightedSequence( act )
 	local actSeqName = self:GetSequenceName( actSeq )
 	local gestCheck = string.find( string.lower( actSeqName ), "gesture_" ) || string.find( string.lower( actSeqName ), "g_" ) || string.find( string.lower( actSeqName ), "gest" )
@@ -662,6 +662,7 @@ function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, cal
 	
 	local seqName = self:GetSequenceName( gestCheck && actSeq || self:GetSequence() )
 	local seqID, seqDur = self:LookupSequence( seqName )	
+	--self:SetKeyValue( "sequence", seqID )
 	local seqSpeed = self:GetSequenceGroundSpeed( seqID )
 	seqDur = seqDur / speed
 

@@ -11,9 +11,10 @@ if !ANPlusLoaded then return end
 
 --util.PrecacheSound( string soundName )
 ------------------------------------------------------------
-
+ 
 --if !duplicator.IsAllowed( "item_item_crate" ) then duplicator.Allow( "item_item_crate" ) end
 --[[
+
 item_item_crate turned out to be unusable due to its spawn function
 
 	if ( NULL_STRING == m_strItemClass )
@@ -22,8 +23,255 @@ item_item_crate turned out to be unusable due to its spawn function
 		UTIL_Remove( this );
 		return;
 	}
+	
 which makes it delete itself cuz duplicator can't apply required KeyValue fast enough.
+
 ]]--
+ 
+
+ANPlus.AddNPC( {
+	['Spawnable']				= false,
+----------------------------------------------------------------- Category at which you'll be able to find your NPC.
+	['Category'] 				= "ANPBase",
+----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
+	['Name'] 					= "ANPlusGib", 
+----------------------------------------------------------------- Entity class of your NPC aka base NPC       
+	['Class'] 					= "gib",
+----------------------------------------------------------------- NPC health and max health.	
+	['Health'] 					= false,
+----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks.
+	['Functions'] = {
+	
+		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
+		['OnNPCSpawn'] = function(self, ply) -- ( CLIENT & SERVER ) -- Player is valid only when PlayerSpawnedNPC gets called.
+			if (SERVER) then
+			
+				self:ANPlusCreateVar( "m_fRemoveDelay", 6 )
+				self.m_fRemoveLast = CurTime()	
+				self.m_fHitWorld = false	
+				
+				self:SetMoveType( 5 )
+				self:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
+				self:SetLocalAngularVelocity( Angle( math.random( 250, 400 ), math.random( 250, 400 ), 0 ) )
+				self:SetVelocity( Vector( math.random( -400, 400 ), math.random( -400, 400 ), math.random( 400, 800 ) ) )
+
+			end
+		end,
+		
+		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
+		['OnNPCThink'] = function(self) -- ( CLIENT & SERVER )   	
+			if (SERVER) then
+			
+				if CurTime() - self.m_fRemoveLast >= self.m_fRemoveDelay then
+					self:Remove()
+				end
+				
+				if !self.m_fHitWorld then
+				
+					local tr = util.TraceLine( {
+						start = self:GetPos(),
+						endpos = self:GetPos() - self:GetUp() * self:GetModelRadius(),
+						filter = self,
+						mask = MASK_SOLID_BRUSHONLY
+						} 		
+					)
+					
+					if tr.Hit then
+						self.m_fHitWorld = true
+						self:SetMoveType( MOVETYPE_NONE )
+						self:SetLocalAngularVelocity( Angle( 0, 0, 0 ) )
+						self:SetVelocity( Vector( 0, 0, 0 ) )
+					end
+					
+				end
+			end
+		end, 
+		
+	},
+	
+}, "SpawnableEntities" )
+
+ 
+if (CLIENT) then
+	surface.CreateFont("anphl2defaultABC", {
+		font = "dejavusans",
+		size = 22 * ANPlusGetFixedScreenW(),
+		--scanlines = 3
+	})
+	surface.CreateFont("anphl2default123", {
+		font = "halflife2",
+		size = 22 * ANPlusGetFixedScreenW(),
+		--scanlines = 3
+	})
+	surface.CreateFont("anphl2betaABC", {
+		font 		= "ocrbczyk",
+		size 		= 42 * ANPlusGetFixedScreenW(),
+		scanlines 	= 3,
+		blursize 	= 2
+	})
+	surface.CreateFont("anphl2betaABCBG", {
+		font 		= "ocrbczyk",
+		size 		= 42 * ANPlusGetFixedScreenW(),
+		scanlines 	= 3,
+		blursize 	= 8,
+	})
+	surface.CreateFont("anphl2beta123", {
+		font = "ocrbczyk_bold",
+		size 		= 42 * ANPlusGetFixedScreenW(),
+		scanlines 	= 3,
+		blursize 	= 2
+	})
+	surface.CreateFont("anphl2beta123BG", {
+		font 		= "ocrbczyk_bold",
+		size 		= 42 * ANPlusGetFixedScreenW(),
+		scanlines 	= 3,
+		blursize 	= 1
+	})
+end
+
+local hpLast = 0
+local hpBuff = 0
+local hpTime = 0
+
+local bgCol 	= Color( 0, 0, 0, 155 )
+local textCol 	= Color( 255, 220, 0, 255 )
+local textBGCol = Color( 0, 0, 0, 255 )
+local font 		= "anphl2defaultABC"
+local font2 	= "anphl2default123"
+
+ANPlus.AddHealthBarStyle( "HL2 Retail", function(ent) 
+	local ply = LocalPlayer()
+	local barTab = ent:ANPlusGetDataTab()['HealthBar']
+	
+	local x = 660 * ANPlusGetFixedScreenW()
+	local y = 100 * ANPlusGetFixedScreenH()
+	local w = 600 * ANPlusGetFixedScreenW()
+	local h = 60 * ANPlusGetFixedScreenH()
+	
+	local x2 = x + 10 * ANPlusGetFixedScreenW()
+	local y2 = y + 25 * ANPlusGetFixedScreenH()
+	local w2 = w - 20 * ANPlusGetFixedScreenW()
+	local h2 = h - 35 * ANPlusGetFixedScreenH()
+	
+	local x3 = x + 13 * ANPlusGetFixedScreenW()
+	local y3 = y + 28 * ANPlusGetFixedScreenH()
+	local w3 = w - 26 * ANPlusGetFixedScreenW()
+	local h3 = h - 40 * ANPlusGetFixedScreenH() 
+	
+	local hp = ent:GetNWFloat( "m_fANPBossHP" ) || ent:Health()
+	local hpMax = ent:GetMaxHealth()
+	local hpper = math.Remap( hp, 0, hpMax, 0, 100 )
+	hpper = math.Round( hpper, 2 )
+	hp = math.Remap( hp, 0, hpMax, 0, 1 )		
+	
+	local col = col || textCol	
+	
+	if hpLast != hp || ply.m_pANPLastHPBarEnt != ent then				
+		hpBuff = ( hp - hpLast )
+		hpTime = CurTime() + 1
+		hpLast = hp	
+	end
+	
+	if hpTime > CurTime() && ( IsValid(ply.m_pANPLastHPBarEnt) && ply.m_pANPLastHPBarEnt == ent ) then
+		if hpBuff < 0 then
+			col = Color( 255, math.Clamp( 255 - ( 255 * (hpTime - CurTime()) ), 0, 220 ), 0, 255 )  
+			--hpOLine = math.Clamp( ( hpTime - CurTime() ) * 2, 0, 1 ) * 2
+		elseif hpBuff > 0 then
+			col = Color( math.Clamp( 255 - ( 255 * (hpTime - CurTime()) ), 0, 255 ), math.Clamp( 255 + ( 255 * (hpTime - CurTime()) ), 0, 220 ), 0, 255 )
+			--hpOLine = math.Clamp( ( hpTime - CurTime() ) * 255, 0, 1 ) * 2
+		end
+	else
+		hpBuff = 0
+	end
+ 
+	local text = string.upper( ent:ANPlusGetDataTab()['KillfeedName'] || ent:ANPlusGetDataTab()['CurName'] )
+	 
+	draw.RoundedBox( 8, x, y, w, h, bgCol )
+	surface.SetDrawColor( textCol )
+	surface.DrawOutlinedRect( x2, y2, w2, h2, 2 * ANPlusGetFixedScreenW() )
+	draw.RoundedBox( 0, x3, y3, w3 * hp, h3, col )
+	
+	local tx = x + 300 * ANPlusGetFixedScreenW()
+	
+	draw.SimpleText( text, font, tx, y, textCol, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+	
+	ply.m_pANPLastHPBarEnt = ent
+end )
+
+local bgCol 	= Color( 0, 0, 0, 155 )
+local textCol 	= Color( 255, 220, 0, 255 )
+local textBGCol = Color( 255, 220, 0, 170 )
+local textBGCol2 = Color( 255, 220, 0, 40 )
+local font 		= "anphl2betaABC"
+local fontBG 	= "anphl2betaABCBG"
+local font2 	= "anphl2beta123"
+local font2BG 	= "anphl2beta123BG"
+
+ANPlus.AddHealthBarStyle( "HL2 Beta", function(ent) 
+	local ply = LocalPlayer()
+	local barTab = ent:ANPlusGetDataTab()['HealthBar']
+	
+	local x = 660 * ANPlusGetFixedScreenW()
+	local y = 100 * ANPlusGetFixedScreenH()
+	local w = 600 * ANPlusGetFixedScreenW()
+	local h = 60 * ANPlusGetFixedScreenH()
+	
+	local x2 = x + 10 * ANPlusGetFixedScreenW()
+	local y2 = y + 25 * ANPlusGetFixedScreenH()
+	local w2 = w - 20 * ANPlusGetFixedScreenW()
+	local h2 = h - 35 * ANPlusGetFixedScreenH()
+	
+	local x3 = x + 13 * ANPlusGetFixedScreenW()
+	local y3 = y + 28 * ANPlusGetFixedScreenH()
+	local w3 = w - 26 * ANPlusGetFixedScreenW()
+	local h3 = h - 40 * ANPlusGetFixedScreenH()  
+	
+	local hp = ent:GetNWFloat( "m_fANPBossHP" ) || ent:Health()
+	local hpMax = ent:GetMaxHealth()
+	local hpper = math.Remap( hp, 0, hpMax, 0, 100 )
+	hpper = math.Round( hpper, 0 )		
+	hpper = math.max( hpper, 0 )		
+ 
+	local text = string.upper( ent:ANPlusGetDataTab()['KillfeedName'] || ent:ANPlusGetDataTab()['CurName'] )
+	
+	local tx = x + 300 * ANPlusGetFixedScreenW()
+
+	draw.SimpleText( text, fontBG, tx, y, textBGCol, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+	draw.SimpleText( text, font, tx, y, textCol, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+
+	local x2 = x + 300 * ANPlusGetFixedScreenW()
+	local x3 = x + 328 * ANPlusGetFixedScreenW()
+	local y2 = y + 35 * ANPlusGetFixedScreenH()	
+	
+	local col = col ||  textCol	
+	
+	if hpLast != hp then				
+		hpBuff = ( hp - hpLast )
+		hpTime = hp != hpLast && CurTime() + 1 || CurTime()
+		hpLast = hp	
+	end
+	
+	if hpTime > CurTime() then
+		if hpBuff < 0 then
+			col = Color( 255, math.Clamp( (hpTime - CurTime()) * 255, 220, 255 ), math.Clamp( (hpTime - CurTime()) * 255, 0, 255 ), 255 )  
+		elseif hpBuff > 0 then
+			col = Color( math.Clamp( 255 - ( 255 * (hpTime - CurTime()) ), 0, 255 ), math.Clamp( 255 + ( 255 * (hpTime - CurTime()) ), 0, 220 ), 0, 255 )
+		end
+	else
+		hpBuff = 0
+	end
+	
+	draw.SimpleText( "+ 000 +", font2BG, x2, y2, textBGCol2, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+	draw.SimpleText( "+ 222 +", font2BG, x2, y2, textBGCol2, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+	draw.SimpleText( "+ 000 +", fontBG, x2, y2, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+	draw.SimpleText( hpper, font2, x3, y2, col, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
+	draw.SimpleText( "+       +", font2, x2, y2, textCol, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+	
+	local x3 = x2 + 10 * ANPlusGetFixedScreenW()
+	
+	--draw.SimpleTextOutlined( "%", font, x3, y2, textCol, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, textBGCol )
+	ply.m_pANPLastHPBarEnt = ent
+end )
 
 ANPlus.AddNPC( {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
@@ -83,7 +331,8 @@ ANPlus.AddNPC( {
 			self:ANPlusCreateVar( "m_sItemKeyValues", "SpawnFlags = 4", "Item KeyValues", "KeyValues that will be applied to the spawned item/s. ( SpawnFlags = 2, Model=models/cool/cool.mdl, etc )" )
 			self:ANPlusCreateVar( "m_sItemInputs", "CalculateType ; 0 ; 0", "Item Inputs", "KeyValues that will be applied to the spawned item/s. ( InputName ; Value ; Delay, InputName2;Value;Delay, etc )" )
 			self:ANPlusCreateVar( "m_fItemCount", 1, "Item Count", "Amount of items to spawn.", 1, 10, 0 )
-			if (SERVER) then
+			
+			if (SERVER) then 
 				--BoxSetup(self, self.m_fAmmoType)
 				--self:ANPlusCreateOutputHook( "OnUsed", "ANPAmmoCrateOnUsed" ) 
 				--self:ANPlusWiremodSetOutputs( false, 			
@@ -476,6 +725,18 @@ local ENTTab = {
 ----------------------------------------------------------------- This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
 ANPlus.AddNPC( ENTTab, "SpawnableEntities" )
 
+local hitboxTranslate = {
+	[0] = "Generic",
+	[1] = "Head",
+	[2] = "Chest",
+	[3] = "Stomach",
+	[4] = "LeftArm",
+	[5] = "RightArm",
+	[6] = "LeftLeg",
+	[7] = "RightLeg",
+	[8] = "Gear",
+}
+
 local NPCTab = {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC. 
 	['Category'] 			= "[ANP] Dev",
@@ -597,13 +858,29 @@ local NPCTab = {
 		end,					
 		------------------------------------------------------------ OnNPCTakeDamage - This function runs whenever NPC gets damaged.
 		['OnNPCTakeDamage'] = function(self, dmginfo)
-			self:SetNWFloat( "ANP_TestDummyDamage", dmginfo:GetDamage() )  
+			local dmg = dmginfo:GetDamage()
+			local dmgPos = dmginfo:GetDamagePosition()
+			self:SetNWFloat( "ANP_TestDummyDamage", dmg )
+			debugoverlay.Cross( dmgPos, 1, 1, Color( 255, 50, 50 ), true )
+			dmginfo:SetDamage( 0 )
 		end,		
 		------------------------------------------------------------ OnNPCScaleDamage - This function runs whenever NPC gets damaged. Can also be used to detect which body part was hit.
 		['OnNPCScaleDamage'] = function(self, hitgroup, dmginfo)	
 			self:SetNWFloat( "ANP_TestDummyHitBox", hitgroup )    
-		end,					
-		},	
+		end,							
+		------------------------------------------------------------ OnNPCHUDPaint - This function can be used to display stuff on Player's screen.
+		['OnNPCHUDPaint'] = function(self)	
+			local ply = LocalPlayer()
+			if self:ANPlusInRange( ply, 1024 ) then
+				local vpos = self:GetPos() + Vector(0,0,self:BoundingRadius()*1.85)
+				local vpos2 = self:GetPos() + Vector(0,0,self:BoundingRadius()*2)
+				local vinfopos = vpos:ToScreen()
+				local vinfopos2 = vpos2:ToScreen()
+				local text = "Damage: " .. ( self:GetNWFloat( "ANP_TestDummyDamage" ) || 0 ) .. " | HitGroup: " .. ( hitboxTranslate[ self:GetNWFloat( "ANP_TestDummyHitBox" ) ] || "None" )
+				draw.SimpleTextOutlined( text, "Trebuchet18", vinfopos.x, vinfopos.y, self:GetColor(), 1, 1, 1, Color( 0, 0, 0, 255 ) )  
+			end
+		end,
+		},
 	} 	
  
 ----------------------------------------------------------------- This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.

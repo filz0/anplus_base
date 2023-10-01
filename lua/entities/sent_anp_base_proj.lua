@@ -31,8 +31,12 @@ ENT.HardBounceSND			= false
 
 ENT.ProjHealth				= false
 
+ENT.EjectForce				= false
+ENT.Thrust 					= true
+ENT.ThrustTime 				= 120
 ENT.Speed 					= 900
 ENT.SpeedAcceleration		= 100
+ENT.SpeedDeceleration		= 100
 ENT.Target					= false
 ENT.TurnSpeed 				= 50
 ENT.TurnAcceleration		= 4
@@ -48,6 +52,8 @@ if (SERVER) then
 	
 	function ENT:ANPlusOnInitialize()	
 	end
+	function ENT:ANPlusPreInitialize()	
+	end
 	function ENT:ANPlusOnPhysicsObj(physObj)	
 	end
 	function ENT:ANPlusOnThink()	
@@ -56,12 +62,15 @@ if (SERVER) then
 	end
 	function ENT:ANPlusOnDestroyed(dmg)	
 	end
-	function ENT:ANPlusOnCollide()	
+	function ENT:ANPlusOnCollide(data, physobj)	
 	end
 	
 	function ENT:Initialize()
 		
 		self:SetModel( self.Model )
+		
+		self:ANPlusPreInitialize()
+		
 		self:PhysicsInit( self.PhysicsInitType )
 		self:SetMoveType( self.MoveType )
 		self:SetMoveCollide( self.MoveCollideType )
@@ -73,6 +82,7 @@ if (SERVER) then
 		if IsValid(physObj) then	
 			self:ANPlusOnPhysicsObj(physObj)
 		end
+		
 		self:ANPlusOnInitialize()
 		--phys:SetBuoyancyRatio( number buoyancy )
 		self.ai_sound = ents.Create( "ai_sound" )
@@ -88,7 +98,7 @@ if (SERVER) then
 		
 		if self.StartSND then self:EmitSound( self.StartSND ) end
 		if self.LoopSND then self:EmitSound( self.LoopSND ) end				
-		
+
 		timer.Simple( self.LifeTime, function()
 			if !IsValid(self) then return end
 			if self.Dead then SafeRemoveEntity(self) return end
@@ -97,7 +107,17 @@ if (SERVER) then
 			else
 				SafeRemoveEntity(self)
 			end
-		end)
+		end )
+		 
+		local phys = self:GetPhysicsObject()
+		if self.EjectForce && IsValid(phys) then			
+			phys:SetVelocity( self:GetForward() * self.EjectForce )
+		end
+		
+		timer.Simple( self.ThrustTime, function()
+			if !IsValid(self) then return end
+			self.Decelerate = true
+		end )
 		
 	end
 
@@ -122,17 +142,25 @@ if (SERVER) then
 
 	function ENT:Think()
 		if self.Dead then return end
-		local phys = self:GetPhysicsObject()
-		if self.Speed && self.Speed > 0 && phys:IsValid() then				
-			self.CurSpeed = math.Approach( self.CurSpeed, self.Speed, self.SpeedAcceleration )
-			phys:SetVelocity( self:GetForward() * self.CurSpeed )				
-		end	
-		if IsValid(self.Target) && self.Target:ANPlusAlive() then				
-			self.CurTurnSpeed = math.Approach( self.CurTurnSpeed, self.TurnSpeed, self.TurnAcceleration )
-			local angleLerp = LerpAngle( FrameTime() * self.CurTurnSpeed, self:GetAngles(), self:Point(self.Target) )	
-			self:SetAngles( angleLerp )	
+		
+		local phys = self:GetPhysicsObject() || self
+
+		if self.Thrust then
+				
+			if self.Speed && self.Speed > 0 && phys:IsValid() then		
+				self.CurSpeed = self.Decelerate && math.Approach( self.CurSpeed, 0, self.SpeedDeceleration ) || math.Approach( self.CurSpeed, self.Speed, self.SpeedAcceleration )
+				phys:AddVelocity( self:GetForward() * self.CurSpeed )								
+			end	
+			if IsValid(self.Target) && self.Target:ANPlusAlive() then				
+				self.CurTurnSpeed = math.Approach( self.CurTurnSpeed, self.TurnSpeed, self.TurnAcceleration )
+				local angleLerp = LerpAngle( FrameTime() * self.CurTurnSpeed, self:GetAngles(), self:Point(self.Target) )	
+				self:SetAngles( angleLerp )	
+			end
+			
 		end
+		
 		self:ANPlusOnThink()
+		
 	end
 
 	function ENT:Point(target)
@@ -155,7 +183,7 @@ if (SERVER) then
 			end	
 				
 			if self.Bounces > 0 then self.Bounces = self.Bounces - 1 end
-			if self.Bounces == 0 then self:ANPlusOnCollide(); self.Dead = true end
+			if self.Bounces == 0 then self:ANPlusOnCollide(data, physobj); self.Dead = true end
 		end	
 	end
 

@@ -354,11 +354,14 @@ function ENT:ANPlusDetectDanger()
 	end
 end
 
-function ENT:ANPlusNPCStateChange()
-	if self.m_fCurNPCState && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCStateChange'] != nil then		
+function ENT:ANPlusNPCStateChange()		
+	if self:IsNPC() then
 		local newState = self:GetNPCState()
 		if self.m_fCurNPCState != newState then
-			self:ANPlusGetDataTab()['Functions']['OnNPCStateChange'](self, newState, self.m_fCurNPCState)	
+			self:SetNWFloat( "m_fANPlusNPCState", newState )
+			if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCStateChange'] != nil then
+				self:ANPlusGetDataTab()['Functions']['OnNPCStateChange'](self, newState, self.m_fCurNPCState)			
+			end	
 		end
 		self.m_fCurNPCState = newState		
 	end
@@ -375,7 +378,7 @@ function ENT:ANPlusDoingSchedule()
 end
 
 function ENT:ANPlusNPCTranslateActivity()
-	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'] != nil then
+	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'] != nil && !self:ANPlusPlayingDeathAnim() && !self:ANPlusPlayingAnim() then
 		local act = self:GetIdealActivity()
 		local actCur = self:GetActivity()
 		--self:ANPlusGetDataTab()['Functions']['OnNPCTranslateActivity'](self, act) 
@@ -464,6 +467,18 @@ function ANPlusSameType(ent1, ent2)
 		return true		
 	end	
 	return false		
+end
+
+function ENT:ANPlusNPCDriverButtonUp(ply, button)
+	if IsValid(self:GetDriver()) && ply == self:GetDriver() && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
+		self:ANPlusGetDataTab()['Functions']['OnNPCDriverButtonUp'](self, ply, button)	
+	end
+end
+
+function ENT:ANPlusNPCDriverButtonDown(ply, button)
+	if IsValid(self:GetDriver()) && ply == self:GetDriver() && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
+		self:ANPlusGetDataTab()['Functions']['OnNPCDriverButtonDown'](self, ply, button)	
+	end
 end
 
 net.Receive("anplus_propmenu", function(_, ply)

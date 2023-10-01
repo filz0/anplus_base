@@ -18,9 +18,11 @@ util.AddNetworkString("anplus_paint_decal")
 util.AddNetworkString("anplus_net_entity")
 util.AddNetworkString("anplus_propmenu")
 util.AddNetworkString("anplus_savedata_net")
+util.AddNetworkString("anplus_ply_spawnmenu") 
 
-net.Receive("anplus_gmodsave_load_from_the_menu", function(len, ply)	
-	--ANPlusNPCPreApply()	
+net.Receive("anplus_ply_spawnmenu", function(len, ply)	
+	local b = net.ReadBool()
+	ply.m_bSpawnMenuOpen = b
 end)
 
 --[[////////////////////////
@@ -442,7 +444,7 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 	if IsValid(ent) && ent:IsANPlus(true) then
 		
 		local dmg = dmginfo:GetDamage()
-	
+		
 		if ent:ANPlusGetDataTab()['DamageTakenScale'] then
 		
 			local dmgTab = ent:ANPlusGetDataTab()['DamageTakenScale']
@@ -478,6 +480,11 @@ hook.Add( "PostEntityTakeDamage", "ANPlusLoad_PostEntityTakeDamage", function(en
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPostTakeDamage'] != nil then
 			ent:ANPlusGetDataTab()['Functions']['OnNPCPostTakeDamage'](ent, dmginfo, tookDMG)			
 		end
+		
+		if ent:ANPlusGetDataTab()['HealthBar'] then
+			ent:SetNWFloat( "m_fANPBossHP", ent:Health() )
+			--ent:SetNWFloat( "m_fANPBossHPMax", ent:GetMaxHealth() )
+		end
 	
 	end
 
@@ -496,4 +503,16 @@ hook.Add( "PlayerCanPickupWeapon", "ANPlusLoad_PlayerCanPickupWeapon", function(
 		wep:Remove()
 		return false 
 	end		
+end)
+
+hook.Add( "PlayerEnteredVehicle", "ANPlusLoad_PlayerEnteredVehicle", function(ply, veh, role)
+	if veh:IsANPlus(true) && veh:ANPlusGetDataTab()['Functions'] && veh:ANPlusGetDataTab()['Functions']['OnNPCPlayerEnter'] != nil then
+		veh:ANPlusGetDataTab()['Functions']['OnNPCPlayerEnter'](ply, veh, role)			
+	end
+end)
+
+hook.Add( "PlayerLeaveVehicle", "ANPlusLoad_PlayerLeaveVehicle", function(ply, veh)
+	if veh:IsANPlus(true) && veh:ANPlusGetDataTab()['Functions'] && veh:ANPlusGetDataTab()['Functions']['OnNPCPlayerLeave'] != nil then
+		veh:ANPlusGetDataTab()['Functions']['OnNPCPlayerLeave'](ply, veh)			
+	end
 end)

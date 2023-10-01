@@ -5,17 +5,6 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 local metaPanel = FindMetaTable("Panel")
 local metaPLAYER = FindMetaTable("Player")
 
-local scrWidth = 1920
-local scrHeight = 1080
-
-function ANPlusGetFixedScreenW()
-	return ScrW() / scrWidth
-end
-
-function ANPlusGetFixedScreenH()
-	return ScrH() / scrHeight
-end
-
 function ANPlusUISound(snd)
 	EmitSound( snd, Vector( 0 ,0 ,0 ), -2 )
 end
@@ -265,7 +254,7 @@ render.ANPlusDrawBeamTrail = function(ent, attachmentID, offsetVec, color, width
 		pos, ang = LocalToWorld( offsetVec, Angle( 0, 0, 0 ), ent:GetPos(), ent:GetAngles() )
 		attachmentID = -1
 	end
-	
+
 	ent['m_vOldPos_att'..attachmentID] = !ent['m_vOldPos_att'..attachmentID] && pos || Lerp( FrameTime() * 2, ent['m_vOldPos_att'..attachmentID], pos )
 
 	local boxSize = 2

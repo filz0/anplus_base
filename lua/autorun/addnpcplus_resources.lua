@@ -4,6 +4,8 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 
 if (SERVER) then
 	resource.AddFile( "resource/fonts/frak.ttf" )
+	resource.AddFile( "resource/fonts/ocrbczyk.ttf" )
+	resource.AddFile( "resource/fonts/ocrbczyk_bold.ttf" )
 end
 
 sound.Add( {

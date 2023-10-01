@@ -3,40 +3,294 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
 --[[////////////////////////
-||||| Here We are checking spawned entities if they are a part of this base. If so, apply valid data table.
+||||| SANDBOX functions override. 
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
-hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
+hook.Add( "InitPostEntity", "ANPlusLoad_GamemodeInitPostEntity", function()
 
-	--timer.Simple( 0, function() 
-		--if !IsValid(ent) then return end 
-		
-		timer.Simple( 0, function()
+	timer.Simple( 0, function()
+	
+		function GAMEMODE:PlayerDeath( ply, inflictor, attacker ) -- If you know a better way of doing this, please tell me :(
 
-			if !IsValid(ent) then return end	
+			-- Don't spawn for at least 2 seconds
+			ply.NextSpawnTime = CurTime() + 2
+			ply.DeathTime = CurTime()
 
-			if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
-				local npc = ent:GetOwner()		
-				if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'] != nil then
-					npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'](npc, ent)		
-				end				
+			if ( IsValid( attacker ) && attacker:GetClass() == "trigger_hurt" ) then attacker = ply end
+
+			if ( IsValid( attacker ) && attacker:IsVehicle() && IsValid( attacker:GetDriver() ) ) then
+				attacker = attacker:GetDriver()
+			end
+
+			if ( !IsValid( inflictor ) && IsValid( attacker ) ) then
+				inflictor = attacker
+			end
+
+			-- Convert the inflictor to the weapon that they're holding if we can.
+			-- This can be right || wrong with NPCs since combine can be holding a
+			-- pistol but kill you by hitting you with their arm.
+			if ( IsValid( inflictor ) && inflictor == attacker && ( inflictor:IsPlayer() || inflictor:IsNPC() ) ) then
+
+				inflictor = inflictor:GetActiveWeapon()
+				if ( !IsValid( inflictor ) ) then inflictor = attacker end
+
+			end
+
+			player_manager.RunClass( ply, "Death", inflictor, attacker )
+
+			if ( attacker == ply ) then
+
+				net.Start( "PlayerKilledSelf" )
+					net.WriteEntity( ply )
+				net.Broadcast()
+
+				MsgAll( attacker:Nick() .. " suicided!\n" )
+
+			return end
+
+			if ( attacker:IsPlayer() ) then
+				
+				local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['KillfeedName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
+				
+				net.Start( "PlayerKilledByPlayer" )
+
+					net.WriteEntity( ply )
+					net.WriteString( anpInf )
+					net.WriteEntity( attacker )
+
+				net.Broadcast()
+
+				MsgAll( attacker:Nick() .. " killed " .. ply:Nick() .. " using " .. inflictor:GetClass() .. "\n" )
+
+			return end
+
+			net.Start( "PlayerKilled" )
+				
+				local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['KillfeedName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
+				local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['KillfeedName'] || attacker:ANPlusGetDataTab()['Name'] ) || attacker:GetClass()
+				
+				net.WriteEntity( ply )
+				net.WriteString( anpInf )
+				net.WriteString( anpAtt )
+
+			net.Broadcast()
+
+			MsgAll( ply:Nick() .. " was killed by " .. anpAtt .. "\n" )
+
+		end
+
+		function GAMEMODE:OnNPCKilled( ent, attacker, inflictor )
+
+			-- Don't spam the killfeed with scripted stuff
+			if ( ent:GetClass() == "npc_bullseye" || ent:GetClass() == "npc_launcher" ) then return end
+
+			if ( IsValid( attacker ) && attacker:GetClass() == "trigger_hurt" ) then attacker = ent end
+			
+			if ( IsValid( attacker ) && attacker:IsVehicle() && IsValid( attacker:GetDriver() ) ) then
+				attacker = attacker:GetDriver()
+			end
+
+			if ( !IsValid( inflictor ) && IsValid( attacker ) ) then
+				inflictor = attacker
 			end
 			
-			if (SERVER) && !ent:IsANPlus(true) then
+			-- Convert the inflictor to the weapon that they're holding if we can.
+			if ( IsValid( inflictor ) && attacker == inflictor && ( inflictor:IsPlayer() || inflictor:IsNPC() ) ) then
+			
+				inflictor = inflictor:GetActiveWeapon()
+				if ( !IsValid( attacker ) ) then inflictor = attacker end
+			
+			end
+			
+			local InflictorClass = "worldspawn"
+			local AttackerClass = "worldspawn"
+			
+			if ( IsValid( inflictor ) ) then InflictorClass = inflictor:GetClass() end
+			if ( IsValid( attacker ) ) then
 
-				for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
-					local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
-					if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
-						table.insert( ANPlusDangerStuffGlobal, ent )
-					end			
+				AttackerClass = attacker:GetClass()
+
+				-- If there is no valid inflictor, use the attacker (i.e. manhacks)
+				if ( !IsValid( inflictor ) ) then InflictorClass = attacker:GetClass() end
+
+				if ( attacker:IsPlayer() ) then
+					
+					local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['KillfeedName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
+
+					net.Start( "PlayerKilledNPC" )
+				
+						net.WriteString( anpVic )
+						net.WriteString( InflictorClass )
+						net.WriteEntity( attacker )
+				
+					net.Broadcast()
+
+					return
 				end
 
-				ent:ANPlusIgnoreTillSet()
-				ent:ANPlusNPCApply( ent:GetKeyValues()['parentname'] )		
-				ent.m_pMyPlayer = nil	
+			end
+
+			if ( ent:GetClass() == "npc_turret_floor" ) then AttackerClass = ent:GetClass() end
+			
+				local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['KillfeedName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
+				local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['KillfeedName'] || inflictor:ANPlusGetDataTab()['Name'] ) || InflictorClass
+				local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['KillfeedName'] || attacker:ANPlusGetDataTab()['Name'] ) || AttackerClass
 				
-			end	
-		end )	
-	--end )	
+			net.Start( "NPCKilledNPC" )
+			
+				net.WriteString( anpVic )
+				net.WriteString( anpInf )
+				net.WriteString( anpAtt )
+			
+			net.Broadcast()
+
+		end
+		
+		local function MakeVehicle( ply, Pos, Ang, model, Class, VName, VTable, data )
+
+			if ( IsValid( ply ) && !gamemode.Call( "PlayerSpawnVehicle", ply, model, VName, VTable ) ) then return end
+
+			local veh = ents.Create( Class )
+			if ( !IsValid( veh ) ) then return NULL end
+
+			duplicator.DoGeneric( veh, data )
+
+			veh:SetModel( model )
+
+			-- Fallback vehiclescripts for HL2 maps ( dupe support )
+			if ( model == "models/buggy.mdl" ) then veh:SetKeyValue( "vehiclescript", "scripts/vehicles/jeep_test.txt" ) end
+			if ( model == "models/vehicle.mdl" ) then veh:SetKeyValue( "vehiclescript", "scripts/vehicles/jalopy.txt" ) end
+
+			-- Fill in the keyvalues if we have them
+			if ( VTable && VTable.KeyValues ) then
+				for k, v in pairs( VTable.KeyValues ) do
+
+					local kLower = string.lower( k )
+
+					veh:SetKeyValue( k, v )
+
+				end
+			end
+
+			veh:SetAngles( Ang )
+			veh:SetPos( Pos )
+
+			DoPropSpawnedEffect( veh )
+
+			veh:Spawn()
+			veh:Activate()
+
+			-- Some vehicles reset this in Spawn()
+			if ( data && data.ColGroup ) then veh:SetCollisionGroup( data.ColGroup ) end
+
+			-- Store spawnmenu data for addons and stuff
+			if ( veh.SetVehicleClass && VName ) then veh:SetVehicleClass( VName ) end
+			veh.VehicleName = VName
+			veh.VehicleTable = VTable
+
+			-- We need to override the class in the case of the Jeep, because it
+			-- actually uses a different class than is reported by GetClass
+			veh.ClassOverride = Class
+
+			if ( IsValid( ply ) ) then
+				gamemode.Call( "PlayerSpawnedVehicle", ply, veh )
+			end
+
+			return veh
+
+		end
+
+		duplicator.RegisterEntityClass( "prop_vehicle_jeep_old", MakeVehicle, "Pos", "Ang", "Model", "Class", "VehicleName", "VehicleTable", "Data" )
+		duplicator.RegisterEntityClass( "prop_vehicle_jeep", MakeVehicle, "Pos", "Ang", "Model", "Class", "VehicleName", "VehicleTable", "Data" ) 
+		duplicator.RegisterEntityClass( "prop_vehicle_airboat", MakeVehicle, "Pos", "Ang", "Model", "Class", "VehicleName", "VehicleTable", "Data" )
+		duplicator.RegisterEntityClass( "prop_vehicle_prisoner_pod", MakeVehicle, "Pos", "Ang", "Model", "Class", "VehicleName", "VehicleTable", "Data" )
+		
+		function Spawn_Vehicle( ply, vname, tr )
+
+			-- We don't support this command from dedicated server console
+			if ( !IsValid( ply ) ) then return end
+
+			if ( !vname ) then return end
+
+			local VehicleList = list.Get( "Vehicles" )
+			local vehicle = VehicleList[ vname ]
+
+			-- Not a valid vehicle to be spawning..
+			if ( !vehicle ) then return end
+
+			if ( !tr ) then
+				tr = ply:GetEyeTraceNoCursor()
+			end
+
+			local Angles = ply:GetAngles()
+			Angles.pitch = 0
+			Angles.roll = 0
+			Angles.yaw = Angles.yaw + 180
+
+			local pos = tr.HitPos
+			if ( vehicle.Offset ) then
+				pos = pos + tr.HitNormal * vehicle.Offset
+			end
+
+			local Ent = MakeVehicle( ply, pos, Angles, vehicle.Model, vehicle.Class, vname, vehicle )
+			if ( !IsValid( Ent ) ) then return end
+
+			-- Unstable for Jeeps
+			-- TryFixPropPosition( ply, Ent, tr.HitPos )
+
+			if ( vehicle.Members ) then
+				table.Merge( Ent, vehicle.Members )
+				duplicator.StoreEntityModifier( Ent, "VehicleMemDupe", vehicle.Members )
+			end
+
+			undo.Create( "Vehicle" )
+				undo.SetPlayer( ply )
+				undo.AddEntity( Ent )
+				undo.SetCustomUndoText( "Undone " .. vehicle.Name )
+			undo.Finish( "Vehicle (" .. tostring( vehicle.Name ) .. ")" )
+
+			ply:AddCleanup( "vehicles", Ent )
+
+		end
+		
+		concommand.Remove( "gm_spawnvehicle" )
+		concommand.Add( "gm_spawnvehicle", function( ply, cmd, args ) Spawn_Vehicle( ply, args[1] ) end )
+		
+	end )
+end)
+
+--[[////////////////////////
+||||| Here We are checking spawned entities if they are a part of this base. If so, apply valid data table.
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
+hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
+
+	timer.Simple( 0, function()
+
+		if !IsValid(ent) then return end	
+		
+		if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
+			local npc = ent:GetOwner()		
+			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'] != nil then
+				npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'](npc, ent)		
+			end				
+		end
+		
+		if (SERVER) && !ent:IsANPlus(true) then
+
+			for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
+				local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
+				if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
+					table.insert( ANPlusDangerStuffGlobal, ent )
+				end			
+			end
+
+			ent:ANPlusIgnoreTillSet()
+			ent:ANPlusNPCApply( ent:GetKeyValues()['parentname'] )		
+			ent.m_pMyPlayer = nil	
+			
+		end	
+	end )	
+
 end )
 
 --[[////////////////////////
@@ -176,6 +430,7 @@ hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)
 		
 	end	
 end )
+
 --[[
 hook.Add( "CalcView", "ANPlus_CalcView", function(ply, pos, angle, fov)	
 	

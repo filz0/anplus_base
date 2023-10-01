@@ -17,10 +17,8 @@ function ENT:ANPlusApplyDataTab( tab )
 end
 
 function ENT:ANPlusNPCThink()
-
-	if !IsValid(self) || !self:ANPlusAlive() then	
-		return false			
-	elseif ( self:IsANPlus() && !GetConVar("ai_disabled"):GetBool() ) || !self:IsNPC() && self:IsANPlus(true) then
+			
+	if ( self:IsANPlus() && !GetConVar("ai_disabled"):GetBool() ) || !self:IsNPC() && self:IsANPlus(true) then
 		if (SERVER)	then	
 			self:ANPlusNPCRelations()					
 			self:ANPlusNPCHealthRegen()					
@@ -70,10 +68,18 @@ function ENT:ANPlusNPCThink()
 			end
 		end
 		
+		if (SERVER) && self:ANPlusGetDataTab()['HealthBar'] then
+			if self:GetNWFloat( "m_fANPBossHP" ) < self:Health() then
+				self:SetNWFloat( "m_fANPBossHP", self:Health() )
+			end 
+		end
+		
 		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCThink'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCThink'](self)	
 		end
-		
+	
+	elseif !IsValid(self) || !self:ANPlusAlive() then	
+		return false	
 	end
 
 end
