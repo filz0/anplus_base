@@ -1060,12 +1060,14 @@ if (CLIENT) then
 		size = 28*multX,
 		shadow = true,
 		antialias = true,
+		outline = true
 	})
 	
 	surface.CreateFont("anp_inv_big", {
 		font = "Frak",
 		size = 55*multX,
 		antialias = true,
+		outline = true
 	})
 	
 	local vicIco = Material( "vgui/anp_victory.png" )

@@ -235,7 +235,69 @@ function ENT:ANPlusCustomConfigMenu(tab)
 				end	
 				function val:OnLoseFocus()
 					valLab:SetWidth( 200 )
-				end				
+				end		
+			elseif isvector( ent[ var['Variable'] ] ) then
+				count = count + 1	
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'] .. ":", Color( 200, 200, 200, 255 ) )
+				count = count + 1
+
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 10, "X:", Color( 200, 200, 200, 255 ) )
+				local valX = colCatSP:ANPlus_CreateNumberScratch( 19, ( count * height ) - 20, ent[ var['Variable'] ].x, var['Decimals'] || 0, var['Min'].x || 0, var['Max'].x || 1, var['Description'] || "" )
+				function valX:OnValueChanged( nVal )					
+					nVal = math.Round( nVal, var['Decimals'] || 0 )
+					local y = var['ValueNew'] && var['ValueNew'].y || ent[ var['Variable'] ].y
+					local z = var['ValueNew'] && var['ValueNew'].z || ent[ var['Variable'] ].z
+					var['ValueNew'] = Vector( nVal, y, z )
+				end	
+				
+				local valLab = colCatSP:ANPlus_CreateLabel( 38, ( count * height - 2 ) - 20, 10, "Y:", Color( 200, 200, 200, 255 ) )
+				local valY = colCatSP:ANPlus_CreateNumberScratch( 49, ( count * height ) - 20, ent[ var['Variable'] ].y, var['Decimals'] || 0, var['Min'].y || 0, var['Max'].y || 1, var['Description'] || "" )
+				function valY:OnValueChanged( nVal )					
+					nVal = math.Round( nVal, var['Decimals'] || 0 )
+					local x = var['ValueNew'] && var['ValueNew'].x || ent[ var['Variable'] ].x
+					local z = var['ValueNew'] && var['ValueNew'].z || ent[ var['Variable'] ].z
+					var['ValueNew'] = Vector( x, nVal, z )
+				end	
+				
+				local valLab = colCatSP:ANPlus_CreateLabel( 68, ( count * height - 2 ) - 20, 10, "Z:", Color( 200, 200, 200, 255 ) )
+				local valZ = colCatSP:ANPlus_CreateNumberScratch( 79, ( count * height ) - 20, ent[ var['Variable'] ].z, var['Decimals'] || 0, var['Min'].z || 0, var['Max'].z || 1, var['Description'] || "" )
+				function valZ:OnValueChanged( nVal )					
+					nVal = math.Round( nVal, var['Decimals'] || 0 )
+					local x = var['ValueNew'] && var['ValueNew'].x || ent[ var['Variable'] ].x
+					local y = var['ValueNew'] && var['ValueNew'].y || ent[ var['Variable'] ].y
+					var['ValueNew'] = Vector( x, y, nVal )
+				end	
+			elseif isangle( ent[ var['Variable'] ] ) then
+				count = count + 1	
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'] .. ":", Color( 200, 200, 200, 255 ) )
+				count = count + 1
+
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 10, "P:", Color( 200, 200, 200, 255 ) )
+				local valX = colCatSP:ANPlus_CreateNumberScratch( 19, ( count * height ) - 20, ent[ var['Variable'] ].x, var['Decimals'] || 0, var['Min'].x || 0, var['Max'].x || 1, var['Description'] || "" )
+				function valX:OnValueChanged( nVal )					
+					nVal = math.Round( nVal, var['Decimals'] || 0 )
+					local y = var['ValueNew'] && var['ValueNew'].y || ent[ var['Variable'] ].y
+					local z = var['ValueNew'] && var['ValueNew'].z || ent[ var['Variable'] ].z
+					var['ValueNew'] = Angle( nVal, y, z )
+				end	
+				
+				local valLab = colCatSP:ANPlus_CreateLabel( 38, ( count * height - 2 ) - 20, 10, "Y:", Color( 200, 200, 200, 255 ) )
+				local valY = colCatSP:ANPlus_CreateNumberScratch( 49, ( count * height ) - 20, ent[ var['Variable'] ].y, var['Decimals'] || 0, var['Min'].y || 0, var['Max'].y || 1, var['Description'] || "" )
+				function valY:OnValueChanged( nVal )					
+					nVal = math.Round( nVal, var['Decimals'] || 0 )
+					local x = var['ValueNew'] && var['ValueNew'].x || ent[ var['Variable'] ].x
+					local z = var['ValueNew'] && var['ValueNew'].z || ent[ var['Variable'] ].z
+					var['ValueNew'] = Angle( x, nVal, z )
+				end	
+				
+				local valLab = colCatSP:ANPlus_CreateLabel( 68, ( count * height - 2 ) - 20, 10, "R:", Color( 200, 200, 200, 255 ) )
+				local valZ = colCatSP:ANPlus_CreateNumberScratch( 79, ( count * height ) - 20, ent[ var['Variable'] ].z, var['Decimals'] || 0, var['Min'].z || 0, var['Max'].z || 1, var['Description'] || "" )
+				function valZ:OnValueChanged( nVal )					
+					nVal = math.Round( nVal, var['Decimals'] || 0 )
+					local x = var['ValueNew'] && var['ValueNew'].x || ent[ var['Variable'] ].x
+					local y = var['ValueNew'] && var['ValueNew'].y || ent[ var['Variable'] ].y
+					var['ValueNew'] = Angle( x, y, nVal )
+				end	
 			end
 		end
 	end

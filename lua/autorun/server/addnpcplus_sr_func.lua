@@ -69,8 +69,8 @@ function ENT:ANPlusIgnoreTillSet()
 			
 		if v:IsANPlus() && v:ANPlusGetDataTab()['Relations'] && v:ANPlusGetDataTab()['Relations']['Default'] && !table.HasValue( v.m_tbANPlusRelationsMem, self )  then
 
-			if v:ANPlusGetDataTab()['Relations']['Default']['NPCToMe'][ 1 ] != "Default" then self:AddEntityRelationship( v, D_NU, 0 ) end
-			if v:ANPlusGetDataTab()['Relations']['Default']['MeToNPC'][ 1 ] != "Default" then v:AddEntityRelationship( self, D_NU, 0 ) end
+			if v:ANPlusGetDataTab()['Relations']['Default']['NPCToMe'][ 1 ] != "Default" then self:AddEntityRelationship( v, D_NU, 99 ) end
+			if v:ANPlusGetDataTab()['Relations']['Default']['MeToNPC'][ 1 ] != "Default" then v:AddEntityRelationship( self, D_NU, 99 ) end
 		 
 		end
 		
@@ -109,11 +109,11 @@ function ENT:ANPlusNPCRelations()
 			it = it + 1
 		
 			if ent != self then 
-
-				local dispTab = ent:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetDataTab()['Name'] ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
+				
+				local dispTab = ent:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetDataTab()['Name'] ] || self:ANPlusGetDataTab()['Relations'][ ent:GetColor() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
 
 				if dispTab then
-					
+
 					if !table.HasValue( self.m_tbANPlusRelationsMem, ent ) then
 					
 						if dispTab['MeToNPC'][ 1 ] != "Default" && self:Disposition( ent ) != RelationsTranslate[ dispTab['MeToNPC'][ 1 ] ] then
@@ -145,45 +145,7 @@ function ENT:ANPlusNPCRelations()
 				end
 			
 			end
-			--[[
-			if ent:IsPlayer() && self:Disposition(ent) != D_LI && self:IsANPlus() && self:ANPlusGetDataTab()['PlayerAlly'] == true && !self.ANPlusFPlyTab[ ent:Nick() ] then
-
-				self:AddEntityRelationship( ent, D_LI, 0 )
 			
-				for k, v in pairs( self.ANPlusEPlyTab ) do
-	
-					if self.ANPlusEPlyTab[k] && k == ent:Nick() then
-			
-						self.ANPlusEPlyTab[k] = nil
-
-					end
-			
-				end
-			
-				local addTab = { [''.. tostring( ent:Nick() ) ..''] = true }
-				table.Merge(self.ANPlusFPlyTab, addTab)
-
-			end
-		
-			if ent:IsPlayer() && self:Disposition(ent) != D_HT && self:IsANPlus() && self:ANPlusGetDataTab()['PlayerAlly'] == false && !self.ANPlusEPlyTab[ ent:Nick() ] then
-
-				self:AddEntityRelationship( ent, D_HT, 0 )
-			
-				for k, v in pairs( self.ANPlusFPlyTab ) do
-	
-					if self.ANPlusFPlyTab[k] && k == ent:Nick() then
-		
-						self.ANPlusFPlyTab[k] = nil
-
-					end
-		
-				end
-				
-				local addTab = { [''.. tostring( ent:Nick() ) ..''] = true }
-				table.Merge( self.ANPlusEPlyTab, addTab )
-
-			end
-		]]--
 		end
 
 	end

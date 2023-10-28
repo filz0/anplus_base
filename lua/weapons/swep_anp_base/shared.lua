@@ -56,14 +56,19 @@ SWEP.EventDisable					= {}
 
 SWEP.FlashlightTab 					= false
 --[[
-SWEP.FlashlightTab = {
-	['SmartMode'] 			= true, -- If true, flashlight will only activate if owner is in combat or alerted and deactivate if idle. If false, flashlight will activate on spawn.
-	['SpotlightAttachment']	= "1",
-	['SpotlightPos'] 		= Vector( -1, -1.2, -6 ),
-	['SpotlightAng']		= Angle( 0, -90, 0 ),
-	['SpotlightWidth']		= 5,
-	['SpotlightLength']		= 20,
-	['SpotlightColor']		= Color( 170, 255, 255, 255 ),
+SWEP.FlashlightTab 		= {
+	['SmartMode'] 		= false, 							-- If true, flashlight will only activate if owner is in combat or alerted and deactivate if idle. If false, flashlight will activate on spawn.
+	['Attachment']		= "1",
+	['FlashLightMat'] 	= "effects/flashlight001",	
+	['FarZ']			= 300,								-- Sets the distance at which the projected texture ends.
+	['NearZ']			= 1, 								-- Sets the distance at which the projected texture begins its projection.
+	['FOV']				= 60, 								-- Sets the angle of projection.
+	['FlashLightSpr'] 	= Material( "sprites/glow1_fix" ),
+	['Mins']			= { 5, 5 },
+	['Maxs']			= { 40, 40 },
+	['Pos'] 			= Vector( 1, -1.2, 0 ),
+	['Ang']				= Angle( 0, 0, 0 ),
+	['Color']			= Color( 170, 255, 255, 255 ),
 }
 ]]--
 -- SWEP NPC Settings
@@ -190,10 +195,15 @@ SWEP.m_fProfScale = 1
 SWEP.m_fHChance = 50
 SWEP.m_fPrimarySpread = 0.02
 SWEP.m_fPrimarySpreadMMult = 1.1
+SWEP.m_fCheckLightLast = 0
+SWEP.m_fCheckLightDelay = 1.5
+SWEP.m_fLightLevel = 1
 SWEP.NPCRestMin	= 1
 SWEP.NPCRestMax	= 2
 SWEP.NPCBurstMin = 4
 SWEP.NPCBurstMax = 8
+
+local fLightSmartMode = GetConVar( "anplus_swep_flight_smartmode" )
 
 -- Hooks
 function SWEP:ANPlusInitialize()
@@ -214,12 +224,30 @@ function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	
 	if (SERVER) then	
-		if self.FlashlightTab && self.FlashlightTab['SpotlightAttachment'] then self:ANPlusWeaponFlashlight() end
 		if self.Primary.FireLoopSound then self.FireLoopSound = CreateSound( self, self.Primary.FireLoopSound ); self.FireLoopSound:Stop() end
 		self:GenerateBurst()	
 	elseif (CLIENT) then
-		hook.Add( "PreDrawEffects", self, self.ANPlusPreDrawEffects )
-		hook.Add( "PostDrawEffects", self, self.ANPlusPostDrawEffects )
+		hook.Add( "PreDrawEffects", self, self.SWEPPreDrawEffects )
+		hook.Add( "PostDrawEffects", self, self.SWEPPostDrawEffects )
+		if self.FlashlightTab && self.FlashlightTab['Attachment'] then			
+			
+			local fLightTab = self.FlashlightTab
+			local attTab = self:GetAttachment( fLightTab['Attachment'] )
+			self.m_pFLProjText = ProjectedTexture()
+
+			self.m_pFLProjText:SetTexture( fLightTab['FlashLightMat'] )
+			self.m_pFLProjText:SetFOV( fLightTab['FOV'] )
+			self.m_pFLProjText:SetFarZ( fLightTab['FarZ'] )
+			self.m_pFLProjText:SetColor( fLightTab['Color'] )
+			self.m_pFLProjText:SetNearZ( fLightSmartMode:GetBool() && 0 || fLightTab['NearZ'] )
+			
+			local newPos, newAng = LocalToWorld( fLightTab['Pos'], fLightTab['Ang'], attTab.Pos, attTab.Ang )	
+			
+			self.m_pFLProjText:SetPos( newPos ) -- Initial position and angles
+			self.m_pFLProjText:SetAngles( newAng )
+			self.m_pFLProjText:Update()
+			
+		end
 	end
 
 end
@@ -482,43 +510,6 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback) -- bul
 	
 end
 
-function SWEP:ANPlusWeaponFlashlight()
-	self.flight = ANPlusCreateSpotlight( self.FlashlightTab['SpotlightColor'] || Color( 255, 255, 255, 255 ), self.FlashlightTab['SpotlightWidth'] || 5, self.FlashlightTab['SpotlightLength'] || 5, 2 )
-	self.flight:ANPlusParent( self.Weapon, self.FlashlightTab['SpotlightAttachment'], self.FlashlightTab['SpotlightPos'] || nil, self.FlashlightTab['SpotlightAng'] || nil )
-	if !self.FlashlightTab['SmartMode'] then self:ANPlusWeaponFlashlightToggle( true, 1 ) end
-end
-
-function SWEP:ANPlusGetWeaponFlashlight()
-	return self.flight 
-end
-
-function SWEP:ANPlusWeaponFlashlightToggle(toggle, delay)
-	if !IsValid(self.flight) then return end
-	if toggle && !self.flight:GetInternalVariable( "m_bSpotlightOn" ) then
-		if delay && delay > 0 then
-			timer.Simple( delay, function()
-				if !IsValid(self) || !IsValid(self.flight) then return end
-				self.flight:Fire( "LightOn", nil, 0 )
-				self:EmitSound( "ANP.WEAPON.Flashlight" )
-			end)
-		else
-			self.flight:Fire( "LightOn", nil, 0 )
-			self:EmitSound( "ANP.WEAPON.Flashlight" )
-		end
-	elseif !toggle && self.flight:GetInternalVariable( "m_bSpotlightOn" ) then
-		if delay && delay > 0 then
-			timer.Simple( delay, function()
-				if !IsValid(self) || !IsValid(self.flight) then return end
-				self.flight:Fire( "LightOff", nil, 0 )
-				self:EmitSound( "ANP.WEAPON.Flashlight" )
-			end)
-		else
-			self.flight:Fire( "LightOff", nil, 0 )
-			self:EmitSound( "ANP.WEAPON.Flashlight" )
-		end
-	end
-end
-
 function SWEP:ANPlusReload()
 end
 
@@ -549,14 +540,6 @@ function SWEP:ThinkServer()
 	local owner = self:GetOwner()
 	
 	if IsValid(owner) then
-		
-		if IsValid(self.flight) && self.FlashlightTab && self.FlashlightTab['SmartMode'] then
-			if owner:GetNPCState() == 2 || owner:GetNPCState() == 3 then 
-				self:ANPlusWeaponFlashlightToggle( true )
-			else
-				self:ANPlusWeaponFlashlightToggle( false )
-			end
-		end
 
 		local OwnerACT = owner:GetActivity()	
 		if self.LastOwnerACT != OwnerACT && self.BlackListACTs[ OwnerACT ] && !self.BlackListACTs[ self.LastOwnerACT ] then
@@ -745,7 +728,6 @@ function SWEP:OnDrop()
 	self:ANPlusOnDrop()
 	
 	self:StopParticles()
-	if (SERVER) && IsValid(self.flight) then self:ANPlusWeaponFlashlightToggle(false, nil) end
 	if self.Primary.PreFireSound then self:StopSound( self.Primary.PreFireSound ) end
 	if self.Primary.PostFireSound then self:StopSound( self.Primary.PostFireSound ) end
 	if self.FireLoopSound then self.FireLoopSound:Stop() end	
@@ -773,21 +755,107 @@ function SWEP:OnRemove()
 	if self.Primary.PreFireSound then self:StopSound( self.Primary.PreFireSound ) end
 	if self.Primary.PostFireSound then self:StopSound( self.Primary.PostFireSound ) end
 	if self.FireLoopSound then self.FireLoopSound:Stop() end
-
+	if (CLIENT) then if IsValid(self.m_pFLProjText) then self.m_pFLProjText:Remove() end end
 end
 
 if (CLIENT) then
+	local defFov = GetConVar( "fov_desired" )
+	local fLightDistStart = GetConVar( "anplus_swep_flight_fade_distance_start" )
+	local fLightDist = GetConVar( "anplus_swep_flight_fade_distance" )
+	local fLightBeamMat = Material( "sprites/glow_test02.vmt" )
 	
 	function SWEP:ANPlusPreDrawEffects()
+	end
+	
+	function SWEP:SWEPPreDrawEffects()
+	
+		if self.FlashlightTab && self.FlashlightTab['Attachment'] then
+				
+			if IsValid(self.m_pFLProjText) then
+			
+				local fLightTab = self.FlashlightTab
+				
+				if fLightSmartMode:GetBool() && CurTime() - self.m_fCheckLightLast >= self.m_fCheckLightDelay then
+					local col = render.GetLightColor( self:GetPos() )
+					self.m_fLightLevel = ( col.x * 0.299 ) + ( col.y * 0.587 ) + ( col.z * 0.114 )
+					
+					if IsValid(self:GetOwner()) then
+						if self.m_fLightLevel < 0.0055 then
+							if !self:ANPlusIsWepFLightEnabled() then
+								self.m_pFLProjText:SetNearZ( fLightTab['NearZ'] )
+								self.m_pFLProjText:SetBrightness( 1 )
+							end
+						else
+							if self:ANPlusIsWepFLightEnabled() then
+								self.m_pFLProjText:SetNearZ( 0 )
+								self.m_pFLProjText:SetBrightness( 0 )							
+							end
+						end
+					end
+					
+					self.m_fCheckLightLast = CurTime() + self.m_fCheckLightDelay
+				end
+				
+				if self:ANPlusIsWepFLightEnabled() then					
+					local fLightCol = fLightTab['Color']
+					local attTab = self:GetAttachment( fLightTab['Attachment'] )
+					
+					local ply = LocalPlayer()					
+					local viewEnt = ply:GetViewEntity()	
+					local dSqr, d = ANPlusGetRangeVector( viewEnt:GetPos(), attTab.Pos )	
+					local transFov = math.Remap( ply:GetFOV(), 0, defFov:GetFloat(), 0, 1 )						
+					local plyToLightAng = ( ply:GetPos() - self.m_pFLProjText:GetPos() ):Angle()
+					plyToLightAng = ANPlusNormalizeAngle( plyToLightAng, attTab.Ang )	
+					local p = math.Remap( plyToLightAng.p, -180, 180, 0, 255 )
+					local y = math.Remap( plyToLightAng.y, -180, 180, 0, 255 )
+					p = math.abs( plyToLightAng.p )
+					y = math.abs( plyToLightAng.y )
+					local ang = math.max( p , y ) * 3					
+					local bright = math.Remap( math.min( d * transFov - fLightDistStart:GetFloat(), fLightDist:GetFloat() ), 1, fLightDist:GetFloat(), 1, 0 )	
+					self.m_pFLProjText:SetBrightness( bright )
+					local newPos, newAng = LocalToWorld( fLightTab['Pos'], fLightTab['Ang'], attTab.Pos, attTab.Ang )	
+					
+					self.m_pFLProjText:SetPos( newPos )
+					self.m_pFLProjText:SetAngles( newAng )		
+					
+					local alpha = math.Remap( math.min( d * transFov - fLightDistStart:GetFloat(), fLightDist:GetFloat() ), 1, fLightDist:GetFloat(), 255, 0 )	
+					alpha = math.min( alpha, 255 )
+					alpha = math.max( alpha - ang, 0 )
+					local fLightCol = Color( fLightCol.r, fLightCol.g, fLightCol.b, alpha )
+					render.SetMaterial( fLightTab['FlashLightSpr'] )
+					render.ANPlusDrawSpriteParallax( newPos, fLightTab['Mins'][ 1 ], fLightTab['Mins'][ 2 ], fLightTab['Maxs'][ 1 ], fLightTab['Maxs'][ 2 ], 2000, fLightCol )
+					
+				end
+				self.m_pFLProjText:Update()
+			end
+			
+		end
+		self:ANPlusPreDrawEffects()
 	end
 	
 	function SWEP:ANPlusPostDrawEffects()
 	end
 	
+	function SWEP:SWEPPostDrawEffects()
+		self:ANPlusPostDrawEffects()
+	end
+	
 	function SWEP:ANPlusDrawWorldModel()
 		return true
 	end
-
+	
+	function SWEP:ANPlusGetWepFLight()
+		return self.m_pFLProjText
+	end
+	
+	function SWEP:ANPlusIsWepFLightEnabled()
+		if IsValid(self.m_pFLProjText) then
+			return self.m_pFLProjText:GetNearZ() > 0 || self.m_pFLProjText:GetBrightness() <= 0
+		else
+			return false
+		end
+	end
+	
 	function SWEP:DrawWorldModel()
 		
 		if !IsValid(self) then return end
@@ -825,7 +893,7 @@ if (CLIENT) then
 			if !noDraw then self:DrawModel() end
 			
 		end
-	
+		
 	end
 	
 end

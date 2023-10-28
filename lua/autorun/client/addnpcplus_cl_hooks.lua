@@ -69,7 +69,7 @@ local function CheckDaThing(ent)
 	return true
 end
 
-local hbBarStyle = GetConVar( "anplus_hpbar_style" )
+local hbBarStyle = GetConVar( "anplus_hpbar_def_style" )
 
 hook.Add( "HUDPaint", "ANPlusLoad_HUDPaint", function()
 	if ( dev:GetFloat() ) > 2 then DrawMaterialOverlay( "effects/anp/grid2.png", 0 ) end

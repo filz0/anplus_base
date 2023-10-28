@@ -67,7 +67,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self = newSelf
 					end
 				end
-				
+
 				local data = table.Copy( dataTab )
 				
 				local colBoundsMin, colBoundsMax = self:GetCollisionBounds()
@@ -107,6 +107,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 								self:SetModel( CurModel )
 								timer.Simple( 0, function()
 									if IsValid(self) && self:GetModel() != CurModel then
+										self:SetPos( self:GetPos() + Vector( 0, 0, 5 ) )
 										self:SetModel( CurModel )
 									end
 								end )
@@ -184,8 +185,10 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 							if !self.m_bANPlusEntity then
 								if self.m_sNewWeapon then
 									self:Give( self.m_sNewWeapon ) 
-								elseif self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] && self:GetKeyValues()['additionalequipment'] != "" then
-									self:Give( self:GetKeyValues()['additionalequipment'] ) 	
+								elseif data['DefaultWeapons'] then			
+									local rngW = math.random( 1, #data['DefaultWeapons'] )
+									rngW = data['DefaultWeapons'][ rngW ]
+									self:Give( rngW ) 	
 								end
 							end
 						end
@@ -362,6 +365,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					end
 					
 					self:ANPlusAddSaveData( "m_bANPlusEntity", true )
+					self:ANPlusAddSaveData( "m_sANPlusName", self:ANPlusGetDataTab()['Name'] )
 				end	
 				
 				hook.Add( "Think", self, self.ANPlusNPCThink )		
@@ -402,7 +406,7 @@ function ENT:ANPlusGetDataTab()
 end
 
 function ENT:ANPMuteSound(bool)
-	self:SetNWBool( "ANP_IsMuted", bool )
+	self:SetNW2Bool( "m_bANPMuted", bool )
 end
 
 function ENT:ANPlusApplyFlexData(flexTab, scale)

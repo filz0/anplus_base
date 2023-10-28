@@ -153,8 +153,9 @@ if (SERVER) then
 			end	
 			if IsValid(self.Target) && self.Target:ANPlusAlive() then				
 				self.CurTurnSpeed = math.Approach( self.CurTurnSpeed, self.TurnSpeed, self.TurnAcceleration )
-				local angleLerp = LerpAngle( FrameTime() * self.CurTurnSpeed, self:GetAngles(), self:Point(self.Target) )	
-				self:SetAngles( angleLerp )	
+				local angleApproach = math.ApproachAngle( self:GetAngles(), self:Point(self.Target), self.CurTurnSpeed )
+				--local angleLerp = LerpAngle( FrameTime() * self.CurTurnSpeed, self:GetAngles(), self:Point(self.Target) )	
+				self:SetAngles( angleApproach )	
 			end
 			
 		end

@@ -102,26 +102,6 @@ function metaENT:ANPlusDisableCollisions(ent)
 	end		
 end
 
-/*
-local effTab = {} -- Template (remove things that you ain't gonna use)
-	effTab.Effect =
-	effTab.SetStart =
-	effTab.SetOrigin =
-	effTab.SetNormal =
-	effTab.SetMagnitude =
-	effTab.SetScale =
-	effTab.SetRadius =
-	effTab.SetAngle =
-	effTab.SetAttachment =
-	effTab.SetColor =
-	effTab.SetDamageType =
-	effTab.SetFlags =
-	effTab.SetHitBox =
-	effTab.SetMaterialIndex =
-	effTab.SetSurfaceProp =
-metaENT:ANPlusClientEffect( effTab )
-*/
-
 --[[
 function ANPlusPlayerKillFeed( ply, inf, npc ) -- Yoink https://github.com/Facepunch/garrysmod/tree/451b4ff5d1aea7b9b06a8024ef706c248a79647e/garrysmod/gamemodes/base/gamemode
 
@@ -521,8 +501,8 @@ function ANPlusCreateSporeExplosion(spawnRate, startDisabled)
 	return ent
 end
 
-function metaENT:ANPlusNPCGetImprovedAiming(pos, target, aimpos)
-	local newPos = IsValid(target) && self:ANPlusInRange( target, 16384 ) && pos || self:WorldSpaceCenter()	
+function metaENT:ANPlusNPCGetImprovedAiming(shootPos, target, aimpos)
+	local newPos = IsValid(target) && self:ANPlusInRange( target, 16384 ) && shootPos || self:WorldSpaceCenter()	
 	local targetPos = ( aimpos || target:BodyTarget( newPos ) || target:WorldSpaceCenter() || target:GetPos() )
 	local dir = targetPos && ( targetPos - newPos ):GetNormalized() || self:GetAimVector()
 	return newPos, dir

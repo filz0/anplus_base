@@ -259,15 +259,26 @@ hook.Add( "InitPostEntity", "ANPlusLoad_GamemodeInitPostEntity", function()
 end)
 
 --[[////////////////////////
-||||| Here We are checking spawned entities if they are a part of this base. If so, apply valid data table.
+||||| Here We are checking spawned entities if they are a part of this base. If so, apply a valid data table.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
+local defaultOutputs = {
+	['NPC'] = {
+		{ "OnFoundEnemy" , "OnNPCFoundEnemy" },
+		{ "OnLostEnemy" , "OnNPCLostEnemy" },
+		{ "OnLostEnemyLOS" , "OnNPCLostEnemyLOS" },
+		{ "OnDeploy" , "OnNPCTurretDeploy" },
+		{ "OnRetire" , "OnNPCTurretRetire" },
+		{ "OnTipped" , "OnNPCTurretTipped" },
+	}
+}
 
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 
 	timer.Simple( 0, function()
 
 		if !IsValid(ent) then return end	
-		
+
 		if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
 			local npc = ent:GetOwner()		
 			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'] != nil then
@@ -275,19 +286,34 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 			end				
 		end
 		
-		if (SERVER) && !ent:IsANPlus(true) then
-
-			for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
-				local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
-				if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
-					table.insert( ANPlusDangerStuffGlobal, ent )
-				end			
-			end
-
-			ent:ANPlusIgnoreTillSet()
-			ent:ANPlusNPCApply( ent:GetKeyValues()['parentname'] )		
-			ent.m_pMyPlayer = nil	
+		if (SERVER) then
 			
+			if defaultOutputs then
+				local hookTab = ent:IsNPC() && defaultOutputs['NPC']
+				if hookTab then
+					for i = 1, #hookTab do
+						local hookData = hookTab[ i ]
+						if hookData then
+							ent:ANPlusCreateOutputHook( hookData[ 1 ], hookData[ 2 ] )
+						end
+					end
+				end
+			end
+			
+			if !ent:IsANPlus(true) then
+
+				for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
+					local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
+					if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
+						table.insert( ANPlusDangerStuffGlobal, ent )
+					end			
+				end
+
+				ent:ANPlusIgnoreTillSet()
+				ent:ANPlusNPCApply( ent:GetKeyValues()['parentname'] )		
+				ent.m_pMyPlayer = nil	
+				
+			end
 		end	
 	end )	
 
@@ -309,6 +335,7 @@ end )
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
 hook.Add( "EntityFireBullets", "ANPlusLoad_EntityFireBullets", function(npc, data)	
+
 	if IsValid(npc) && npc:IsANPlus(true) && npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'] != nil then
 		
 		--npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc, npc:IsNPC() && npc:GetActiveWeapon() || nil, data)	
@@ -369,31 +396,56 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 	end
 	
 	if ent:IsANPlus(true) then	
-		if ent:GetNWBool( "ANP_IsMuted" ) then return false end		
+		
+		if ent:GetNW2Bool( "m_bANPMuted" ) then return false end		
+		
 		ent.m_tLastSoundEmitted = data			
+		
 		if ent:ANPlusGetDataTab()['SoundModification'] && ent:ANPlusGetDataTab()['SoundModification']['SoundList'] then	
+			
 			local sndTab = ent:ANPlusGetDataTab()['SoundModification']['SoundList']		
+			
 			for _, v in ipairs( sndTab ) do		
-				--if( ( sndTab['Folder'] && string.find( string.lower( data.SoundName ), sndTab['Folder'] ) ) || ( sndTab['SoundList'] && sndTab['SoundList'][ data.SoundName ] && sndTab['SoundList'][ data.SoundName ][ 1 ] ) ) then
-				if v && string.find( string.lower( data.SoundName ), v[ 1 ] ) then				
-					if v['Play'] != nil && v['Play'] == false then return false end			
-					local sndReplace = v['Replacement'] && istable( v['Replacement'] ) && v['Replacement'][ math.random( 1, #v['Replacement'] ) ] || v['Replacement'] || data.SoundName
-					sndReplace = !v['SoundCharacter'] && sndReplace || v['SoundCharacter'] == true && ( sndChars[ string.Left( data.SoundName, 1 ) ] && string.Left( data.SoundName, 1 ) .. sndReplace || sndReplace ) || isstring( v['SoundCharacter'] ) && v['SoundCharacter'] .. sndReplace 
-					local sndLVL = v['SoundLevel'] && istable( v['SoundLevel'] ) && math.random( v['SoundLevel'][ 1 ], ( v['SoundLevel'][ 2 ] || v['SoundLevel'][ 1 ] ) ) || v['SoundLevel'] || data.SoundLevel
-					local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || data.Pitch
-					local sndChannel = v['Channel'] || data.Channel
-					local sndVolume = v['Volume'] && istable( v['Volume'] ) && math.random( v['Volume'][ 1 ], ( v['Volume'][ 2 ] || v['Volume'][ 1 ] ) ) || v['Volume'] || data.Volume
-					local sndFlags = v['Flags'] || data.Flags
-					local sndDSP = v['DSP'] || data.DSP
-					data.SoundName	= sndReplace
-					data.SoundLevel = sndLVL
-					data.Pitch 		= sndPitch 
-					data.Channel 	= sndChannel
-					data.Volume 	= sndVolume
-					data.Flags		= sndFlags
-					data.DSP 		= sndDSP	
-					return true			
-				end			
+				
+				if v then
+				
+					if string.find( string.lower( data.SoundName ), v[ 1 ] ) || string.find( data.OriginalSoundName, v[ 1 ] ) then 	
+						
+						if v['Play'] != nil && v['Play'] == false then return false end			
+						
+						local sndRNG = v['Replacement'] && istable( v['Replacement'] ) && v['Replacement'][ math.random( 1, #v['Replacement'] ) ] || v['Replacement'] || data.SoundName
+						
+						local sndReplace = sound.GetTable()[ sndRNG ] && sound.GetProperties( sndRNG )['sound'] || sndRNG
+						sndReplace = !v['SoundCharacter'] && sndReplace || v['SoundCharacter'] == true && ( sndChars[ string.Left( data.SoundName, 1 ) ] && string.Left( data.SoundName, 1 ) .. sndReplace || sndReplace ) || isstring( v['SoundCharacter'] ) && v['SoundCharacter'] .. sndReplace 
+						
+						local sndLVL = v['SoundLevel'] && istable( v['SoundLevel'] ) && math.random( v['SoundLevel'][ 1 ], ( v['SoundLevel'][ 2 ] || v['SoundLevel'][ 1 ] ) ) || v['SoundLevel'] || data.SoundLevel
+						local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || data.Pitch
+						local sndChannel = v['Channel'] || data.Channel
+						local sndVolume = v['Volume'] && istable( v['Volume'] ) && math.random( v['Volume'][ 1 ], ( v['Volume'][ 2 ] || v['Volume'][ 1 ] ) ) || v['Volume'] || data.Volume
+						local sndFlags = v['Flags'] || data.Flags
+						local sndDSP = v['DSP'] || data.DSP
+
+						data.SoundName			= !data.SentenceIndex && sndReplace || data.SoundName
+						data.SoundLevel 		= sndLVL
+						data.Pitch 				= sndPitch 
+						data.Channel 			= sndChannel
+						data.Volume 			= sndVolume
+						data.Flags				= sndFlags
+						data.DSP 				= sndDSP	
+						if data.SentenceIndex && sndRNG != data.OriginalSoundName then
+							if sound.GetProperties( sndRNG ) || string.find( string.lower( sndRNG ), "/" ) then
+								ent:EmitSound( sndReplace, data.SoundLevel, data.Pitch, data.Volume, data.Channel, data.Flags, data.DSP )
+							else
+								EmitSentence( sndReplace, ent:GetPos(), ent:EntIndex(), data.Channel, data.Volume, data.SoundLevel, data.Flags, data.Pitch )
+							end
+							
+							return false
+						end
+						return true	
+					end	
+					
+				end
+				
 			end			
 		end
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'] != nil then
@@ -402,7 +454,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 			return bool
 		end	
 	end	
-end )
+end ) 
 
 hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)	
 	if IsValid(ent) then

@@ -5,6 +5,7 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 local metaANG = FindMetaTable("Angle")
 local metaVEC = FindMetaTable("Vector")
 local metaENT = FindMetaTable("Entity")
+local metaVEH = FindMetaTable("Vehicle")
 local metaPLAYER = FindMetaTable("Player")
 --
 
@@ -59,10 +60,8 @@ end
 function metaENT:ANPlusGetAngleToPos(pos, _ang, bDontClamp)
 	local _pos
 	if self:IsPlayer() then
-		_pos = self:GetShootPos()
-		if !_ang then
-			_ang = self:GetAimVector():Angle()
-		end
+		_ang = _ang || self:GetAimVector():Angle()
+		_pos = self:GetShootPos()	
 	else
 		_ang = _ang || self:GetAngles()
 		_pos = self:GetPos()
@@ -781,7 +780,7 @@ end
 
 function ANPlusScreenMsg(ply, id, x, y, size, dur, text, font, color)	
 	if (SERVER) then
-		net.Start("anplus_screenmsg_ply")
+		net.Start( "anplus_screenmsg_ply" )
 		net.WriteFloat( dur || 0 )
 		net.WriteFloat( x || 0 )
 		net.WriteFloat( y || 0 )
@@ -1305,7 +1304,7 @@ function metaENT:ANPlusCreateVar(var, val, label, desc, min, max, deci, updateCa
 	end
 end
 
-function metaENT:ANPlusSetVar(var, val)
+function metaENT:ANPlusSetVar(var, val, func)
 	if self[var] == nil then return end
 	self[var] = val
 	if (SERVER) then self:ANPlusAddSaveData( var, val, func ) end
@@ -1319,13 +1318,13 @@ function metaENT:ANPlusGetLastFiredBullet()
 	return self.m_tLastFiredBullet
 end
 
-function ANPlusFindClosestEntity(pos, tab, filterFunc)
+function ANPlusFindClosestEntity(pos, tab, filterFunc, filterEnts)
 	local distClosestSqr = math.huge
 	local distClosest
 	local entClosest
 	if !tab || !istable(tab) then return end
 	for _, v in pairs( tab ) do	
-		if v && IsValid(v) then
+		if v && IsValid(v) && ( !filterEnts || !filterEnts[ v ] ) then
 			local filter = isfunction(filterFunc) && filterFunc(v) || !isfunction(filterFunc) && true
 			local distSqr, dist = ANPlusGetRangeVector( v:GetPos(), pos )
 				if distSqr < distClosestSqr && filter then	
@@ -1350,12 +1349,14 @@ end
 
 function metaENT:ANPlusSetColorFade(color, delta)
 	color = color || self:GetColor()
-	delta = delta || 1
+	local alpha = color.a	
+	color = Vector( color.r, color.g, color.b )
+	delta = delta || 1	
 	local fx = EffectData()
 	fx:SetEntity( self )
 	fx:SetMagnitude( delta ) -- Delta
-	fx:SetStart( color:ToVector() * 255 ) -- Color
-	fx:SetColor( color.a || 255 ) -- Alpha
+	fx:SetStart( color ) -- Color
+	fx:SetColor( alpha || 255 ) -- Alpha
 	util.Effect( "anp_fade", fx, true, true )
 end
 

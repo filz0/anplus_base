@@ -129,6 +129,16 @@ sound.Add( {
 	}
 } )
 
+sound.Add( {
+	name = "ANP.WEAPON.Beam.Flyby",
+	channel = CHAN_ITEM,
+	volume = 0.7,
+	level = 140,
+	pitch = { 70, 90 }, 
+	sound = "anp/fx/beam_flyby.wav",
+
+} )
+
 ANPlus.AddParticle( "particles/grenade_fx.pcf", {
 	"grenade_explosion_01",
 	"grenade_explosion_01b",

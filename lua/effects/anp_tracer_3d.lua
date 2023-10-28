@@ -40,6 +40,7 @@ function EFFECT:Init(data)
 	self.TracerS			= self.DataTab && self.DataTab['TracerScale'] || 4
 	self.TracerLength		= self.DataTab && self.DataTab['TracerLength'] || 100
 	self.TracerCol			= self.DataTab && self.DataTab['TracerColor'] || Color( 255, 255, 255, 255 )
+	self.TracerSND			= self.DataTab && self.DataTab['TracerSND'] || "ANP.WEAPON.Tracer.Flyby"
 	
 	self.TrailMat			= self.DataTab && self.DataTab['TrailMat'] && Material( self.DataTab['TrailMat'] ) || ( self.DataTab && self.DataTab['TrailMat'] == nil || !self.DataTab ) && Material( "effects/anp/tracer_trail" ) || false
 	self.TrailS				= self.DataTab && self.DataTab['TrailScale'] || 1	
@@ -70,8 +71,8 @@ function EFFECT:Init(data)
 end
 
 function EFFECT:Think()
-	if self.DieTime == nil || self.LifeTime == nil then return end
-	if self.LifeTime <= 0 && IsValid(self.BulletEnt) then self.BulletEnt:Remove() end
+	if self.DieTime == nil || self.LifeTime == nil then return false end
+	if self.LifeTime <= 0 && IsValid(self.BulletEnt) then self.BulletEnt:Remove() return false end
 	if ( CurTime() > self.DieTime ) then return false end
 	self.LifeTime = self.LifeTime - FrameTime() * self.BulletSpeedMul
 	self.StartTime = self.StartTime + FrameTime() * self.BulletSpeedMul
@@ -128,7 +129,9 @@ function EFFECT:RenderFixed()
 		
 		if self.TracerMat then
 			render.SetMaterial( self.TracerMat )
-			render.DrawBeam( startPos, endPos, self.TracerS, 0, 1, self.TracerCol )
+			render.UpdateRefractTexture()
+			self.TracerMat:SetVector( "$color2", Vector( self.TracerCol.r / 255, self.TracerCol.g / 255, self.TracerCol.b / 255 ) )
+			render.DrawBeam( startPos, endPos, self.TracerS, 0, 1 )
 		end
 		
 		if self.DataTab && self.DataTab['FunctionRender'] != nil then
@@ -140,12 +143,14 @@ function EFFECT:RenderFixed()
 			local measure	= viewPos - ( self.EndPos )
 			local dot		= self.Dir:Dot(	measure	) /	measure:Length()
 			if dot <= 0 then
-				sound.Play( "ANP.WEAPON.Tracer.Flyby", pos )
+				sound.Play( self.TracerSND, pos )
 				self['m_bNearMissFXPlayed' .. ply:EntIndex()] = true 
 			end
+			--[[
 			if viewEnt == ply && dist <= 60 then
-				--render.ANPlusDrawOverlay( "suppress", { Offset = 0, Scatter = 1, Strength = 5, Fadeout = 30 } )
+				render.ANPlusDrawOverlay( "suppress", { Offset = 0, Scatter = 1, Strength = 5, Fadeout = 30 } )
 			end
+			]]--
 		end
 --##--------------------------------------------------------------------------------------------------------------------## Nearmiss / Flyby bullet sounds.		
 	end	

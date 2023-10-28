@@ -248,6 +248,7 @@ ANPlus = {
 		if id && hpbarTab then
 			ANPHealthBarStyles[ id ] = hpbarTab 
 		end
+		PrintTable(ANPHealthBarStyles)
 	end,
 	
 } 
@@ -267,11 +268,13 @@ ANPlus.AddConVar( "anplus_random_placement", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE +
 ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply ANPC's health.", 0.1 )
 ANPlus.AddConVar( "anplus_replacer_enabled", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Enable ANPlus Replacer.", 0, 1 )
 ANPlus.AddConVar( "anplus_look_distance_override", 2048, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Set NPC look/sight distance. This command only affect ANPCs that don't have thier look distance changed by thier code.", 0, 32000 )
-ANPlus.AddClientConVar( "anplus_hpbar_enable", 1, "Enable health bars.", 0, 1 )
 ANPlus.AddClientConVar( "anplus_hpbar_dist", 2048, "Enable light effect used by the muzzle effects from this base.", 0 )
-ANPlus.AddClientConVar( "anplus_hpbar_style", "HL2 Default", "Select a style of NPC's health bar if one has it enabled." )
+ANPlus.AddClientConVar( "anplus_hpbar_def_style", "HL2 Retail", "Select a style of NPC's health bar if one has it enabled." )
 ANPlus.AddClientConVar( "anplus_swep_muzzlelight", 1, "Enable light effect used by the muzzle effects from this base.", 0, 1 )
 ANPlus.AddClientConVar( "anplus_swep_shell_smoke", 1, "Allow smoke effect to be emitted from fired bullet casings.", 0, 1 )
+ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance_start", 2048, "Distance at which SWEP's flashlight will start fading.", 512, 10240 )
+ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance", 1024, "SWEP's flashlight fade distance.", 512, 10240 )
+ANPlus.AddClientConVar( "anplus_swep_flight_smartmode", 1, "NPCs will only use flashlights in dark places.", 0, 1 )
  
 local invChars = {" ","{","}","[","]","(",")","!","+","=","?",".",",","/","-","`","~"}
 function ANPlusIDCreate(name)
@@ -327,7 +330,7 @@ if (CLIENT) then
 
 		local hpBarList = vgui.Create( "DComboBox" )
 		--DComboBox:SetPos( 5, 30 )
-		hpBarList:SetConVar( "anplus_hpbar_style" )
+		hpBarList:SetConVar( "anplus_hpbar_def_style" )
 		hpBarList:SetValue( "options" )
 		for id, func in pairs( ANPHealthBarStyles ) do
 			if id && func then
@@ -335,7 +338,7 @@ if (CLIENT) then
 			end
 		end
 		hpBarList.OnSelect = function( self, index, value )
-			RunConsoleCommand( "anplus_hpbar_style", value )
+			RunConsoleCommand( "anplus_hpbar_def_style", value )
 		end
 		
 		local hpBarLabel = vgui.Create( "DLabel" )
@@ -347,6 +350,9 @@ if (CLIENT) then
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Health Bar Render Distance", "anplus_hpbar_dist", 0, 4096, 0 ), "Distance at which the special Health Bar will show on Player's screen." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Muzzle Light Effect", "anplus_swep_muzzlelight" ), "If enabled, muzzle effects from this base will emit light." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Casing/Shell Smoke", "anplus_swep_shell_smoke" ), "If enabled, spent casings/shells from this base will generate smoke particle effect." )
+		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Flashlight Smart Mode", "anplus_swep_flight_smartmode" ), "If enabled, NPCs will only use flashlights in dark places." )
+		panel:ANPlus_SecureMenuItem( panel:NumSlider( "SWEP Flashlight Fade Distance Start", "anplus_swep_flight_fade_distance_start", 512, 10240, 0 ), "Distance at which SWEP's flashlight will start fading." )
+		panel:ANPlus_SecureMenuItem( panel:NumSlider( "SWEP Flashlight Fade Distance", "anplus_swep_flight_fade_distance", 512, 10240, 0 ), "Distance at which SWEP's flashlight will fade." )
 	end
 	local function ANPlusMenuDefault_Functions(panel)
 		panel:ClearControls()	

@@ -73,7 +73,7 @@ ANPlus.AddNPC( {
    
 			},
 		},
-			---   
+		---   
 	},
 --]]
 	['Models'] = nil,
@@ -243,7 +243,7 @@ ANPlus.AddNPC( {
 	}, 
 --]]
 	['SoundModification'] 		= nil,
------------------------------------------------------------------ Custom functions.	An order doesn't matter. They are based on hooks.
+----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks. Remember to remove unused functions for the performance's sake.
 	['Functions'] = {
 		
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
@@ -257,6 +257,54 @@ ANPlus.AddNPC( {
 		
 		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
 		['OnNPCThink'] = function(self) -- ( CLIENT & SERVER )    	
+		end,
+		
+		------------------------------------------------------------ OnNPCFoundEnemy - Called when NPC establishes line of sight to its enemy.
+		['OnNPCFoundEnemy'] = function(self, enemy)	
+		end,
+		
+		------------------------------------------------------------ OnNPCLostEnemy - Called when NPC loses its enemy. Usually due to the enemy being killed/removed, or because NPC has selected a newer, more dangerous enemy.
+		['OnNPCLostEnemy'] = function(self, lastEnemy) -- lastEnemy might not always be valid. Always use IsValid().
+		end,
+		
+		------------------------------------------------------------ OnNPCLostEnemyLOS - Called when NPC loses line of sight to its enemy.
+		['OnNPCLostEnemyLOS'] = function(self, lastEnemy) -- lastEnemy might not always be valid. Always use IsValid().	
+		end,
+		
+		------------------------------------------------------------ OnNPCTurretDeploy - Called when NPC(Turret) has become active and dangerous.
+		['OnNPCTurretDeploy'] = function(self)
+		end,
+		
+		------------------------------------------------------------ OnNPCTurretRetire - Called when NPC(Turret) has become inactive and harmless.
+		['OnNPCTurretRetire'] = function(self)
+		end,
+		
+		------------------------------------------------------------ OnNPCTurretTipped - Called when NPC(Turret) has been tipped over and is inactive.
+		['OnNPCTurretTipped'] = function(self)
+		end,
+		
+		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
+		['OnNPCScaleDamageOnNPC'] = function(self, npc, hitgroup, dmginfo)		
+		end,
+		
+		------------------------------------------------------------ OnNPCScaleDamageOnPlayer - This function runs whenever NPC damages Players.
+		['OnNPCScaleDamageOnPlayer'] = function(self, ply, hitgroup, dmginfo)		
+		end,
+		
+		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
+		['OnNPCDamageOnEntity'] = function(self, ent, dmginfo)	
+		end,
+		
+		------------------------------------------------------------ OnNPCPostDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities) and after damage calcualtions are done. You can't define hit groups through it.
+		['OnNPCPostDamageOnEntity'] = function(self, ent, dmginfo, tookDMG)	
+		end,
+		
+		------------------------------------------------------------ OnNPCKilledPlayer - This function runs whenever this NPC kills a player.
+		['OnNPCKilledPlayer'] = function(ply, inflictor, self) 	
+		end,
+		
+		------------------------------------------------------------ OnNPCKilledNPC - This function runs whenever this NPC kills another NPC.
+		['OnNPCKilledNPC'] = function(self, npc, inflictor)		
 		end,
 		
 		------------------------------------------------------------ OnNPCFollow - It is called whenever NPC follows/unfollows something. Follow/unfollow can be determined by the "state" value.
@@ -274,11 +322,11 @@ ANPlus.AddNPC( {
 		------------------------------------------------------------ OnNPCSaveTableFinish - Called after duplicator finishes saving the NPC, allowing you to modify the save data.
 		['OnNPCSaveTableFinish'] = function(self, dupeData)	
 		end,
-		
+		--[[
 		------------------------------------------------------------ OnNPCRestore - Called when the NPC is reloaded from a Source Engine save (not the Sandbox saves or dupes) or on a changelevel (for example Half-Life 2 campaign level transitions).
 		['OnNPCRestore'] = function(self)	
 		end,
-		
+		]]--
 		------------------------------------------------------------ OnNPCLoad - This function is called when NPC gets loaded via GMod Save system or the Duplicator tool and has some save data using ENT:ANPlusStoreEntityModifier(dataTab).
 		['OnNPCLoad'] = function(ply, self, dataTab)	
 		end,
@@ -334,14 +382,6 @@ ANPlus.AddNPC( {
 			return true
 		end,
 		
-		------------------------------------------------------------ OnNPCKilledPlayer - This function runs whenever this NPC kills a player.
-		['OnNPCKilledPlayer'] = function(ply, inflictor, self) 	
-		end,
-		
-		------------------------------------------------------------ OnNPCKilledNPC - This function runs whenever this NPC kills another NPC.
-		['OnNPCKilledNPC'] = function(self, npc, inflictor)		
-		end,
-		
 		------------------------------------------------------------ OnNPCKeyValue - This function runs whenever keyvalues/inputs/outpust run, are called or whatever.
 		['OnNPCKeyValue'] = function(self, key, value) -- ( CLIENT & SERVER )	
 		end,
@@ -380,22 +420,6 @@ ANPlus.AddNPC( {
 		
 		------------------------------------------------------------ OnNPCScaleDamage - This function runs whenever NPC gets damaged. Can also be used to detect which body part was hit.
 		['OnNPCScaleDamage'] = function(self, hitgroup, dmginfo)	
-		end,
-		
-		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
-		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)		
-		end,
-		
-		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
-		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)		
-		end,
-		
-		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
-		['OnNPCDamageOnEntity'] = function(self, ent, dmginfo)	
-		end,
-		
-		------------------------------------------------------------ OnNPCPostDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities) and after damage calcualtions are done. You can't define hit groups through it.
-		['OnNPCPostDamageOnEntity'] = function(self, ent, dmginfo, tookDMG)	
 		end,
 		
 		------------------------------------------------------------ OnNPCDeath - This function runs whenever NPC dies.
@@ -571,7 +595,7 @@ ANPlus.AddNPC( {
 	}, 
 --]]
 	['SoundModification'] 		= nil,
------------------------------------------------------------------ Custom functions.	An order doesn't matter. They are based on hooks.
+----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks. Remember to remove unused functions for the performance's sake.
 	['Functions'] = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
@@ -673,11 +697,11 @@ ANPlus.AddNPC( {
 		end,
 		
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
-		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)		
+		['OnNPCScaleDamageOnNPC'] = function(self, npc, hitgroup, dmginfo)		
 		end,
 		
-		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
-		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)		
+		------------------------------------------------------------ OnNPCScaleDamageOnPlayer - This function runs whenever NPC damages Players.
+		['OnNPCScaleDamageOnPlayer'] = function(self, ply, hitgroup, dmginfo)		
 		end,
 		
 		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.
@@ -858,7 +882,7 @@ ANPlus.AddNPC( {
 	}, 
 --]]
 	['SoundModification'] 		= nil,
------------------------------------------------------------------ Custom functions.	An order doesn't matter. They are based on hooks.
+----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks. Remember to remove unused functions for the performance's sake.
 	['Functions'] = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
@@ -976,11 +1000,11 @@ ANPlus.AddNPC( {
 		end,
 		
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
-		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)		
+		['OnNPCScaleDamageOnNPC'] = function(self, npc, hitgroup, dmginfo)		
 		end,
 		
-		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
-		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)		
+		------------------------------------------------------------ OnNPCScaleDamageOnPlayer - This function runs whenever NPC damages Players.
+		['OnNPCScaleDamageOnPlayer'] = function(self, ply, hitgroup, dmginfo)		
 		end,
 		
 		------------------------------------------------------------ OnNPCDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities). You can't define hit groups through it.

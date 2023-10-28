@@ -284,7 +284,7 @@ hook.Add( "ScalePlayerDamage", "ANPlusLoad_ScalePlayerDamage", function(ply, hg,
 	local att = dmginfo:GetAttacker()	
 	if IsValid(att) && att:IsANPlus(true) then	
 		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnPlayer'] != nil then
-			att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnPlayer'](ply, hg, dmginfo)		
+			att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnPlayer'](att, ply, hg, dmginfo)		
 		end	
 	end
 end)
@@ -352,7 +352,7 @@ hook.Add( "ScaleNPCDamage", "ANPlusLoad_EntityTakeDamage", function(npc, hg, dmg
 	if IsValid(att) && att:IsANPlus(true) then
 	
 		if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnNPC'] != nil then
-			att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnNPC'](npc, hg, dmginfo)	
+			att:ANPlusGetDataTab()['Functions']['OnNPCScaleDamageOnNPC'](att, npc, hg, dmginfo)	
 		end
 	
 	end
@@ -516,3 +516,47 @@ hook.Add( "PlayerLeaveVehicle", "ANPlusLoad_PlayerLeaveVehicle", function(ply, v
 		veh:ANPlusGetDataTab()['Functions']['OnNPCPlayerLeave'](ply, veh)			
 	end
 end)
+
+hook.Add( "OnNPCFoundEnemy", "ANPlusLoad_OnNPCFoundEnemy", function()
+	local activator, caller = ACTIVATOR, CALLER
+	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCFoundEnemy'] != nil then
+		local enemy = caller:GetEnemy()
+		caller.m_pLastEnemy = enemy
+		caller:ANPlusGetDataTab()['Functions']['OnNPCFoundEnemy'](caller, enemy)			
+	end
+end )
+
+hook.Add( "OnNPCLostEnemy", "ANPlusLoad_OnNPCLostEnemy", function()
+	local activator, caller = ACTIVATOR, CALLER
+	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCLostEnemy'] != nil then
+		caller:ANPlusGetDataTab()['Functions']['OnNPCLostEnemy'](caller, caller.m_pLastEnemy)			
+	end
+end )
+
+hook.Add( "OnNPCLostEnemyLOS", "ANPlusLoad_OnNPCLostEnemyLOS", function()
+	local activator, caller = ACTIVATOR, CALLER
+	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCLostEnemyLOS'] != nil then
+		caller:ANPlusGetDataTab()['Functions']['OnNPCLostEnemyLOS'](caller, caller.m_pLastEnemy)			
+	end
+end )
+
+hook.Add( "OnNPCTurretDeploy", "ANPlusLoad_OnNPCTurretDeploy", function()
+	local activator, caller = ACTIVATOR, CALLER
+	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCTurretDeploy'] != nil then
+		caller:ANPlusGetDataTab()['Functions']['OnNPCTurretDeploy'](caller, caller.m_pLastEnemy)			
+	end
+end )
+
+hook.Add( "OnNPCTurretRetire", "ANPlusLoad_OnNPCTurretRetire", function()
+	local activator, caller = ACTIVATOR, CALLER
+	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCTurretRetire'] != nil then
+		caller:ANPlusGetDataTab()['Functions']['OnNPCTurretRetire'](caller, caller.m_pLastEnemy)			
+	end
+end )
+
+hook.Add( "OnNPCTurretTipped", "ANPlusLoad_OnNPCTurretTipped", function()
+	local activator, caller = ACTIVATOR, CALLER
+	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCTurretTipped'] != nil then
+		caller:ANPlusGetDataTab()['Functions']['OnNPCTurretTipped'](caller, caller.m_pLastEnemy)			
+	end
+end )

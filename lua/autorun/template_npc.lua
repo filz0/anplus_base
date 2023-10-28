@@ -27,7 +27,6 @@ item_item_crate turned out to be unusable due to its spawn function
 which makes it delete itself cuz duplicator can't apply required KeyValue fast enough.
 
 ]]--
- 
 
 ANPlus.AddNPC( {
 	['Spawnable']				= false,
@@ -39,7 +38,7 @@ ANPlus.AddNPC( {
 	['Class'] 					= "gib",
 ----------------------------------------------------------------- NPC health and max health.	
 	['Health'] 					= false,
------------------------------------------------------------------ Custom functions.	An order doesn't matter. They are based on hooks.
+----------------------------------------------------------------- Custom functions.	An order doesn't matter. They are based on hooks. Remember to remove unused functions for the performance's sake.
 	['Functions'] = {
 	
 		------------------------------------------------------------ OnNPCSpawn - This function runs on NPC spawn/dupe placement/save load.
@@ -725,19 +724,7 @@ local ENTTab = {
 ----------------------------------------------------------------- This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
 ANPlus.AddNPC( ENTTab, "SpawnableEntities" )
 
-local hitboxTranslate = {
-	[0] = "Generic",
-	[1] = "Head",
-	[2] = "Chest",
-	[3] = "Stomach",
-	[4] = "LeftArm",
-	[5] = "RightArm",
-	[6] = "LeftLeg",
-	[7] = "RightLeg",
-	[8] = "Gear",
-}
-
-local NPCTab = {
+ANPlus.AddNPC( {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC. 
 	['Category'] 			= "[ANP] Dev",
 ----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
@@ -770,7 +757,7 @@ local NPCTab = {
 ----------------------------------------------------------------- Sets if NPC should only be spawnable on the ceiling.
 	['OnCeiling'] 				= false,
 ----------------------------------------------------------------- Sets if NPC should only be spawnable on the floor.
-	['OnFloor'] 			= false,
+	['OnFloor'] 				= false,
 ----------------------------------------------------------------- Position offset from the crosshair.
 	['Offset'] 					= nil,
 ----------------------------------------------------------------- Rotates NPC after spawn. (eg. ['Rotate'] = Angle( 0, 180, 0 ))
@@ -828,12 +815,11 @@ local NPCTab = {
 		['RightLeg'] = 0, --%, 0 is default.  
 		
 	}, 
------------------------------------------------------------------ Set if your NPC should be friendly to players. true = Yes / false = No / nil = default to the NPC
-	['PlayerAlly'] 				= false,  
 ----------------------------------------------------------------- This table can be used to specify how our NPC should react to other NPCs and vice versa. ['MeToNPC'] sets how our NPC should react to the other NPC. ['NPCToMe'] sets how other NPC should react to ours. The first value sets the relation and the second one sets its strength. If you plan to use this table, make sure that ['Default'] is present inside as it will tell NPCs that are not present in here what to do. You can use NPC classes (npc_citizen) or ANP IDs/Names.
 	['Relations'] = { 
 	
-		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, -- "Hate" / "Like" / "Fear" / "Neutral"     
+		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, -- "Hate" / "Like" / "Fear" / "Neutral"   
+		['player'] = { ['MeToNPC'] = { "Hate", 0 } },
  
 	},  	
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
@@ -880,13 +866,10 @@ local NPCTab = {
 				draw.SimpleTextOutlined( text, "Trebuchet18", vinfopos.x, vinfopos.y, self:GetColor(), 1, 1, 1, Color( 0, 0, 0, 255 ) )  
 			end
 		end,
-		},
-	} 	
- 
------------------------------------------------------------------ This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
-ANPlus.AddNPC( NPCTab ) 
+	},
+} ) 	
 
-local NPCTab = {
+ANPlus.AddNPC( {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
 	['Category'] 			= "Humans + Resistance",
 ----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
@@ -1004,6 +987,8 @@ local NPCTab = {
 	['Relations'] = { 
 	
 		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, -- "Hate" / "Like" / "Fear" / "Neutral"     
+		
+		['player'] = { ['MeToNPC'] = { "Default", 0 } },
 		
 		['npc_combine_s'] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } },
 		
@@ -1164,21 +1149,18 @@ local NPCTab = {
 		
 		end,	
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
-		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)		
+		['OnNPCScaleDamageOnNPC'] = function(self, npc, hitgroup, dmginfo)		
 			npc:Ignite(2,2)	
 		end,		
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
-		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)			
+		['OnNPCScaleDamageOnPlayer'] = function(self, ply, hitgroup, dmginfo)			
 			ply:Ignite(2,2)		
 		end,		
 	},
 	
-}  
- 
------------------------------------------------------------------ This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
-ANPlus.AddNPC( NPCTab ) 
+} ) 
 
-local NPCTab = {
+ANPlus.AddNPC( {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
 	['Category'] 			= "Humans + Resistance",
 ----------------------------------------------------------------- Name of your NPC, it also works as an identifier in the base. Make sure that it is unique. If you wish to make a spawnicon, name it after this value.
@@ -1283,12 +1265,11 @@ local NPCTab = {
 		[DMG_POISON]	= -50, --%,  
 		
 	}, 
------------------------------------------------------------------ Set if your NPC should be friendly to players. true = Yes / false = No / nil = default to the NPC
-	['PlayerAlly'] 			= false,
 ----------------------------------------------------------------- This table can be used to specify how our NPC should react to other NPCs and vice versa. ['MeToNPC'] sets how our NPC should react to the other NPC. ['NPCToMe'] sets how other NPC should react to ours. First value sets the relation and the second one sets its strength. If you plan to use this table, make sure that ['Default'] is present inside as it will tell NPCs that are not present in here what to do.
 	['Relations'] = { 
 	
-		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, -- "Hate" / "Like" / "Fear" / "Neutral"     
+		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, -- "Hate" / "Like" / "Fear" / "Neutral"   
+		['player'] = { ['MeToNPC'] = { "Hate", 0 } },		
 
 	},    
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
@@ -1433,15 +1414,13 @@ local NPCTab = {
 		['OnNPCScaleDamage'] = function(self, hitgroup, dmginfo)	
 			end,		
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages other NPCs.
-		['OnNPCScaleDamageOnNPC'] = function(npc, hitgroup, dmginfo)			
+		['OnNPCScaleDamageOnNPC'] = function(self, npc, hitgroup, dmginfo)			
 			npc:Ignite(2,2)		
 		end,		
 		------------------------------------------------------------ OnNPCScaleDamageOnNPC - This function runs whenever NPC damages Players.
-		['OnNPCScaleDamageOnPlayer'] = function(ply, hitgroup, dmginfo)			
+		['OnNPCScaleDamageOnPlayer'] = function(self, ply, hitgroup, dmginfo)			
 			ply:Ignite(2,2)	
 		end,	
 	},	
-}  
- 
------------------------------------------------------------------ This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
-ANPlus.AddNPC( NPCTab ) 
+	
+} )
