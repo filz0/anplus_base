@@ -66,6 +66,7 @@ function ENT:ANPlusNPCThink()
 					end
 				--end
 			end
+
 		end
 		
 		if (SERVER) && self:ANPlusGetDataTab()['HealthBar'] then

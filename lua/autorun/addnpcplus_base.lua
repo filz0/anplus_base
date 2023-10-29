@@ -275,6 +275,8 @@ ANPlus.AddClientConVar( "anplus_swep_shell_smoke", 1, "Allow smoke effect to be 
 ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance_start", 2048, "Distance at which SWEP's flashlight will start fading.", 512, 10240 )
 ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance", 1024, "SWEP's flashlight fade distance.", 512, 10240 )
 ANPlus.AddClientConVar( "anplus_swep_flight_smartmode", 1, "NPCs will only use flashlights in dark places.", 0, 1 )
+ANPlus.AddClientConVar( "anplus_swep_laser_fade_distance_start", 1024, "Distance at which SWEP's laser will start fading.", 512, 10240 )
+ANPlus.AddClientConVar( "anplus_swep_laser_fade_distance", 512, "SWEP's laser fade distance.", 512, 10240 )
  
 local invChars = {" ","{","}","[","]","(",")","!","+","=","?",".",",","/","-","`","~"}
 function ANPlusIDCreate(name)
@@ -353,6 +355,8 @@ if (CLIENT) then
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Flashlight Smart Mode", "anplus_swep_flight_smartmode" ), "If enabled, NPCs will only use flashlights in dark places." )
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "SWEP Flashlight Fade Distance Start", "anplus_swep_flight_fade_distance_start", 512, 10240, 0 ), "Distance at which SWEP's flashlight will start fading." )
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "SWEP Flashlight Fade Distance", "anplus_swep_flight_fade_distance", 512, 10240, 0 ), "Distance at which SWEP's flashlight will fade." )
+		panel:ANPlus_SecureMenuItem( panel:NumSlider( "SWEP Laser Fade Distance Start", "anplus_swep_laser_fade_distance_start", 512, 10240, 0 ), "Distance at which SWEP's laser will start fading." )
+		panel:ANPlus_SecureMenuItem( panel:NumSlider( "SWEP Laser Fade Distance", "anplus_swep_laser_fade_distance", 512, 10240, 0 ), "Distance at which SWEP's laser will fade." )
 	end
 	local function ANPlusMenuDefault_Functions(panel)
 		panel:ClearControls()	

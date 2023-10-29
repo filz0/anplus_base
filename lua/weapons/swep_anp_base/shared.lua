@@ -58,16 +58,31 @@ SWEP.FlashlightTab 					= false
 --[[
 SWEP.FlashlightTab 		= {
 	['Attachment']		= "1",
-	['FlashLightMat'] 	= "effects/flashlight001",	
-	['FarZ']			= 1024,								-- Sets the distance at which the projected texture ends.
-	['NearZ']			= 1, 								-- Sets the distance at which the projected texture begins its projection.
-	['FOV']				= 40, 								-- Sets the angle of projection.
-	['FlashLightSpr'] 	= Material( "sprites/light_glow03_fix" ),
-	['Mins']			= { 5, 5 },
-	['Maxs']			= { 120, 120 },
 	['Pos'] 			= Vector( 1, -1.2, 0 ),
 	['Ang']				= Angle( 0, 0, 0 ),
 	['Color']			= Color( 170, 255, 255, 255 ),
+	
+	['FlashLightMat'] 	= "effects/flashlight001",	
+	['FlashLightFarZ']	= 1024,								-- Sets the distance at which the projected texture ends.
+	['FlashLightNearZ']	= 1, 								-- Sets the distance at which the projected texture begins its projection.
+	['FlashLightFOV']	= 40, 								-- Sets the angle of projection.
+	['SpriteMat'] 		= Material( "sprites/light_glow03_fix" ),
+	['SpriteMins']		= { 5, 5 },							-- { width, height } at min distance.
+	['SpriteMaxs']		= { 120, 120 },						-- { width, height } at max distance.
+}
+SWEP.LaserTab 		= {
+	['Attachment']		= "1",
+	['Pos'] 			= Vector( 1, -1.2, 0 ),
+	['Ang']				= Angle( 0, 0, 0 ),	
+	['Color']			= Color( 0, 220, 255, 255 ),
+	
+	['LaserMat'] 		= Material( "sprites/rollermine_shock" ),	
+	['LaserSize']		= { 2048, 3 }, 						-- { length, width }
+	['LaserNoFade'] 	= false,							-- If true, the laser of this weapon won't fade with distance. It's meant to be used with weapons like sniper rifles. Lasers fade for performance reasons. Use it smart.
+	['StartDotMat'] 	= Material( "particle/particle_glow_02" ),
+	['StartDotSize']	= { 3, 3 }, 						-- { width, height }
+	['EndDotMat'] 		= Material( "particle/particle_glow_02" ),
+	['EndDotSize']		= { 3, 3 }, 						-- { width, height }
 }
 ]]--
 -- SWEP NPC Settings
@@ -203,6 +218,7 @@ SWEP.NPCBurstMin = 4
 SWEP.NPCBurstMax = 8
 
 local fLightSmartMode = GetConVar( "anplus_swep_flight_smartmode" )
+local vector_zero = Vector( 0, 0, 0 )
 
 -- Hooks
 function SWEP:ANPlusInitialize()
@@ -230,17 +246,17 @@ function SWEP:Initialize()
 		hook.Add( "PostDrawEffects", self, self.SWEPPostDrawEffects )
 		if self.FlashlightTab && self.FlashlightTab['Attachment'] then			
 			
-			local fLightTab = self.FlashlightTab
-			local attTab = self:GetAttachment( fLightTab['Attachment'] )
+			local tab = self.FlashlightTab
+			local attTab = self:GetAttachment( tab['Attachment'] )
 			self.m_pFLProjText = ProjectedTexture()
 
-			self.m_pFLProjText:SetTexture( fLightTab['FlashLightMat'] )
-			self.m_pFLProjText:SetFOV( fLightTab['FOV'] )
-			self.m_pFLProjText:SetFarZ( fLightTab['FarZ'] )
-			self.m_pFLProjText:SetColor( fLightTab['Color'] )
-			self.m_pFLProjText:SetNearZ( fLightSmartMode:GetBool() && 0 || fLightTab['NearZ'] )
+			self.m_pFLProjText:SetTexture( tab['FlashLightMat'] )
+			self.m_pFLProjText:SetFOV( tab['FlashLightFOV'] )
+			self.m_pFLProjText:SetFarZ( tab['FlashLightFarZ'] )
+			self.m_pFLProjText:SetColor( tab['Color'] )
+			self.m_pFLProjText:SetNearZ( fLightSmartMode:GetBool() && 0 || tab['FlashLightNearZ'] )
 			
-			local newPos, newAng = LocalToWorld( fLightTab['Pos'], fLightTab['Ang'], attTab.Pos, attTab.Ang )	
+			local newPos, newAng = LocalToWorld( tab['Pos'], tab['Ang'], attTab.Pos, attTab.Ang )	
 			
 			self.m_pFLProjText:SetPos( newPos ) -- Initial position and angles
 			self.m_pFLProjText:SetAngles( newAng )
@@ -550,6 +566,14 @@ function SWEP:ThinkServer()
             owner:SetSchedule(SCHED_RELOAD)      
         end
 		
+		if IsValid(owner:GetEnemy()) && owner:Visible( owner:GetEnemy() ) then
+			local enemy = owner:GetEnemy()
+			self:SetNW2Vector( "m_vecANPSWEPEnemyPos", enemy:ANPlusGetHitGroupBone( 1 ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:GetPos() + enemy:OBBCenter() ) 
+		elseif !IsValid(owner:GetInternalVariable( "m_hLookTarget" )) || !owner:Visible( owner:GetInternalVariable( "m_hLookTarget" ) ) then
+
+			self:SetNW2Vector( "m_vecANPSWEPEnemyPos", vector_zero ) 
+		end
+		
 	end
 	
 	self:ANPlusWorldModelUpdate()
@@ -759,9 +783,12 @@ end
 
 if (CLIENT) then
 	local defFov = GetConVar( "fov_desired" )
+	
 	local fLightDistStart = GetConVar( "anplus_swep_flight_fade_distance_start" )
 	local fLightDist = GetConVar( "anplus_swep_flight_fade_distance" )
-	local fLightBeamMat = Material( "sprites/glow_test02.vmt" )
+	
+	local lStart = GetConVar( "anplus_swep_laser_fade_distance_start" )
+	local lDist = GetConVar( "anplus_swep_laser_fade_distance" )
 	
 	function SWEP:ANPlusPreDrawEffects()
 	end
@@ -772,7 +799,7 @@ if (CLIENT) then
 				
 			if IsValid(self.m_pFLProjText) then
 			
-				local fLightTab = self.FlashlightTab
+				local tab = self.FlashlightTab
 				
 				if fLightSmartMode:GetBool() && CurTime() - self.m_fCheckLightLast >= self.m_fCheckLightDelay then
 					local col = render.GetLightColor( self:GetPos() )
@@ -781,7 +808,7 @@ if (CLIENT) then
 					if IsValid(self:GetOwner()) then
 						if self.m_fLightLevel < 0.0055 then
 							if !self:ANPlusIsWepFLightEnabled() then
-								self.m_pFLProjText:SetNearZ( fLightTab['NearZ'] )
+								self.m_pFLProjText:SetNearZ( tab['FlashLightNearZ'] )
 								self.m_pFLProjText:SetBrightness( 1 )
 							end
 						else
@@ -795,9 +822,10 @@ if (CLIENT) then
 					self.m_fCheckLightLast = CurTime() + self.m_fCheckLightDelay
 				end
 				
-				if self:ANPlusIsWepFLightEnabled() then					
-					local fLightCol = fLightTab['Color']
-					local attTab = self:GetAttachment( fLightTab['Attachment'] )
+				if self:ANPlusIsWepFLightEnabled() then	
+				
+					local attTab = self:GetAttachment( tab['Attachment'] )
+					local col = tab['Color']
 					
 					local ply = LocalPlayer()					
 					local viewEnt = ply:GetViewEntity()	
@@ -812,7 +840,7 @@ if (CLIENT) then
 					local ang = math.max( p , y ) * 3					
 					local bright = math.Remap( math.min( d * transFov - fLightDistStart:GetFloat(), fLightDist:GetFloat() ), 1, fLightDist:GetFloat(), 1, 0 )	
 					self.m_pFLProjText:SetBrightness( bright )
-					local newPos, newAng = LocalToWorld( fLightTab['Pos'], fLightTab['Ang'], attTab.Pos, attTab.Ang )	
+					local newPos, newAng = LocalToWorld( tab['Pos'], tab['Ang'], attTab.Pos, attTab.Ang )	
 					
 					self.m_pFLProjText:SetPos( newPos )
 					self.m_pFLProjText:SetAngles( newAng )		
@@ -820,16 +848,53 @@ if (CLIENT) then
 					local alpha = math.Remap( math.min( d * transFov - fLightDistStart:GetFloat(), fLightDist:GetFloat() ), 1, fLightDist:GetFloat(), 255, 0 )	
 					alpha = math.min( alpha, 255 )
 					alpha = math.max( alpha - ang, 0 )
-					local fLightCol = Color( fLightCol.r, fLightCol.g, fLightCol.b, alpha )
-					render.SetMaterial( fLightTab['FlashLightSpr'] )
-					render.ANPlusDrawSpriteParallax( newPos, fLightTab['Mins'][ 1 ], fLightTab['Mins'][ 2 ], fLightTab['Maxs'][ 1 ], fLightTab['Maxs'][ 2 ], 2000, fLightCol )
+					col = Color( col.r, col.g, col.b, alpha )
+					render.SetMaterial( tab['SpriteMat'] )
+					render.ANPlusDrawSpriteParallax( newPos, tab['SpriteMins'][ 1 ], tab['SpriteMins'][ 2 ], tab['SpriteMaxs'][ 1 ], tab['SpriteMaxs'][ 2 ], 2000, col )
 					
 				end
 				self.m_pFLProjText:Update()
 			end
 			
 		end
+		
+		if self.LaserTab && self.LaserTab['Attachment'] then
+		
+			local tab = self.LaserTab
+			local attTab = self:GetAttachment( tab['Attachment'] )
+			local newPos, newAng = LocalToWorld( tab['Pos'], tab['Ang'], attTab.Pos, attTab.Ang )	
+			local col = tab['Color']
+			local ply = LocalPlayer()					
+			local viewEnt = ply:GetViewEntity()	
+			local dSqr, d = ANPlusGetRangeVector( viewEnt:GetPos(), attTab.Pos )	
+			local transFov = math.Remap( ply:GetFOV(), 0, defFov:GetFloat(), 0, 1 )	
+			local alpha = tab['LaserNoFade'] && 255 || math.Remap( math.min( d * transFov - lStart:GetFloat(), lDist:GetFloat() ), 1, lDist:GetFloat(), 255, 0 )
+			if alpha > 0 then
+				col = Color( col.r, col.g, col.b, alpha )
+				
+				local endPos = vector_zero != self:GetNW2Vector( "m_vecANPSWEPEnemyPos" ) && self:ANPlusValidAnglesNormal( self:GetNW2Vector( "m_vecANPSWEPEnemyPos" ), angCheck ) && self:GetNW2Vector( "m_vecANPSWEPEnemyPos" ) || newPos + newAng:Forward() * tab['LaserSize'][ 1 ]
+				
+				local tr = util.TraceLine({
+					start = newPos,
+					endpos = endPos,
+					filter = { self, self:GetOwner() },
+				})
+				
+				render.SetMaterial( tab['StartDotMat'] )
+				render.DrawSprite( newPos, tab['StartDotSize'][ 1 ], tab['StartDotSize'][ 2 ], col )
+				
+				render.SetMaterial( tab['LaserMat'] )
+				render.DrawBeam( newPos, tr.HitPos, tab['LaserSize'][ 2 ], 0, 1, col )
+				
+				if tr.Hit == true then
+					render.SetMaterial( tab['EndDotMat'] )
+					render.DrawSprite( tr.HitPos, tab['EndDotSize'][ 1 ], tab['EndDotSize'][ 2 ], col )
+				end
+			end
+		end
+		
 		self:ANPlusPreDrawEffects()
+
 	end
 	
 	function SWEP:ANPlusPostDrawEffects()
