@@ -54,8 +54,8 @@ ANPlus = {
 			
 			if (CLIENT) then				
 				print( "AddNPCPlus " .. ANPlusLoadGlobalCount .. " Loaded: " .. tab['Name'] )  				
-				language.Add( id, id )
-				language.Add( "#" .. id, id )
+				--language.Add( id, id )
+				--language.Add( "#" .. id, id )
 			end		
 			--	
 			if listType == "NPC" then -- Default stuff that We need for other stuff to not break.

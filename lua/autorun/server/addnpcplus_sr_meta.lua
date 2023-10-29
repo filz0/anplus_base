@@ -7,12 +7,13 @@ local metaENT = FindMetaTable("Entity")
 function metaENT:ANPlusSetKillfeedName(name)
 	if !name || name == "" then name = nil end
 	if self:ANPlusGetDataTab() then
-		self:ANPlusGetDataTab()['KillfeedName'] = name
+		self:ANPlusGetDataTab()['KillfeedName'] = name		
+	--[[
 		if !name then return end
-		
 		net.Start( "anplus_add_fakename_language" )
 		net.WriteString( name )
 		net.Broadcast()
+	]]--
 	end
 end
 

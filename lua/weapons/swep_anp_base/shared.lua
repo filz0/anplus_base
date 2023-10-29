@@ -70,19 +70,19 @@ SWEP.FlashlightTab 		= {
 	['SpriteMins']		= { 5, 5 },							-- { width, height } at min distance.
 	['SpriteMaxs']		= { 120, 120 },						-- { width, height } at max distance.
 }
-SWEP.LaserTab 		= {
+SWEP.LaserTab 			= {
 	['Attachment']		= "1",
-	['Pos'] 			= Vector( 1, -1.2, 0 ),
+	['Pos'] 			= Vector( -4, 0.8, 0 ),
 	['Ang']				= Angle( 0, 0, 0 ),	
 	['Color']			= Color( 0, 220, 255, 255 ),
 	
 	['LaserMat'] 		= Material( "sprites/rollermine_shock" ),	
-	['LaserSize']		= { 2048, 3 }, 						-- { length, width }
+	['LaserSize']		= { 2048, 2 }, 						-- { length, width }
 	['LaserNoFade'] 	= false,							-- If true, the laser of this weapon won't fade with distance. It's meant to be used with weapons like sniper rifles. Lasers fade for performance reasons. Use it smart.
 	['StartDotMat'] 	= Material( "particle/particle_glow_02" ),
-	['StartDotSize']	= { 3, 3 }, 						-- { width, height }
+	['StartDotSize']	= { 1, 1 }, 						-- { width, height }
 	['EndDotMat'] 		= Material( "particle/particle_glow_02" ),
-	['EndDotSize']		= { 3, 3 }, 						-- { width, height }
+	['EndDotSize']		= { 1, 1 }, 						-- { width, height }
 }
 ]]--
 -- SWEP NPC Settings
@@ -880,13 +880,17 @@ if (CLIENT) then
 					filter = { self, self:GetOwner() },
 				})
 				
-				render.SetMaterial( tab['StartDotMat'] )
-				render.DrawSprite( newPos, tab['StartDotSize'][ 1 ], tab['StartDotSize'][ 2 ], col )
+				if tab['StartDotMat'] then
+					render.SetMaterial( tab['StartDotMat'] )
+					render.DrawSprite( newPos, tab['StartDotSize'][ 1 ], tab['StartDotSize'][ 2 ], col )
+				end
 				
-				render.SetMaterial( tab['LaserMat'] )
-				render.DrawBeam( newPos, tr.HitPos, tab['LaserSize'][ 2 ], 0, 1, col )
+				if tab['LaserMat'] then
+					render.SetMaterial( tab['LaserMat'] )
+					render.DrawBeam( newPos, tr.HitPos, tab['LaserSize'][ 2 ], 0, 1, col )
+				end
 				
-				if tr.Hit == true then
+				if tab['EndDotMat'] && tr.Hit == true then
 					render.SetMaterial( tab['EndDotMat'] )
 					render.DrawSprite( tr.HitPos, tab['EndDotSize'][ 1 ], tab['EndDotSize'][ 2 ], col )
 				end

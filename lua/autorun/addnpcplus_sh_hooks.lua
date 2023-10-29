@@ -8,140 +8,34 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 hook.Add( "InitPostEntity", "ANPlusLoad_GamemodeInitPostEntity", function()
 
 	timer.Simple( 0, function()
-	
-		function GAMEMODE:PlayerDeath( ply, inflictor, attacker ) -- If you know a better way of doing this, please tell me :(
-
-			-- Don't spawn for at least 2 seconds
-			ply.NextSpawnTime = CurTime() + 2
-			ply.DeathTime = CurTime()
-
-			if ( IsValid( attacker ) && attacker:GetClass() == "trigger_hurt" ) then attacker = ply end
-
-			if ( IsValid( attacker ) && attacker:IsVehicle() && IsValid( attacker:GetDriver() ) ) then
-				attacker = attacker:GetDriver()
-			end
-
-			if ( !IsValid( inflictor ) && IsValid( attacker ) ) then
-				inflictor = attacker
-			end
-
-			-- Convert the inflictor to the weapon that they're holding if we can.
-			-- This can be right || wrong with NPCs since combine can be holding a
-			-- pistol but kill you by hitting you with their arm.
-			if ( IsValid( inflictor ) && inflictor == attacker && ( inflictor:IsPlayer() || inflictor:IsNPC() ) ) then
-
-				inflictor = inflictor:GetActiveWeapon()
-				if ( !IsValid( inflictor ) ) then inflictor = attacker end
-
-			end
-
-			player_manager.RunClass( ply, "Death", inflictor, attacker )
-
-			if ( attacker == ply ) then
-
-				net.Start( "PlayerKilledSelf" )
-					net.WriteEntity( ply )
-				net.Broadcast()
-
-				MsgAll( attacker:Nick() .. " suicided!\n" )
-
-			return end
-
-			if ( attacker:IsPlayer() ) then
-				
-				local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['KillfeedName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
-				
-				net.Start( "PlayerKilledByPlayer" )
-
-					net.WriteEntity( ply )
-					net.WriteString( anpInf )
-					net.WriteEntity( attacker )
-
-				net.Broadcast()
-
-				MsgAll( attacker:Nick() .. " killed " .. ply:Nick() .. " using " .. inflictor:GetClass() .. "\n" )
-
-			return end
-
-			net.Start( "PlayerKilled" )
-				
-				local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['KillfeedName'] || inflictor:ANPlusGetDataTab()['Name'] ) || inflictor:GetClass()
-				local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['KillfeedName'] || attacker:ANPlusGetDataTab()['Name'] ) || attacker:GetClass()
-				
-				net.WriteEntity( ply )
-				net.WriteString( anpInf )
-				net.WriteString( anpAtt )
-
-			net.Broadcast()
-
-			MsgAll( ply:Nick() .. " was killed by " .. anpAtt .. "\n" )
-
-		end
-
-		function GAMEMODE:OnNPCKilled( ent, attacker, inflictor )
-
-			-- Don't spam the killfeed with scripted stuff
-			if ( ent:GetClass() == "npc_bullseye" || ent:GetClass() == "npc_launcher" ) then return end
-
-			if ( IsValid( attacker ) && attacker:GetClass() == "trigger_hurt" ) then attacker = ent end
+		
+		function GAMEMODE:GetDeathNoticeEntityName( ent )
 			
-			if ( IsValid( attacker ) && attacker:IsVehicle() && IsValid( attacker:GetDriver() ) ) then
-				attacker = attacker:GetDriver()
-			end
-
-			if ( !IsValid( inflictor ) && IsValid( attacker ) ) then
-				inflictor = attacker
+			if ent:IsANPlus( true ) then 
+				return ent:ANPlusGetKillfeedName()
 			end
 			
-			-- Convert the inflictor to the weapon that they're holding if we can.
-			if ( IsValid( inflictor ) && attacker == inflictor && ( inflictor:IsPlayer() || inflictor:IsNPC() ) ) then
-			
-				inflictor = inflictor:GetActiveWeapon()
-				if ( !IsValid( attacker ) ) then inflictor = attacker end
-			
-			end
-			
-			local InflictorClass = "worldspawn"
-			local AttackerClass = "worldspawn"
-			
-			if ( IsValid( inflictor ) ) then InflictorClass = inflictor:GetClass() end
-			if ( IsValid( attacker ) ) then
+			-- Some specific HL2 NPCs, just for fun
+			-- TODO: Localization strings?
+			if ( ent:GetClass() == "npc_citizen" ) then
+				if ( ent:GetName() == "griggs" ) then return "Griggs" end
+				if ( ent:GetName() == "sheckley" ) then return "Sheckley" end
+				if ( ent:GetName() == "tobias" ) then return "Laszlo" end
+				if ( ent:GetName() == "stanley" ) then return "Sandy" end
 
-				AttackerClass = attacker:GetClass()
-
-				-- If there is no valid inflictor, use the attacker (i.e. manhacks)
-				if ( !IsValid( inflictor ) ) then InflictorClass = attacker:GetClass() end
-
-				if ( attacker:IsPlayer() ) then
-					
-					local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['KillfeedName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
-
-					net.Start( "PlayerKilledNPC" )
-				
-						net.WriteString( anpVic )
-						net.WriteString( InflictorClass )
-						net.WriteEntity( attacker )
-				
-					net.Broadcast()
-
-					return
-				end
-
+				if ( ent:GetModel() == "models/odessa.mdl" ) then return "Odessa Cubbage" end
 			end
 
-			if ( ent:GetClass() == "npc_turret_floor" ) then AttackerClass = ent:GetClass() end
-			
-				local anpVic = ent:IsANPlus() && ( ent:ANPlusGetDataTab()['KillfeedName'] || ent:ANPlusGetDataTab()['Name'] ) || ent:GetClass()
-				local anpInf = inflictor:IsANPlus(true) && ( inflictor:ANPlusGetDataTab()['KillfeedName'] || inflictor:ANPlusGetDataTab()['Name'] ) || InflictorClass
-				local anpAtt = attacker:IsANPlus(true) && ( attacker:ANPlusGetDataTab()['KillfeedName'] || attacker:ANPlusGetDataTab()['Name'] ) || AttackerClass
-				
-			net.Start( "NPCKilledNPC" )
-			
-				net.WriteString( anpVic )
-				net.WriteString( anpInf )
-				net.WriteString( anpAtt )
-			
-			net.Broadcast()
+			-- Custom vehicle and NPC names
+			if ( ent:IsVehicle() and ent.VehicleTable and ent.VehicleTable.Name ) then
+				return ent.VehicleTable.Name
+			end
+			if ( ent:IsNPC() and ent.NPCTable and ent.NPCTable.Name ) then
+				return ent.NPCTable.Name
+			end
+
+			-- Fallback to old behavior
+			return "#" .. ent:GetClass()
 
 		end
 		

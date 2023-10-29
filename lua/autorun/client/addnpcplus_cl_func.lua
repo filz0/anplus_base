@@ -3,7 +3,7 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
 local ENT = FindMetaTable("Entity")
-
+--[[
 net.Receive("anplus_add_fakename_language", function()
 	local name = net.ReadString()
 	if name then
@@ -12,7 +12,7 @@ net.Receive("anplus_add_fakename_language", function()
 		end
 	end	
 end)
-
+]]--
 net.Receive("anplus_fix_bones", function()
 
 	local ent = net.ReadEntity()

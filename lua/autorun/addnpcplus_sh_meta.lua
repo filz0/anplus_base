@@ -679,7 +679,7 @@ function ANPlusIsEmptySpace(spos, epos, filterTab, vecmin, vecmax)
 end
 
 function metaENT:ANPlusGetName()
-	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Name'] || (SERVER) && self:GetName() || self:GetClass()
+	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Name'] || (SERVER) && ( self:GetName() || self:GetClass() )
 end
 
 function ANPlusEmitUISound(ply, snd, vol)	
