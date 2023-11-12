@@ -181,7 +181,6 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 		end
 		
 		if (SERVER) then
-			
 			if defaultOutputs then
 				local hookTab = ent:IsNPC() && defaultOutputs['NPC']
 				if hookTab then
@@ -294,28 +293,31 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 		if ent:GetNW2Bool( "m_bANPMuted" ) then return false end		
 		
 		ent.m_tLastSoundEmitted = data			
-		
+
 		if ent:ANPlusGetDataTab()['SoundModification'] && ent:ANPlusGetDataTab()['SoundModification']['SoundList'] then	
 			
 			local sndTab = ent:ANPlusGetDataTab()['SoundModification']['SoundList']		
+			local delDigits = string.gsub( data.OriginalSoundName, "%d", "" )
 			
 			for _, v in ipairs( sndTab ) do		
 				
 				if v then
-				
-					if string.find( string.lower( data.SoundName ), v[ 1 ] ) || string.find( data.OriginalSoundName, v[ 1 ] ) then 	
+					
+					if string.find( string.lower( data.SoundName ), v[ 1 ] ) || !data.SentenceIndex && string.find( data.OriginalSoundName, v[ 1 ] ) || data.SentenceIndex && delDigits == v[ 1 ] then 	
 						
 						if v['Play'] != nil && v['Play'] == false then return false end			
 						
 						local sndRNG = v['Replacement'] && istable( v['Replacement'] ) && v['Replacement'][ math.random( 1, #v['Replacement'] ) ] || v['Replacement'] || data.SoundName
 						
-						local sndReplace = sound.GetTable()[ sndRNG ] && sound.GetProperties( sndRNG )['sound'] || sndRNG
+						local sndScript = sound.GetProperties( sndRNG ) || false						
+						local sndReplace = sndScript && ( istable( sndScript['sound'] ) && sndScript['sound'][ math.random( 1, #sndScript['sound'] ) ] || sndScript['sound'] ) || sndRNG
+						
 						sndReplace = !v['SoundCharacter'] && sndReplace || v['SoundCharacter'] == true && ( sndChars[ string.Left( data.SoundName, 1 ) ] && string.Left( data.SoundName, 1 ) .. sndReplace || sndReplace ) || isstring( v['SoundCharacter'] ) && v['SoundCharacter'] .. sndReplace 
 						
-						local sndLVL = v['SoundLevel'] && istable( v['SoundLevel'] ) && math.random( v['SoundLevel'][ 1 ], ( v['SoundLevel'][ 2 ] || v['SoundLevel'][ 1 ] ) ) || v['SoundLevel'] || data.SoundLevel
-						local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || data.Pitch
-						local sndChannel = v['Channel'] || data.Channel
-						local sndVolume = v['Volume'] && istable( v['Volume'] ) && math.random( v['Volume'][ 1 ], ( v['Volume'][ 2 ] || v['Volume'][ 1 ] ) ) || v['Volume'] || data.Volume
+						local sndLVL = v['SoundLevel'] && istable( v['SoundLevel'] ) && math.random( v['SoundLevel'][ 1 ], ( v['SoundLevel'][ 2 ] || v['SoundLevel'][ 1 ] ) ) || v['SoundLevel'] || sndScript && sndScript['level'] || data.SoundLevel
+						local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || sndScript && sndScript['pitch'] || data.Pitch
+						local sndChannel = v['Channel'] || sndScript && sndScript['channel'] || data.Channel
+						local sndVolume = v['Volume'] && istable( v['Volume'] ) && math.random( v['Volume'][ 1 ], ( v['Volume'][ 2 ] || v['Volume'][ 1 ] ) ) || v['Volume'] || sndScript && sndScript['volume'] || data.Volume
 						local sndFlags = v['Flags'] || data.Flags
 						local sndDSP = v['DSP'] || data.DSP
 
@@ -325,17 +327,19 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 						data.Channel 			= sndChannel
 						data.Volume 			= sndVolume
 						data.Flags				= sndFlags
-						data.DSP 				= sndDSP	
+						data.DSP 				= sndDSP
+
 						if data.SentenceIndex && sndRNG != data.OriginalSoundName then
-							if sound.GetProperties( sndRNG ) || string.find( string.lower( sndRNG ), "/" ) then
+							if sound.GetProperties( sndRNG ) || string.find( string.lower( sndRNG ), "/" ) then	
 								ent:EmitSound( sndReplace, data.SoundLevel, data.Pitch, data.Volume, data.Channel, data.Flags, data.DSP )
 							else
-								EmitSentence( sndReplace, ent:GetPos(), ent:EntIndex(), data.Channel, data.Volume, data.SoundLevel, data.Flags, data.Pitch )
+								ent:PlaySentence( sndReplace, 0, data.Volume )
 							end
 							
 							return false
 						end
-						return true	
+						
+						return true						
 					end	
 					
 				end

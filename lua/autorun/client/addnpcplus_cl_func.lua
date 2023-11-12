@@ -150,14 +150,19 @@ function ENT:ANPlusNPCPostDrawEffects()
 	end
 end
 
-function ENT:ANPlusCustomConfigMenu(tab)
+local ccm_DCol = Color( 200, 200, 200, 255 )
+local ccm_BTCol = Color ( 100, 100, 100, 255 )
+local ccm_BHCol = Color( 150, 150, 150, 255 )
+
+function ENT:ANPlusCustomConfigMenu()
 		
 	local ply = LocalPlayer()
 	local ent = self
-	if !tab then print("Couldn't load variables, aborting...") return end
+	local tab = ent['m_tSaveDataMenu']
+	if !tab then ANPlusUISound( "ANP.UI.Error" ); print("Couldn't load variables, aborting...") return end
 
 	ANPlusUISound( "ANP.UI.Open" )
-
+	
 	local dFrame = vgui.Create( "DFrame" )
 		dFrame:SetTitle( "" )
 		dFrame:SetSize( 225, 75 )
@@ -207,11 +212,17 @@ function ENT:ANPlusCustomConfigMenu(tab)
 	colCatSP:SetSize( 235, 250 )
 	colCat:SetContents( colCatSP )
 	
-	local count = 0
+	local count = 1
 	local height = 20
+	
+	colCatSP:ANPlus_CreateLabel( 5, ( height - 2 ) - 20, 200, "[ Custom Variables ]-----------------", ccm_DCol )
+	
 	for _, var in ipairs( tab ) do 
-		if var then
-			if isbool( ent[ var['Variable'] ] ) then
+		if var then			
+			if isstring( ent[ var['Variable'] ] ) && ent[ var['Variable'] ] == "Category" && var['Label'] then
+				count = count + 1
+				colCatSP:ANPlus_CreateLabel( 5, ( count * height - 2 ) - 20, 200, var['Label'], ccm_DCol )
+			elseif isbool( ent[ var['Variable'] ] ) then
 				count = count + 1				
 				local val = colCatSP:ANPlus_CreateCheckBoxLabel( 5, ( count * height ) - 20, var['Label'], false, ent[ var['Variable'] ], var['Description'] || "" )
 				function val:OnChange( bVal )
@@ -219,7 +230,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 				end
 			elseif isnumber( ent[ var['Variable'] ] ) then
 				count = count + 1
-				local valLab = colCatSP:ANPlus_CreateLabel( 25, ( count * height - 2 ) - 20, 200, var['Label'], Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 29, ( count * height - 2 ) - 20, 200, var['Label'], color_white, "DermaDefault" )
 				local val = colCatSP:ANPlus_CreateNumberScratch( 5, ( count * height ) - 20, ent[ var['Variable'] ], var['Decimals'] || 0, var['Min'] || 0, var['Max'] || 1, var['Description'] || "" )
 				function val:OnValueChanged( nVal )					
 					nVal = math.Round( nVal, var['Decimals'] || 0 )
@@ -227,21 +238,30 @@ function ENT:ANPlusCustomConfigMenu(tab)
 				end				
 			elseif isstring( ent[ var['Variable'] ] ) then
 				count = count + 1	
-				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'] .. ":", Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'] .. ":", color_white, "DermaDefault" )
 				count = count + 1
-				local val = colCatSP:ANPlus_CreateTextEntry( 5, ( count * height ) - 20, 205, 15, ent[ var['Variable'] ], Color( 200, 200, 200, 255 ), false, var['Description'] || "" )				
+				local val = colCatSP:ANPlus_CreateTextEntry( 5, ( count * height ) - 20, 205, 15, ent[ var['Variable'] ], color_black, false, var['Description'] || "" )				
 				function val:OnEnter( sVal )
 					var['ValueNew'] = sVal
+					val:ANPlusHighlightTextColor( Color( 0, 255, 0, 255 ), 0.5, color_black )
 				end	
 				function val:OnLoseFocus()
-					valLab:SetWidth( 200 )
+					var['ValueNew'] = val:GetText()
+					val:ANPlusHighlightTextColor( Color( 0, 255, 0, 255 ), 0.5, color_black )
+				end	
+				function val:OnChange()
+					var['ValueNew'] = val:GetText()
+					timer.Create( "Timer_ANPlusCustomConfigMenu_TextCheck", 0.7, 1, function()
+						if !IsValid(dFrame) then return end
+						val:ANPlusHighlightTextColor( Color( 0, 255, 0, 255 ), 0.5, color_black )
+					end )
 				end		
 			elseif isvector( ent[ var['Variable'] ] ) then
 				count = count + 1	
-				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'] .. ":", Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'] .. ":", color_white, "DermaDefault" )
 				count = count + 1
 
-				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 10, "X:", Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 10, "X:", color_white, "DermaDefault" )
 				local valX = colCatSP:ANPlus_CreateNumberScratch( 19, ( count * height ) - 20, ent[ var['Variable'] ].x, var['Decimals'] || 0, var['Min'].x || 0, var['Max'].x || 1, var['Description'] || "" )
 				function valX:OnValueChanged( nVal )					
 					nVal = math.Round( nVal, var['Decimals'] || 0 )
@@ -250,7 +270,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 					var['ValueNew'] = Vector( nVal, y, z )
 				end	
 				
-				local valLab = colCatSP:ANPlus_CreateLabel( 38, ( count * height - 2 ) - 20, 10, "Y:", Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 38, ( count * height - 2 ) - 20, 10, "Y:", color_white, "DermaDefault" )
 				local valY = colCatSP:ANPlus_CreateNumberScratch( 49, ( count * height ) - 20, ent[ var['Variable'] ].y, var['Decimals'] || 0, var['Min'].y || 0, var['Max'].y || 1, var['Description'] || "" )
 				function valY:OnValueChanged( nVal )					
 					nVal = math.Round( nVal, var['Decimals'] || 0 )
@@ -259,7 +279,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 					var['ValueNew'] = Vector( x, nVal, z )
 				end	
 				
-				local valLab = colCatSP:ANPlus_CreateLabel( 68, ( count * height - 2 ) - 20, 10, "Z:", Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 68, ( count * height - 2 ) - 20, 10, "Z:", color_white, "DermaDefault" )
 				local valZ = colCatSP:ANPlus_CreateNumberScratch( 79, ( count * height ) - 20, ent[ var['Variable'] ].z, var['Decimals'] || 0, var['Min'].z || 0, var['Max'].z || 1, var['Description'] || "" )
 				function valZ:OnValueChanged( nVal )					
 					nVal = math.Round( nVal, var['Decimals'] || 0 )
@@ -269,10 +289,10 @@ function ENT:ANPlusCustomConfigMenu(tab)
 				end	
 			elseif isangle( ent[ var['Variable'] ] ) then
 				count = count + 1	
-				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'] .. ":", Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 200, var['Label'] .. ":", color_white, "DermaDefault" )
 				count = count + 1
 
-				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 10, "P:", Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 8, ( count * height - 2 ) - 20, 10, "P:", color_white, "DermaDefault" )
 				local valX = colCatSP:ANPlus_CreateNumberScratch( 19, ( count * height ) - 20, ent[ var['Variable'] ].x, var['Decimals'] || 0, var['Min'].x || 0, var['Max'].x || 1, var['Description'] || "" )
 				function valX:OnValueChanged( nVal )					
 					nVal = math.Round( nVal, var['Decimals'] || 0 )
@@ -281,7 +301,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 					var['ValueNew'] = Angle( nVal, y, z )
 				end	
 				
-				local valLab = colCatSP:ANPlus_CreateLabel( 38, ( count * height - 2 ) - 20, 10, "Y:", Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 38, ( count * height - 2 ) - 20, 10, "Y:", color_white, "DermaDefault" )
 				local valY = colCatSP:ANPlus_CreateNumberScratch( 49, ( count * height ) - 20, ent[ var['Variable'] ].y, var['Decimals'] || 0, var['Min'].y || 0, var['Max'].y || 1, var['Description'] || "" )
 				function valY:OnValueChanged( nVal )					
 					nVal = math.Round( nVal, var['Decimals'] || 0 )
@@ -290,7 +310,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 					var['ValueNew'] = Angle( x, nVal, z )
 				end	
 				
-				local valLab = colCatSP:ANPlus_CreateLabel( 68, ( count * height - 2 ) - 20, 10, "R:", Color( 200, 200, 200, 255 ) )
+				local valLab = colCatSP:ANPlus_CreateLabel( 68, ( count * height - 2 ) - 20, 10, "R:", color_white, "DermaDefault" )
 				local valZ = colCatSP:ANPlus_CreateNumberScratch( 79, ( count * height ) - 20, ent[ var['Variable'] ].z, var['Decimals'] || 0, var['Min'].z || 0, var['Max'].z || 1, var['Description'] || "" )
 				function valZ:OnValueChanged( nVal )					
 					nVal = math.Round( nVal, var['Decimals'] || 0 )
@@ -304,16 +324,16 @@ function ENT:ANPlusCustomConfigMenu(tab)
 	
 	colCat:Toggle()
 	
-	local save = dFrame:ANPlus_CreateButton( 5, 5, 50, 20, 8, Color( 200, 200, 200, 255 ), "Apply", Color ( 100, 100, 100, 255 ), "Apply all of the changes." )
+	local save = dFrame:ANPlus_CreateButton( 5, 5, 50, 20, 8, ccm_DCol, "Apply", ccm_BTCol, "Apply all of the changes." )
 	function save:OnCursorEntered()
 		function save:Paint(w, h)
-			draw.RoundedBox( 8, 3, 3, w - 6, h - 6, Color( 150, 150, 150, 255 ) )
+			draw.RoundedBox( 8, 3, 3, w - 6, h - 6, ccm_BHCol )
 		end
 		ANPlusUISound( "ANP.UI.Hover" )
 	end
 	function save:OnCursorExited()
 		function save:Paint(w, h)
-			draw.RoundedBox( 8, 0, 0, w, h, Color( 200, 200, 200, 255 ) )
+			draw.RoundedBox( 8, 0, 0, w, h, ccm_DCol )
 		end
 	end
 	function save:DoClick()
@@ -323,7 +343,7 @@ function ENT:ANPlusCustomConfigMenu(tab)
 			if var then
 				ent[ var['Variable'] ] = var['ValueNew'] || var['ValueNew'] != false && ent[ var['Variable'] ]
 				
-				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	
+				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	  
 					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var['Variable'], ply)			
 				end
 			end
@@ -343,16 +363,16 @@ function ENT:ANPlusCustomConfigMenu(tab)
 		
 	end
 	
-	local cancel = dFrame:ANPlus_CreateButton( 170, 5, 50, 20, 8, Color( 200, 200, 200, 255 ), "Close", Color ( 100, 100, 100, 255 ), "Close the interface." )
+	local cancel = dFrame:ANPlus_CreateButton( 170, 5, 50, 20, 8, ccm_DCol, "Close", ccm_BTCol, "Close the interface." )
 	function cancel:OnCursorEntered()
 		function cancel:Paint(w, h)
-			draw.RoundedBox( 8, 3, 3, w - 6, h - 6, Color( 150, 150, 150, 255 ) )
+			draw.RoundedBox( 8, 3, 3, w - 6, h - 6, ccm_BHCol )
 		end
 		ANPlusUISound( "ANP.UI.Hover" )
 	end
 	function cancel:OnCursorExited()
 		function cancel:Paint(w, h)
-			draw.RoundedBox( 8, 0, 0, w, h, Color( 200, 200, 200, 255 ) )
+			draw.RoundedBox( 8, 0, 0, w, h, ccm_DCol )
 		end
 	end
 	function cancel:DoClick()

@@ -452,7 +452,7 @@ net.Receive("anplus_propmenu", function(_, ply)
 	if IsValid(ent) && tab then
 
 		for _, var in pairs( tab ) do 
-			if var && var['ValueNew'] != nil then
+			if var && var['ValueNew'] != nil then				
 				ent[ var['Variable'] ] = var['ValueNew'] || var['ValueNew'] != false && ent[ var['Variable'] ]			
 
 				if ent['m_tSaveDataUpdateFuncs'] && isfunction( ent['m_tSaveDataUpdateFuncs'][ var['Variable'] ] ) then

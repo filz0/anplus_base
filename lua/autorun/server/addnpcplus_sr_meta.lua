@@ -811,10 +811,6 @@ function metaENT:ANPlusCreateOutputHook(entOutput, eventName)
 	self:Fire( "AddOutput", entOutput .. " anp_lua_run:RunPassedCode:hook.Run( '" .. eventName .. "' ):0:-1" )
 end
 
-function metaENT:ANPlusIsRagdoll()
-	return self:GetClass() == "prop_ragdoll" || false
-end
-
 function metaENT:ANPlusAddSaveData(key, val, func)
 	if key then
 		val = isbool(val) && tostring(val) || val -- False valuse do not save, idk either...

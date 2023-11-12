@@ -46,14 +46,17 @@ ANPlus.AddNPC( {
 			if (SERVER) then
 			
 				self:ANPlusCreateVar( "m_fRemoveDelay", 6 )
+				self:ANPlusCreateVar( "m_fRadius", self:GetModelRadius() )
+				self:ANPlusCreateVar( "m_fAngularVelocity", Angle( math.random( 250, 400 ), math.random( 250, 400 ), 0 ) )
+				self:ANPlusCreateVar( "m_fVelocity", Vector( math.random( -400, 400 ), math.random( -400, 400 ), math.random( 400, 800 ) ) )
 				self.m_fRemoveLast = CurTime()	
 				self.m_fHitWorld = false	
 				
 				self:SetMoveType( 5 )
 				self:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
-				self:SetLocalAngularVelocity( Angle( math.random( 250, 400 ), math.random( 250, 400 ), 0 ) )
-				self:SetVelocity( Vector( math.random( -400, 400 ), math.random( -400, 400 ), math.random( 400, 800 ) ) )
-
+				self:SetLocalAngularVelocity( self.m_fAngularVelocity )
+				self:SetVelocity( self.m_fVelocity )
+				
 			end
 		end,
 		
@@ -69,7 +72,7 @@ ANPlus.AddNPC( {
 				
 					local tr = util.TraceLine( {
 						start = self:GetPos(),
-						endpos = self:GetPos() - self:GetUp() * self:GetModelRadius(),
+						endpos = self:GetPos() - self:GetUp() * self.m_fRadius,
 						filter = self,
 						mask = MASK_SOLID_BRUSHONLY
 						} 		
@@ -723,6 +726,18 @@ local ENTTab = {
  
 ----------------------------------------------------------------- This bit of code here makes sure that your NPC will get added to the global table. Remember to update table name. You can have multiple tables in a single lua file.
 ANPlus.AddNPC( ENTTab, "SpawnableEntities" )
+
+local hitboxTranslate = {
+	[0] = "Generic",
+	[1] = "Head",
+	[2] = "Chest",
+	[3] = "Stomach",
+	[4] = "Left Arm",
+	[5] = "Right Arm",
+	[6] = "Left Leg",
+	[7] = "Right Leg",
+	[8] = "Gear",
+}
 
 ANPlus.AddNPC( {
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC. 

@@ -292,11 +292,11 @@ if (SERVER) then
 ANP_LUA_RUN_ENT = nil
 
 function ANPMapLuaCreate()
-	--if !ANP_LUA_RUN_ENT then
-		ANP_LUA_RUN_ENT = ents.Create( "lua_run" )
+	ANP_LUA_RUN_ENT = ents.Create( "lua_run" )
+	if IsValid(ANP_LUA_RUN_ENT) then
 		ANP_LUA_RUN_ENT:SetName( "anp_lua_run" )
 		ANP_LUA_RUN_ENT:Spawn()
-	--end
+	end
 end
 
 hook.Add( "InitPostEntity", "ANP_LUA_RUN_ENT", ANPMapLuaCreate )
@@ -392,7 +392,7 @@ properties.Add( "anplus_editmenu", {
 		if ( !ent:IsANPlus( true ) ) then return false end
 		if ( !ent['m_tSaveDataMenu'] || table.Count( ent['m_tSaveDataMenu'] ) == 0 ) then return false end
 		if ( !gamemode.Call( "CanProperty", ply, "anplus_editmenu", ent ) ) then return false end
-		
+
 		return true
 	end,
 	Action = function( self, ent ) -- The action to perform upon using the property ( Clientside )
@@ -401,21 +401,23 @@ properties.Add( "anplus_editmenu", {
 			net.WriteEntity( ent )
 		self:MsgEnd()
 		
-		ent:ANPlusCustomConfigMenu( ent['m_tSaveDataMenu'] )
+		--ent:ANPlusCreateVar( "mCategory", "Category", "----[Default Variables]----", "Percentage damage resistance given by the Overseer's buff." )
+		
+		ent:ANPlusCustomConfigMenu()
 		--ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- CLIENT
 
 	end,
 	Receive = function( self, length, ply ) -- The action to perform upon using the property ( Serverside )
 		local ent = net.ReadEntity()
-
 		if ( !properties.CanBeTargeted( ent, ply ) ) then return end
 		if ( !self:Filter( ent, ply ) ) then return end
 		
+		--ent:ANPlusCreateVar( "mCategory", "Category", "----[Default Variables]----", "Percentage damage resistance given by the Overseer's buff." )
 		--ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- SERVER
 		
 	end 
 } )
-
+--[[
 properties.Add( "anplus_controller", {
 	MenuLabel = "ANP Controller", -- Name to display on the context menu
 	Order = 60001, -- The order to display this property relative to other properties
@@ -459,7 +461,7 @@ properties.Add( "anplus_controller", {
 		--ent:SetMaxLookDistance( 1 )
 	end 
 } )
-
+]]--
 
 
 

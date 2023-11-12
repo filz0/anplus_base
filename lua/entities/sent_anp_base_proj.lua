@@ -7,7 +7,7 @@ if (CLIENT) then
 end
 
 ENT.Type 					= "anim"
-ENT.Base 					= "base_gmodentity"
+ENT.Base 					= "base_anim"
 ENT.PrintName				= "sent_anp_base_proj"
 ENT.Author					= "filz0"
 
@@ -23,8 +23,10 @@ ENT.MoveType 				= MOVETYPE_VPHYSICS
 ENT.MoveCollideType 		= MOVECOLLIDE_FLY_BOUNCE
 ENT.CollisionGroupType 		= COLLISION_GROUP_PROJECTILE
 ENT.SolidType 				= SOLID_VPHYSICS
+ENT.PhysObjUse				= 1 -- 1 = PhysObject 2 = Entity
 
 ENT.RunCollideOnDeath		= false
+ENT.UsePhysCollide			= true
 ENT.Bounces					= 0
 ENT.SoftBounceSND			= false
 ENT.HardBounceSND			= false
@@ -76,7 +78,7 @@ if (SERVER) then
 		self:SetMoveCollide( self.MoveCollideType )
 		self:SetCollisionGroup( self.CollisionGroupType )
 		self:SetSolid( self.SolidType )
-		if self.ProjHealth && self.ProjHealth > 0 then self:SetHealth( self.ProjHealth ) end
+		--if self.ProjHealth && self.ProjHealth > 0 then self:SetHealth( self.ProjHealth ) end
 
 		local physObj = self:GetPhysicsObject()
 		if IsValid(physObj) then	
@@ -84,6 +86,7 @@ if (SERVER) then
 		end
 		
 		self:ANPlusOnInitialize()
+
 		--phys:SetBuoyancyRatio( number buoyancy )
 		self.ai_sound = ents.Create( "ai_sound" )
 		self.ai_sound:SetPos( self:GetPos() )
@@ -95,7 +98,7 @@ if (SERVER) then
 		self.ai_sound:Activate()
 		self.ai_sound:Fire( "EmitAISound", "", 1 )
 		self:DeleteOnRemove( self.ai_sound )
-		
+
 		if self.StartSND then self:EmitSound( self.StartSND ) end
 		if self.LoopSND then self:EmitSound( self.LoopSND ) end				
 
@@ -109,7 +112,7 @@ if (SERVER) then
 			end
 		end )
 		 
-		local phys = self:GetPhysicsObject()
+		local phys = self.PhysObjUse == 1 && self:GetPhysicsObject() || self.PhysObjUse == 2 && self
 		if self.EjectForce && IsValid(phys) then			
 			phys:SetVelocity( self:GetForward() * self.EjectForce )
 		end
@@ -143,7 +146,7 @@ if (SERVER) then
 	function ENT:Think()
 		if self.Dead then return end
 		
-		local phys = self:GetPhysicsObject() || self
+		local phys = self.PhysObjUse == 1 && self:GetPhysicsObject() || self.PhysObjUse == 2 && self
 
 		if self.Thrust then
 				
@@ -153,7 +156,10 @@ if (SERVER) then
 			end	
 			if IsValid(self.Target) && self.Target:ANPlusAlive() then				
 				self.CurTurnSpeed = math.Approach( self.CurTurnSpeed, self.TurnSpeed, self.TurnAcceleration )
-				local angleApproach = math.ApproachAngle( self:GetAngles(), self:Point(self.Target), self.CurTurnSpeed )
+				local x = math.ApproachAngle( self:GetAngles().x, self:Point(self.Target).x, self.CurTurnSpeed )
+				local y = math.ApproachAngle( self:GetAngles().y, self:Point(self.Target).y, self.CurTurnSpeed )
+				local z = math.ApproachAngle( self:GetAngles().z, self:Point(self.Target).z, self.CurTurnSpeed )
+				local angleApproach = Angle( x, y, z )
 				--local angleLerp = LerpAngle( FrameTime() * self.CurTurnSpeed, self:GetAngles(), self:Point(self.Target) )	
 				self:SetAngles( angleApproach )	
 			end
@@ -172,20 +178,22 @@ if (SERVER) then
 	end
 	
 	function ENT:PhysicsCollide(data, physobj)
-		if !self.Dead then			
-								
-			if !self.m_bDecalPainted && self.CollideDecal then util.Decal( self.CollideDecal, data.HitPos + data.HitNormal, data.HitPos - data.HitNormal ); self.m_bDecalPainted = true end
-			
-			local SurTab = util.GetSurfaceData(util.GetSurfaceIndex(physobj:GetMaterial())) 
-			if ( data.Speed > 40 and data.Speed <= 250 and data.DeltaTime > 0.1 ) and SurTab.impactSoftSound then
-				self:EmitSound( self.SoftBounceSND || SurTab.impactSoftSound )	
-			elseif ( data.Speed > 250 and data.DeltaTime > 0.1 ) and SurTab.impactHardSound then	
-				self:EmitSound( self.HardBounceSND || SurTab.impactHardSound )		
-			end	
+		if self.UsePhysCollide then
+			if !self.Dead then			
+									
+				if !self.m_bDecalPainted && self.CollideDecal then util.Decal( self.CollideDecal, data.HitPos + data.HitNormal, data.HitPos - data.HitNormal ); self.m_bDecalPainted = true end
 				
-			if self.Bounces > 0 then self.Bounces = self.Bounces - 1 end
-			if self.Bounces == 0 then self:ANPlusOnCollide(data, physobj); self.Dead = true end
-		end	
+				local SurTab = util.GetSurfaceData(util.GetSurfaceIndex(physobj:GetMaterial())) 
+				if ( data.Speed > 40 and data.Speed <= 250 and data.DeltaTime > 0.1 ) and SurTab.impactSoftSound then
+					self:EmitSound( self.SoftBounceSND || SurTab.impactSoftSound )	
+				elseif ( data.Speed > 250 and data.DeltaTime > 0.1 ) and SurTab.impactHardSound then	
+					self:EmitSound( self.HardBounceSND || SurTab.impactHardSound )		
+				end	
+					
+				if self.Bounces > 0 then self.Bounces = self.Bounces - 1 end
+				if self.Bounces == 0 then self:ANPlusOnCollide(data, physobj); self.Dead = true end
+			end	
+		end
 	end
 
 end

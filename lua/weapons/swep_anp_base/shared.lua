@@ -47,7 +47,7 @@ SWEP.WorldModelCustomiseTab			= nil
 SWEP.WorldModelDraw					= true
 SWEP.WorldModelDrawShadow			= true
 
-SWEP.HoldType						= "ar2"
+SWEP.HoldType						= "ar2" -- If You wish to utilize SWEP:ANPlusSetupWeaponHoldTypeForAI( hType, owner ), set it to 'custom'. SWEP:ANPlusSetupWeaponHoldTypeForAI( hType, owner ) should be used in the shared.lua.
 SWEP.ActivityTranslateAIOverride	= nil
 SWEP.Weight							= 30
 SWEP.DropOnDeath					= true
@@ -211,6 +211,8 @@ SWEP.m_fPrimarySpread = 0.02
 SWEP.m_fPrimarySpreadMMult = 1.1
 SWEP.m_fCheckLightLast = 0
 SWEP.m_fCheckLightDelay = 1.5
+SWEP.m_fAttachmentFlickerLast = 0
+SWEP.m_fAttachmentFlicker = 1
 SWEP.m_fLightLevel = 1
 SWEP.NPCRestMin	= 1
 SWEP.NPCRestMax	= 2
@@ -286,6 +288,10 @@ function SWEP:ANPlusResetPrimaryFire()
 	if self.FireLoopSound then self.FireLoopSound:Stop() end
 end
 
+function SWEP:ANPlusNPCPreAttack()
+	return true
+end
+
 function SWEP:ANPlusNPCPreFire()
 end
 
@@ -296,7 +302,7 @@ function SWEP:ANPlusNPCFire()
 end
 
 function SWEP:PrimaryAttack()
-	if !IsValid(self) || !IsValid(self:GetOwner()) || !self:CanPrimaryAttack() then return end	
+	if !IsValid(self) || !IsValid(self:GetOwner()) || !self:CanPrimaryAttack() || !self:ANPlusNPCPreAttack() then return false end	
 	timer.Create( "ANPlusPreFireReset" .. self:EntIndex(), self.Primary.PreFireReset || self.Primary.Delay, 1, function() -- NPCs can't fire faster that 0.01 using this function?	
 		if !IsValid(self) then return end
 		if self.Primary.PostFireSound && (SERVER) then
@@ -321,14 +327,14 @@ function SWEP:PrimaryAttack()
 	if self.Primary.FireSound && (SERVER) then self:EmitSound( self.Primary.FireSound ) end		
 	if (SERVER) && self.FireLoopSound && !self.FireLoopSound:IsPlaying() then self.FireLoopSound:Play() end
 	
-	if IsValid(self:GetOwner()) then self:GetOwner():ANPlusRestartGesture( self.Primary.AttackGesture || self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1], true, true ) end
+	if IsValid(self:GetOwner()) && self.Primary.AttackGesture != false then self:GetOwner():ANPlusRestartGesture( self.Primary.AttackGesture || self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1], true, true ) end
 	--self:ANPlusRemoveMuzzleSmoke()
 	local hShot = ANPlusPercentageChance( self.m_fHChance )
 	
 	self:ANPlusNPCFire(hShot)
 	self.m_bClipReloaded = false
 	timer.Simple( self.Primary.Delay, function() if !IsValid(self) || !IsValid(self:GetOwner()) then return end	self:SetClip1( !self.Primary.InfiniteAmmo && self:Clip1() - self.Primary.AmmoPerShot || self:Clip1() ) end ) -- Making sure that fire animation will play on last bullet.
-	self.m_fCurBurstCount = self.NPCBurstMax > 0 && self.NPCRestMax > 0 && self.m_fCurBurstCount - 1 || 1
+	self.m_fCurBurstCount = self.NPCBurstMax > 0 && self.NPCRestMax > 0 && self.m_fCurBurstCount - 1 || 99
 	self:SetNextPrimaryFire( CurTime() + self.Primary.Delay )
 
 end
@@ -359,11 +365,13 @@ local angCheck = {
 }
 
 function SWEP:CanPrimaryAttack()	
-	
-	if !IsValid(self:GetOwner()) || !IsValid(self:GetOwner():GetEnemy()) || !self.m_bWeaponReady then return false end
-	
+
+	if !IsValid(self:GetOwner()) || !IsValid(self:GetOwner():GetEnemy()) then return false end
+		
 	local owner = self:GetOwner()
 	local enemy = owner:GetEnemy()
+
+	if owner:IsMoving() && !owner:ANPlusCapabilitiesHas( 64 ) || !self.m_bWeaponReady then return false end
 	
 	if CurTime() < self:GetNextPrimaryFire() || !self:ANPlusCanPrimaryFire() || ( ( self:Clip1() <= 0 || ( self:Clip1() - self.Primary.AmmoPerShot ) < 0 ) && !self.Primary.InfiniteAmmo ) || self.m_fCurBurstCount <= 0 then	
 		return false
@@ -374,14 +382,14 @@ function SWEP:CanPrimaryAttack()
 		return false
 	end
 	
-	if !self:ANPlusCanPrimaryFire() || self.BlackListSchedules[ owner:GetCurrentSchedule() ] || self.BlackListACTs[ owner:GetActivity() ] || !owner:ANPlusAlive() || ( !enemy:ANPlusAlive() ) then
+	if !self:ANPlusCanPrimaryFire() || self.BlackListSchedules[ owner:GetCurrentSchedule() ] || self.BlackListACTs[ owner:GetActivity() ] || !owner:HasCondition( 21 ) || !owner:ANPlusAlive() || ( !enemy:ANPlusAlive() ) then
 		return false
 	end
 	return true  		
 end
 
 function SWEP:ANPlusWeaponShell(att, bone, type, scale, angVec)
-	
+
 	local boneid = self:LookupBone( bone || "" )
 
 	local fx = EffectData()
@@ -432,26 +440,27 @@ end
 --	if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
 --end
 
-function SWEP:ANPlusWeaponFireEntity(entity, hShotChan, entPreCallback, entPostCallback, callback)
+function SWEP:ANPlusWeaponFireEntity(entity, posOffset, hShotChan, entPreCallback, entPostCallback, callback, att)
 	
-	local att = self:GetAttachment( self.MuzzleAttachment )
+	local att = att || self:GetAttachment( self.MuzzleAttachment )
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
+	posOffset = posOffset || Vector( 0, 0, 0 )
 	local projectiles = {}	
 	spread = owner:IsMoving() && self.m_fPrimarySpread * self.m_fPrimarySpreadMMult || self.m_fPrimarySpread
 	local muzzlePos = IsValid(enemy) && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
 	local targetPos = ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
-	local shootAngle = targetPos && ( ( targetPos - muzzlePos ):GetNormalized() ):Angle() || owner:GetAimVector():Angle()
-	
-	--local shootAngle = owner:GetAimVector():Angle()
-    shootAngle.p = shootAngle.p + math.Rand( -spread, spread )
-    shootAngle.y = shootAngle.y + math.Rand( -spread, spread )
+	local shootAng = targetPos && ( ( targetPos - muzzlePos ):GetNormalized() ):Angle() || owner:GetAimVector():Angle()
+	local dir = shootAng:Forward()
+	--local shootAng = owner:GetAimVector():Angle()
+    shootAng.p = shootAng.p + math.Rand( -spread, spread )
+    shootAng.y = shootAng.y + math.Rand( -spread, spread )
 	
 	for i = 1, self.Primary.NumShots do
 
 		local ent = ents.Create( entity )	
-		ent:SetPos( att.Pos )
-		ent:SetAngles( shootAngle )
+		ent:SetPos( muzzlePos + att.Ang:Forward() * 20 )
+		ent:SetAngles( shootAng )
 		ent:SetOwner( owner )
 		if isfunction( entPreCallback ) then			
 			ent.m_cPreSpawnCB = entPreCallback
@@ -484,17 +493,14 @@ function SWEP:ANPlusWeaponFireEntity(entity, hShotChan, entPreCallback, entPostC
 	
 	if isfunction( callback ) then
 		
-		local origin = owner:GetShootPos()
-		local vector = owner:GetAimVector()
-		
-		callback( origin, vector, att )
+		callback( muzzlePos, shootAng, dir, att )
 			
 	end
 	
 end
 
-function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
-	local att = self:GetAttachment( self.MuzzleAttachment )
+function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback, att) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
+	local att = att || self:GetAttachment( self.MuzzleAttachment )
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
 	local muzzlePos = enemy && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
@@ -519,7 +525,28 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback) -- bul
 	
 	if isfunction( callback ) then
 		
-		callback( muzzlePos, direction, att )
+		callback( muzzlePos, dir, att )
+			
+	end
+	
+end
+
+function SWEP:ANPlusWeaponFireCustom(hShotChan, callback, att) -- callback( muzzlePos, dirSprd, dir, att )
+	local att = att || self:GetAttachment( self.MuzzleAttachment )
+	local owner = self:GetOwner()
+    local enemy = owner:GetEnemy()
+	local muzzlePos = enemy && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
+	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	spread = self:GetOwner():IsMoving() && self.m_fPrimarySpread * self.m_fPrimarySpreadMMult || self.m_fPrimarySpread	
+	local dirSprd = targetPos && ( targetPos - muzzlePos ):GetNormalized() || owner:GetAimVector()
+	local dir = dirSprd
+	--local shootAngle = owner:GetAimVector():Angle()
+    dirSprd.x = dirSprd.x + math.Rand( -spread, spread )
+    dirSprd.y = dirSprd.y + math.Rand( -spread, spread )
+	
+	if isfunction( callback ) then
+		
+		callback( muzzlePos, dirSprd, dir, att )
 			
 	end
 	
@@ -580,6 +607,9 @@ function SWEP:ThinkServer()
 	
 end
 
+function SWEP:ANPlusTranslateActivity( act )
+end
+
 function SWEP:ANPlusNPCTriggerPull( shootPos, shootDir )
 end
 
@@ -614,7 +644,7 @@ end
 
 function SWEP:GenerateBurst() -- Cuz I can't get the current burst count && rest time, I have to calculate it myself... >:(	
 	self.m_fCurRestCalc = math.Round( math.Rand( self.NPCRestMin, self.NPCRestMax ), 2 )
-	self.m_fCurBurstCalc = self.NPCBurstMax > 0 && math.random( self.NPCBurstMin, self.NPCBurstMax ) || 1 -- Let's check if our max burst count is higher than 0. If not, screw the burst mechanic && just go brrrrrr.
+	self.m_fCurBurstCalc = self.NPCBurstMax > 0 && math.random( self.NPCBurstMin, self.NPCBurstMax ) || 99 -- Let's check if our max burst count is higher than 0. If not, screw the burst mechanic && just go brrrrrr.
 	self.m_fCurBurstCount = self.m_fCurBurstCalc
 end
 
@@ -639,7 +669,6 @@ function SWEP:GetCapabilities()
 end
 
 function SWEP:GetNPCBulletSpread( wp )
-
 	-- Handles the bullet spread based on the given proficiency (wp)
 	-- return value is in degrees
 	local profNPC = self.NPCWeaponProficiencyTab[ wp ]
@@ -839,16 +868,30 @@ if (CLIENT) then
 					y = math.abs( plyToLightAng.y )
 					local ang = math.max( p , y ) * 3					
 					local bright = math.Remap( math.min( d * transFov - fLightDistStart:GetFloat(), fLightDist:GetFloat() ), 1, fLightDist:GetFloat(), 1, 0 )	
-					self.m_pFLProjText:SetBrightness( bright )
+					local alpha = math.Remap( math.min( d * transFov - fLightDistStart:GetFloat(), fLightDist:GetFloat() ), 1, fLightDist:GetFloat(), 255, 0 )	
+					alpha = math.min( alpha, 255 )
+					alpha = math.max( alpha - ang, 0 )
+					
+					
+					if IsValid(self:GetOwner()) then
+						self.m_pFLProjText:SetBrightness( bright )
+						col = Color( col.r, col.g, col.b, alpha )
+					else
+						if CurTime() - self.m_fAttachmentFlickerLast >= 0.6 then
+							self.m_fAttachmentFlicker = self.m_fAttachmentFlicker == 1 && 0 || 1
+
+							self.m_fAttachmentFlickerLast = CurTime() + math.random( 0.01, 0.6 )
+						end
+						self.m_fAttachmentFlicker = self.m_fAttachmentFlicker == 1 && 1 || math.Approach( self.m_fAttachmentFlicker, 1, 0.06 )
+						self.m_pFLProjText:SetBrightness( bright * self.m_fAttachmentFlicker )
+						col = Color( col.r, col.g, col.b, alpha * self.m_fAttachmentFlicker )
+					end
+					
 					local newPos, newAng = LocalToWorld( tab['Pos'], tab['Ang'], attTab.Pos, attTab.Ang )	
 					
 					self.m_pFLProjText:SetPos( newPos )
 					self.m_pFLProjText:SetAngles( newAng )		
-					
-					local alpha = math.Remap( math.min( d * transFov - fLightDistStart:GetFloat(), fLightDist:GetFloat() ), 1, fLightDist:GetFloat(), 255, 0 )	
-					alpha = math.min( alpha, 255 )
-					alpha = math.max( alpha - ang, 0 )
-					col = Color( col.r, col.g, col.b, alpha )
+										
 					render.SetMaterial( tab['SpriteMat'] )
 					render.ANPlusDrawSpriteParallax( newPos, tab['SpriteMins'][ 1 ], tab['SpriteMins'][ 2 ], tab['SpriteMaxs'][ 1 ], tab['SpriteMaxs'][ 2 ], 2000, col )
 					
@@ -870,9 +913,20 @@ if (CLIENT) then
 			local transFov = math.Remap( ply:GetFOV(), 0, defFov:GetFloat(), 0, 1 )	
 			local alpha = tab['LaserNoFade'] && 255 || math.Remap( math.min( d * transFov - lStart:GetFloat(), lDist:GetFloat() ), 1, lDist:GetFloat(), 255, 0 )
 			if alpha > 0 then
-				col = Color( col.r, col.g, col.b, alpha )
 				
-				local endPos = vector_zero != self:GetNW2Vector( "m_vecANPSWEPEnemyPos" ) && self:ANPlusValidAnglesNormal( self:GetNW2Vector( "m_vecANPSWEPEnemyPos" ), angCheck ) && self:GetNW2Vector( "m_vecANPSWEPEnemyPos" ) || newPos + newAng:Forward() * tab['LaserSize'][ 1 ]
+				if IsValid(self:GetOwner()) then
+					col = Color( col.r, col.g, col.b, alpha )
+				else
+					if CurTime() - self.m_fAttachmentFlickerLast >= 0.6 then
+						self.m_fAttachmentFlicker = self.m_fAttachmentFlicker == 1 && 0 || 1
+
+						self.m_fAttachmentFlickerLast = CurTime() + math.random( 0.01, 0.6 )
+					end
+					self.m_fAttachmentFlicker = self.m_fAttachmentFlicker == 1 && 1 || math.Approach( self.m_fAttachmentFlicker, 1, 0.06 )
+					col = Color( col.r, col.g, col.b, alpha * self.m_fAttachmentFlicker )
+				end
+				
+				local endPos = vector_zero != self:GetNW2Vector( "m_vecANPSWEPEnemyPos" ) && IsValid(self:GetOwner()) && d <= tab['LaserSize'][ 1 ] && self:ANPlusValidAnglesNormal( self:GetNW2Vector( "m_vecANPSWEPEnemyPos" ), angCheck ) && self:GetNW2Vector( "m_vecANPSWEPEnemyPos" ) || newPos + newAng:Forward() * tab['LaserSize'][ 1 ]
 				
 				local tr = util.TraceLine({
 					start = newPos,

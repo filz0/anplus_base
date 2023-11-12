@@ -332,6 +332,14 @@ function ANPlusTableDeNull(tab)
 	end
 end
 
+function metaENT:ANPlusGetDataTab()
+	if self:GetTable() && self:GetTable()['ANPlusData'] then
+		return self:GetTable()['ANPlusData']
+	else
+		return nil
+	end
+end
+
 local SIZEOF_INT = 4
 local SIZEOF_SHORT = 2
 local AINET_VERSION_NUMBER = 37
@@ -1292,13 +1300,63 @@ function metaENT:ANPlusStopSoundSentence(fullstop)
 	end	
 end
 
+local function applyVar(ent, var, val, label, desc, min, max, deci)
+	if IsValid(ent) then
+		local getVec = ANPlusStringToVector( val )
+		local getAng = ANPlusStringToAngle( val )
+		local getBool = val == "true"
+		local getNum = isnumber( tonumber( val ) ) && tonumber( val )
+		local getStr = isstring( val ) && val != "true" && val != "false" && val
+		val = getBool || getNum || getVec || getAng || getStr		
+		if var && label then
+			local addtab = { ['Variable'] = var, ['Label'] = label, ['Description'] = desc, ['Min'] = min, ['Max'] = max, ['Decimals'] = deci }
+			table.insert( ent['m_tSaveDataMenu'], addtab )
+		end
+		
+		ent[ var ] = ent[ var ] || ent[ var ] == nil && val
+	end
+end
+
+local function createVar()
+	local ent = net.ReadEntity()
+	local var =	net.ReadString()
+	local val =	net.ReadString()
+	local label = net.ReadString()
+	local desc = net.ReadString()
+	local min = net.ReadFloat()
+	local max = net.ReadFloat()
+	local deci = net.ReadFloat()
+	
+	if IsValid(ent) then applyVar(ent, var, val, label, desc, min, max, deci) end
+end
+
+net.Receive("anplus_savedata_tosv", function(_, ply)
+	createVar()
+end)
+
+net.Receive("anplus_savedata_tocl", function()	
+	createVar()	
+end)
+
 function metaENT:ANPlusCreateVar(var, val, label, desc, min, max, deci, updateCallback)
-	self[var] = self[var] || self[var] == nil && val
+	if val == nil then return end
+	val = isangle( val ) && "angle " .. tostring( val ) || isvector( val ) && "vector " .. tostring( val ) || tostring( val )
+	if (SERVER) then 
+		net.Start( "anplus_savedata_tocl" )
+		net.WriteEntity( self )
+		net.WriteString( var )
+		net.WriteString( val )
+		net.WriteString( label || "" )
+		net.WriteString( desc || "" )
+		net.WriteFloat( min || 0 )
+		net.WriteFloat( max || 1 )
+		net.WriteFloat( deci || 0 )
+		net.Broadcast()		
+	end	
+	applyVar(self, var, val, label, desc, min, max, deci)
 	if var && label then
-		local addtab = { ['Variable'] = var, ['Label'] = label, ['Description'] = desc, ['Min'] = min, ['Max'] = max, ['Decimals'] = deci }
-		table.insert( self['m_tSaveDataMenu'], addtab )
-		if updateCallback then
-			local addtab = { [var] = updateCallback }
+		if updateCallback && !self['m_tSaveDataUpdateFuncs'][ var ] then
+			local addtab = { [ var ] = updateCallback }
 			table.Merge( self['m_tSaveDataUpdateFuncs'], addtab )
 		end
 	end
@@ -1347,6 +1405,21 @@ function metaPLAYER:ANPlusControlled(ent)
 	end
 end
 
+function metaENT:ANPlusIsRagdoll()
+	local c = self:GetClass()
+	return c == "prop_ragdoll"
+end
+
+function metaENT:ANPlusIsProp()
+	local c = self:GetClass()
+	return c == "prop_static" || c == "prop_physics" || c == "prop_dynamic"
+end
+
+function metaENT:ANPlusIsDoor()	
+	local c = self:GetClass()	
+	return c == "func_door" || c == "func_door_rotating" || c == "prop_door" || c == "prop_door_rotating"	
+end
+
 function metaENT:ANPlusSetColorFade(color, delta)
 	color = color || self:GetColor()
 	local alpha = color.a	
@@ -1371,4 +1444,40 @@ end
 
 function metaPLAYER:ANPlusIsSpawnMenuOpen()
 	return self.m_bSpawnMenuOpen
+end
+
+function string.ToVector(str)
+	str = string.Split( str, " " )
+	if #str < 3 then return nil end	
+	str[ 1 ] = tonumber( str[ 1 ] )
+	if !isnumber( str[ 1 ] ) then return nil end
+	str[ 2 ] = tonumber( str[ 2 ] )
+	if !isnumber( str[ 2 ] ) then return nil end
+	str[ 3 ] = tonumber( str[ 3 ] )
+	if !isnumber( str[ 3 ] ) then return nil end
+	return Vector( str[ 1 ], str[ 2 ], str[ 3 ] )
+end
+
+function ANPlusStringToVector(str)
+	if !isstring( str ) || !string.gsub( str, "vector ", "" ) then return nil end
+	str = string.gsub( str, "vector ", "" )
+	return string.ToVector(str)
+end
+
+function string.ToAngle(str)
+	str = string.Split( str, " " )
+	if #str < 3 then return nil end	
+	str[ 1 ] = tonumber( str[ 1 ] )
+	if !isnumber( str[ 1 ] ) then return nil end
+	str[ 2 ] = tonumber( str[ 2 ] )
+	if !isnumber( str[ 2 ] ) then return nil end
+	str[ 3 ] = tonumber( str[ 3 ] )
+	if !isnumber( str[ 3 ] ) then return nil end
+	return Angle( str[ 1 ], str[ 2 ], str[ 3 ] )
+end
+
+function ANPlusStringToAngle(str)
+	if !isstring( str ) || !string.gsub( str, "angle ", "" ) then return nil end
+	str = string.gsub( str, "angle ", "" )
+	return string.ToAngle(str)
 end

@@ -712,6 +712,14 @@ ANPlus.AddNPC( {
 		['OnNPCPostDamageOnEntity'] = function(self, ent, dmginfo, tookDMG)	
 		end,
 		
+		------------------------------------------------------------ OnNPCKilledPlayer - This function runs whenever this NPC kills a player.
+		['OnNPCKilledPlayer'] = function(ply, inflictor, self) 	
+		end,
+		
+		------------------------------------------------------------ OnNPCKilledNPC - This function runs whenever this NPC kills another NPC.
+		['OnNPCKilledNPC'] = function(self, npc, inflictor)		
+		end,
+		
 		------------------------------------------------------------ OnNPCEmitSound - This function runs whenever NPC emits any sounds (no scripted sequences).
 		['OnNPCEmitSound'] = function(self, data) -- ( CLIENT & SERVER )
 		end,
@@ -1013,6 +1021,14 @@ ANPlus.AddNPC( {
 		
 		------------------------------------------------------------ OnNPCPostDamageOnEntity - This function runs whenever NPC damages anything (Players, NPCs, and other Entities) and after damage calcualtions are done. You can't define hit groups through it.
 		['OnNPCPostDamageOnEntity'] = function(self, ent, dmginfo, tookDMG)	
+		end,
+		
+		------------------------------------------------------------ OnNPCKilledPlayer - This function runs whenever this NPC kills a player.
+		['OnNPCKilledPlayer'] = function(ply, inflictor, self) 	
+		end,
+		
+		------------------------------------------------------------ OnNPCKilledNPC - This function runs whenever this NPC kills another NPC.
+		['OnNPCKilledNPC'] = function(self, npc, inflictor)		
 		end,
 		
 		------------------------------------------------------------ OnNPCEmitSound - This function runs whenever NPC emits any sounds (no scripted sequences).

@@ -92,14 +92,17 @@ local function ANPlusOnLoad(ply, ent, data)
 		--duplicator.DoGeneric( ent, data )
 		
 		if data['m_tSaveData'] then
-		
+
 			for var, val in pairs( data['m_tSaveData'] ) do 
-				if val then							
-					val = isstring(val) && ( val == "true" || val == "false" ) && tobool(val) || val					
+				if val then	
+					local fixBool = val == "true" && true || val == "false" && false
+					val = val != "true" && val != "false" && val || fixBool	
 					ent[ var ] = val	
-					if data['m_tSaveDataUpdateFuncs'] && data['m_tSaveDataUpdateFuncs'][ var ] then
+					if data['m_tSaveDataUpdateFuncs'] && isfunction( data['m_tSaveDataUpdateFuncs'][ var ] ) then
 						data['m_tSaveDataUpdateFuncs'][ var ](ent, val)
 					end
+					
+					data['m_tSaveData'][ var ] = val
 				end
 			end
 			

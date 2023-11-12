@@ -7,8 +7,10 @@ local ENT = FindMetaTable("Entity")
 function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 	
 	if ANPlusLoadGlobal && IsValid(self) then
+			
 		name = tostring( name )
 		local dataTab = ANPlusLoadGlobal[ name ]
+		
 		local cVar = GetConVar( "anplus_replacer_enabled" ):GetBool()
 		if cVar && !dataTab && !self:IsANPlus(true) then
 			for _, repData in pairs( ANPlusENTReplacerData ) do				
@@ -24,21 +26,14 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 			end
 		end
 		
-		if name && isstring( name ) then
-		
-			local dataTab = ANPlusLoadGlobal[ name ]	
+		if name && isstring( name ) then	
+			
+			local dataTab = ANPlusLoadGlobal[ name ]
 			
 			if ( dataTab ) then
 
 				if (SERVER) then
-				
-					net.Start("anplus_net_entity")
-					net.WriteEntity( self )
-					net.WriteString( name )
-					net.Broadcast()
-				
-					self:SetKeyValue( "parentname" , "" ) -- We don't need it anymore
-					
+
 					if ( !override && dataTab['Class'] && dataTab['Class'] != self:GetClass() ) then 
 						return	
 					elseif ( override && dataTab['Class'] != self:GetClass() ) then				
@@ -66,6 +61,14 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self:Remove()
 						self = newSelf
 					end
+					
+					net.Start("anplus_net_entity")
+					net.WriteEntity( self )
+					net.WriteString( name )
+					net.Broadcast()
+				
+					self:SetKeyValue( "parentname" , "" ) -- We don't need it anymore
+					
 				end
 
 				local data = table.Copy( dataTab )
@@ -181,11 +184,11 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					if self:IsNPC() then		
 						if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
 						if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end														
-						if !data['ForceDefaultWeapons'] && !IsValid(self:GetActiveWeapon()) && self:ANPlusCapabilitiesHas( 2097152 ) then
+						if !data['ForceDefaultWeapons'] && !IsValid(self:GetActiveWeapon()) && self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] != "" && self:ANPlusCapabilitiesHas( 2097152 ) then
 							if !self.m_bANPlusEntity then
 								if self.m_sNewWeapon then
 									self:Give( self.m_sNewWeapon ) 
-								elseif data['DefaultWeapons'] then			
+								elseif data['DefaultWeapons'] then		
 									local rngW = math.random( 1, #data['DefaultWeapons'] )
 									rngW = data['DefaultWeapons'][ rngW ]
 									self:Give( rngW ) 	
@@ -261,7 +264,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				
 				self['m_tSaveDataMenu'] = {}
 				self['m_tSaveDataUpdateFuncs'] = {}
-				
+		
 				if isfunction( postCallback ) then
 					postCallback( self )
 				end
@@ -269,6 +272,55 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
 					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
 				end	
+					
+				if (SERVER) then
+					self:ANPlusCreateVar( "DefaultVariables", "Category", "[ Default Variables ]-----------------", nil ) 
+					
+					self:ANPlusCreateVar( "kv_squadname", self:GetInternalVariable( "m_SquadName" ), "Squad Name", "NPCs that are in the same squad (i.e., have matching squad names) will share information about enemies and will take turns attacking and covering each other.", nil, nil, nil, 				
+					function(self, nVar) 
+						self:SetSaveValue( "m_SquadName", nVar )
+					end )
+					
+					
+					local val = self:GetInternalVariable( "m_bShouldPatrol" )
+					if val != nil then											
+						self:ANPlusCreateVar( "kv_shouldpatrol", tobool(val), "Should Patrol", "Patrol whenever I'm idle or alert.", nil, nil, nil, 				
+						function(self, nVar) 
+							timer.Simple( 0.5, function() if !IsValid(self) then return end self:SetSaveValue( "m_bShouldPatrol", nVar ) end )
+						end )
+					end
+					
+					self:ANPlusCreateVar( "kv_ignoreunseenenemies", tobool( self:GetInternalVariable( "m_bIgnoreUnseenEnemies" ) ), "Ignore Unseen Enemies", "Prefers visible enemies, regardless of distance or relationship priority.", nil, nil, nil, 				
+					function(self, nVar) 
+						self:SetSaveValue( "m_bIgnoreUnseenEnemies", nVar )
+					end )
+					
+					local sleepList = 
+								"\n Choices:" ..
+								"\n 0: None" ..
+								"\n 1: Waiting for threat" ..
+								"\n 2: Waiting for PVS" ..
+								"\n 3: Waiting for input, ignore PVS" ..
+								"\n 4: Auto PVS" ..
+								"\n 5: Auto PVS after PVS" 
+					
+					self:ANPlusCreateVar( "kv_sleepstate", self:GetInternalVariable( "m_SleepState" ), "Sleep State", "Holds the NPC in stasis until specified condition. See also Wake Radius and Wake Squad." .. sleepList, 0, 5, 0, 				
+					function(self, nVar) 
+						self:SetSaveValue( "m_SleepState", nVar )
+					end )
+					
+					self:ANPlusCreateVar( "kv_wakeradius", self:GetInternalVariable( "m_flWakeRadius" ), "Wake Radius", "Auto-wake if player comes within this distance.", 0, 30000, 0, 				
+					function(self, nVar) 
+						self:SetSaveValue( "m_flWakeRadius", nVar )
+					end )
+					
+					self:ANPlusCreateVar( "kv_wakesquad", tobool( self:GetInternalVariable( "m_bWakeSquad" ) ), "Wake Squad", "Wake all of the NPCs squadmates if the NPC is woken.", nil, nil, nil, 				
+					function(self, nVar) 
+						self:SetSaveValue( "m_bWakeSquad", nVar )
+					end )
+				end
+				
+				self['m_tSaveDataMenu'] = {}
 				
 				if self:ANPlusGetDataTab()['HealthBar'] then
 					self:SetNWFloat( "m_fANPBossHP", self:Health() )
@@ -395,15 +447,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 	else 
 		return false
 	end	
-end	
-
-function ENT:ANPlusGetDataTab()
-	if self:GetTable() && self:GetTable()['ANPlusData'] then
-		return self:GetTable()['ANPlusData']
-	else
-		return nil
-	end
-end
+end	 
 
 function ENT:ANPMuteSound(bool)
 	self:SetNW2Bool( "m_bANPMuted", bool )
