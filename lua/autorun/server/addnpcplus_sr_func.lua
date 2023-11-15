@@ -431,15 +431,15 @@ function ANPlusSameType(ent1, ent2)
 	return false		
 end
 
-function ENT:ANPlusNPCDriverButtonUp(ply, button)
-	if IsValid(self:GetDriver()) && ply == self:GetDriver() && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
-		self:ANPlusGetDataTab()['Functions']['OnNPCDriverButtonUp'](self, ply, button)	
+function ENT:ANPlusNPCUserButtonUp(ply, button)
+	if ( ( self:IsVehicle() && IsValid(self:GetDriver()) && ply == self:GetDriver() ) || ( IsValid(ply:GetEntityInUse()) && ply:GetEntityInUse() == self ) ) && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
+		self:ANPlusGetDataTab()['Functions']['OnNPCUserButtonUp'](self, ply, button)	
 	end
 end
 
-function ENT:ANPlusNPCDriverButtonDown(ply, button)
-	if IsValid(self:GetDriver()) && ply == self:GetDriver() && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
-		self:ANPlusGetDataTab()['Functions']['OnNPCDriverButtonDown'](self, ply, button)	
+function ENT:ANPlusNPCUserButtonDown(ply, button)
+	if ( ( self:IsVehicle() && IsValid(self:GetDriver()) && ply == self:GetDriver() ) || ( IsValid(ply:GetEntityInUse()) && ply:GetEntityInUse() == self ) ) && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
+		self:ANPlusGetDataTab()['Functions']['OnNPCUserButtonDown'](self, ply, button)	
 	end
 end
 
@@ -461,7 +461,7 @@ net.Receive("anplus_propmenu", function(_, ply)
 				
 				ent:ANPlusAddSaveData( var['Variable'], ent[ var['Variable'] ], ent['m_tSaveDataUpdateFuncs'] && ent['m_tSaveDataUpdateFuncs'][ var['Variable'] ] || nil )
 				
-				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	
+				if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	
 					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var['Variable'], var['ValueNew'], ply)			
 				end
 			end

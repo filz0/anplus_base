@@ -1308,12 +1308,30 @@ local function applyVar(ent, var, val, label, desc, min, max, deci)
 		local getNum = isnumber( tonumber( val ) ) && tonumber( val )
 		local getStr = isstring( val ) && val != "true" && val != "false" && val
 		val = getBool || getNum || getVec || getAng || getStr		
+		ent['m_tSaveDataMenu'] = ent['m_tSaveDataMenu'] || {}
+		
 		if var && label then
-			local addtab = { ['Variable'] = var, ['Label'] = label, ['Description'] = desc, ['Min'] = min, ['Max'] = max, ['Decimals'] = deci }
-			table.insert( ent['m_tSaveDataMenu'], addtab )
+		
+			local tabCount = #ent['m_tSaveDataMenu']
+			local exists
+			
+			for i = 0, tabCount do
+			
+				local tabVal = ent['m_tSaveDataMenu'][ i ]
+				
+				if tabVal && tabVal['Variable'] == var then exists = true end
+				
+				if i == tabCount && !exists then
+					local addtab = { ['Variable'] = var, ['Label'] = label, ['Description'] = desc, ['Min'] = min, ['Max'] = max, ['Decimals'] = deci }
+					table.insert( ent['m_tSaveDataMenu'], addtab )
+				end
+				
+			end
+			
 		end
 		
 		ent[ var ] = ent[ var ] || ent[ var ] == nil && val
+		
 	end
 end
 
@@ -1340,7 +1358,9 @@ end)
 
 function metaENT:ANPlusCreateVar(var, val, label, desc, min, max, deci, updateCallback)
 	if val == nil then return end
+	
 	val = isangle( val ) && "angle " .. tostring( val ) || isvector( val ) && "vector " .. tostring( val ) || tostring( val )
+	
 	if (SERVER) then 
 		net.Start( "anplus_savedata_tocl" )
 		net.WriteEntity( self )
@@ -1353,13 +1373,17 @@ function metaENT:ANPlusCreateVar(var, val, label, desc, min, max, deci, updateCa
 		net.WriteFloat( deci || 0 )
 		net.Broadcast()		
 	end	
+	
 	applyVar(self, var, val, label, desc, min, max, deci)
+	
 	if var && label then
+		self['m_tSaveDataUpdateFuncs'] = self['m_tSaveDataUpdateFuncs'] || {}
 		if updateCallback && !self['m_tSaveDataUpdateFuncs'][ var ] then
 			local addtab = { [ var ] = updateCallback }
 			table.Merge( self['m_tSaveDataUpdateFuncs'], addtab )
 		end
 	end
+	
 end
 
 function metaENT:ANPlusSetVar(var, val, func)

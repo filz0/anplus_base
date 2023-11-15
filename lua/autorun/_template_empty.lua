@@ -37,7 +37,7 @@ ANPlus.AddNPC( {
 	['Class'] 					= "npc_citizen",
 ----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
 --[[
-	['Models'] = {
+	['Models'] 					= {
 		--- 
 		{ "models/mymodel.mdl", 
 			['BodyGroups'] = { 					-- Table with body groups that you wish to change.
@@ -76,7 +76,7 @@ ANPlus.AddNPC( {
 		---   
 	},
 --]]
-	['Models'] = nil,
+	['Models'] 					= nil,
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
 ----------------------------------------------------------------- Sets if NPC should only be spawnable on the ceiling.
@@ -161,10 +161,12 @@ ANPlus.AddNPC( {
 	['RemoveCapabilities'] 		= nil,
 ----------------------------------------------------------------- Enables or disables the inverse kinematic usage of this NPC.	
 	['EnableInverseKinematic'] 	= true,
------------------------------------------------------------------ Allow or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
+----------------------------------------------------------------- Enable or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
 	['AllowPhysgunPickup'] 		= true, 
------------------------------------------------------------------ Allow or disallow GravGun pickup on your NPC. Might not work on all NPCs. If set to false, it will disable all GravGun-related functions!	
+----------------------------------------------------------------- Enable or disable GravGun pickup on your NPC. Might not work on all NPCs. If set to false, it will disable all GravGun-related functions!	
 	['AllowGravGunPickUp'] 		= false,
+----------------------------------------------------------------- Enable or disable Player pickup on your Entity. Might not work on all Entities. If set to false, it will disable all PlayerPickUp-related functions!	
+	['AllowPlayerPickUp'] 		= true,
 ----------------------------------------------------------------- Increase or decrease NPC's damage output. The lowest is -100 (%) and it can go as high as you wish (be reasonable).
 	['DamageDealtScale'] 		= 0, --%, 0 is default.
 ----------------------------------------------------------------- Increase or decrease NPC's self damage. The lowest is -100 (%) and it can go as high as you wish (be reasonable).
@@ -390,6 +392,10 @@ ANPlus.AddNPC( {
 		['OnNPCWaterLevelChanged'] = function(self, old, new)
 		end,
 		
+		------------------------------------------------------------ OnPlayerPickup - Called when a player tries to pick up this Entity using the "use" key, return to override.
+		['OnNPCPlayerPickup'] = function(ply, self)
+		end,
+		
 		------------------------------------------------------------ OnPhysgunPickup - This function runs when NPC gets picked up by the Player PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.
 		['OnNPCOnPhysgunPickup'] = function(ply, self)
 		end,
@@ -479,7 +485,7 @@ ANPlus.AddNPC( {
 	['Class'] 					= "ent_class",
 ----------------------------------------------------------------- Table with models. Each model can have different body groups, material, color, and skin.	
 --[[
-	['Models'] = {
+	['Models'] 					= {
 		--- 
 		{ "models/mymodel.mdl", 
 			['BodyGroups'] = { 					-- Table with body groups that you wish to change.
@@ -527,7 +533,7 @@ ANPlus.AddNPC( {
 			---   
 	},
 --]]
-	['Models'] = nil,
+	['Models'] 					= nil,
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
 ----------------------------------------------------------------- Displays author of this Entity.
@@ -546,7 +552,7 @@ ANPlus.AddNPC( {
 	['Health'] 					= false,
 ----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
 --[[ EXAMPLE
-	['KeyValues'] 			= { citizentype = CT_REBEL, SquadName = "resistance" },
+	['KeyValues'] 				= { citizentype = CT_REBEL, SquadName = "resistance" },
 --]]
 	['KeyValues'] 				= {},
 ----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
@@ -558,10 +564,12 @@ ANPlus.AddNPC( {
 	},  
 --]]
 	['InputsAndOutputs'] 		= nil,    
------------------------------------------------------------------ Allow or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
+----------------------------------------------------------------- Enable or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
 	['AllowPhysgunPickup'] 		= true, 
------------------------------------------------------------------ Allow or disallow GravGun pickup on your NPC. Might not work on all NPCs. If set to false, it will disable all GravGun-related functions!	
+----------------------------------------------------------------- Enable or disable GravGun pickup on your NPC. Might not work on all NPCs. If set to false, it will disable all GravGun-related functions!	
 	['AllowGravGunPickUp'] 		= false,
+----------------------------------------------------------------- Enable or disable Player pickup on your Entity. Might not work on all Entities. If set to false, it will disable all PlayerPickUp-related functions!	
+	['AllowPlayerPickUp'] 		= true,
 ----------------------------------------------------------------- Increase or decrease NPC's damage output. The lowest is -100 (%) and it can go as high as you wish (be reasonable).
 	['DamageDealtScale'] 		= 0, --%, 0 is default.
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
@@ -605,6 +613,14 @@ ANPlus.AddNPC( {
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
 		['SetUseType'] = SIMPLE_USE,
 		['OnNPCUse'] = function(self, activator, caller, type)		
+		end,
+		
+		------------------------------------------------------------ OnNPCUserButtonUp - Called when the user/driver releases a button.
+		['OnNPCUserButtonUp'] = function(self, ply, button)	
+		end,
+		
+		------------------------------------------------------------ OnNPCUserButtonDown - Called when the user/driver presses a button.
+		['OnNPCUserButtonDown'] = function(self, ply, button)	
 		end,
 		
 		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
@@ -666,6 +682,18 @@ ANPlus.AddNPC( {
 		
 		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.
 		['OnNPCWaterLevelChanged'] = function(self, old, new)
+		end,
+		
+		------------------------------------------------------------ OnAllowPlayerPickup - Called when a player tries to pick up this Entity using the "use" key, return to override.
+		['OnNPCAllowPlayerPickup'] = function(ply, self)
+		end,
+		
+		------------------------------------------------------------ OnNPCOnPlayerPickup - Called when a player +use pickups this Entity. This will be called after the Entity passes though GM:AllowPlayerPickup.
+		['OnNPCOnPlayerPickup'] = function(ply, self)
+		end,
+		
+		------------------------------------------------------------ OnNPCOnPlayerDrop - Called when a player +use drops or throws this Entity.
+		['OnNPCOnPlayerDrop'] = function(ply, self, thrown)
 		end,
 		
 		------------------------------------------------------------ OnPhysgunPickup - This function runs when NPC gets picked up by the Player PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.
@@ -811,7 +839,7 @@ ANPlus.AddNPC( {
 			---   
 	},
 --]]
-	['Models'] = nil,
+	['Models'] 					= nil,
 ----------------------------------------------------------------- Sets if NPC should only be spawnable by admins. 
 	['AdminOnly'] 				= false, 
 ----------------------------------------------------------------- Displays author of this Entity.
@@ -841,7 +869,7 @@ ANPlus.AddNPC( {
 	['ExtraSeats']				= false,
 ----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
 --[[ EXAMPLE
-	['KeyValues'] 			= { citizentype = CT_REBEL, SquadName = "resistance" },
+	['KeyValues'] 				= { citizentype = CT_REBEL, SquadName = "resistance" },
 --]]
 	['KeyValues'] 				= {},
 ----------------------------------------------------------------- Spawnflags to give your NPC. Refer to Valve's wiki for more information. If you wish to add more, just do it like this: 256 + 1024 + etc.
@@ -853,10 +881,12 @@ ANPlus.AddNPC( {
 	},  
 --]]
 	['InputsAndOutputs'] 		= nil,    
------------------------------------------------------------------ Allow or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
+----------------------------------------------------------------- Enable or disable PhysGun pickup on your NPC. If set to false, it will disable all PhysGun-related functions!	
 	['AllowPhysgunPickup'] 		= true, 
------------------------------------------------------------------ Allow or disallow GravGun pickup on your NPC. Might not work on all NPCs. If set to false, it will disable all GravGun-related functions!	
+----------------------------------------------------------------- Enable or disable GravGun pickup on your NPC. Might not work on all NPCs. If set to false, it will disable all GravGun-related functions!	
 	['AllowGravGunPickUp'] 		= false,
+----------------------------------------------------------------- Enable or disable Player pickup on your Entity. Might not work on all Entities. If set to false, it will disable all PlayerPickUp-related functions!	
+	['AllowPlayerPickUp'] 		= true,
 ----------------------------------------------------------------- Increase or decrease NPC's damage output. The lowest is -100 (%) and it can go as high as you wish (be reasonable).
 	['DamageDealtScale'] 		= 0, --%, 0 is default.
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
@@ -902,12 +932,12 @@ ANPlus.AddNPC( {
 		['OnNPCUse'] = function(self, activator, caller, type)		
 		end,
 		
-		------------------------------------------------------------ OnNPCDriverButtonUp - Called when the driver releases a button.
-		['OnNPCDriverButtonUp'] = function(self, ply, button)	
+		------------------------------------------------------------ OnNPCUserButtonUp - Called when the user/driver releases a button.
+		['OnNPCUserButtonUp'] = function(self, ply, button)	
 		end,
 		
-		------------------------------------------------------------ OnNPCDriverButtonDown - Called when the driver presses a button.
-		['OnNPCDriverButtonDown'] = function(self, ply, button)	
+		------------------------------------------------------------ OnNPCUserButtonDown - Called when the user/driver presses a button.
+		['OnNPCUserButtonDown'] = function(self, ply, button)	
 		end,
 		
 		------------------------------------------------------------ OnNPCPlayerEnter - Called when the player enters the vehicle.
@@ -977,6 +1007,10 @@ ANPlus.AddNPC( {
 		
 		------------------------------------------------------------ OnNPCWaterLevelChanged - This function runs when NPC gets submerged in water.
 		['OnNPCWaterLevelChanged'] = function(self, old, new)
+		end,
+		
+		------------------------------------------------------------ OnPlayerPickup - Called when a player tries to pick up this Entity using the "use" key, return to override.
+		['OnNPCPlayerPickup'] = function(ply, self)
 		end,
 		
 		------------------------------------------------------------ OnPhysgunPickup - This function runs when NPC gets picked up by the Player PhysGun. It won't work if ['AllowPhysgunPickup'] is set to false.

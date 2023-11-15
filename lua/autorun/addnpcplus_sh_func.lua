@@ -87,7 +87,7 @@ end
 
 local function ANPlusOnLoad(ply, ent, data)
 
-	if IsValid(ent) && istable( data ) && data['CurName'] then -- Adv. Duplicator 2 Support!	
+	if IsValid(ent) && istable( data ) then -- Adv. Duplicator 2 Support!	
 		
 		--duplicator.DoGeneric( ent, data )
 		
@@ -110,20 +110,26 @@ local function ANPlusOnLoad(ply, ent, data)
 			net.WriteEntity( ent )
 			net.WriteTable( data['m_tSaveData'] )
 			net.Broadcast()
+			
+		end
+		
+		if data['CurName'] then
+			
 			ent:Spawn()
+			
+			ent:ANPlusIgnoreTillSet()
+			ent:ANPlusNPCApply(data['CurName'])
+
+			if ent:ANPlusIsWiremodCompEnt() then
+				ent.IsWire = true
+			end
+
+			if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'] != nil then		
+				ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'](ply, ent, data)		
+			end	
+			
 		end
-
-		ent:ANPlusIgnoreTillSet()
-		ent:ANPlusNPCApply(data['CurName'])
-
-		if ent:ANPlusIsWiremodCompEnt() then
-			ent.IsWire = true
-		end
-
-		if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'] != nil then		
-			ent:ANPlusGetDataTab()['Functions']['OnNPCLoad'](ply, ent, data)		
-		end	
-
+		
 	end
 	
 end

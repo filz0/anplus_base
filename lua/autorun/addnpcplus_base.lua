@@ -389,7 +389,7 @@ properties.Add( "anplus_editmenu", {
 	Filter = function( self, ent, ply ) -- A function that determines whether an entity is valid for this property
 		if ( !IsValid( ent ) ) then return false end
 		if ( ent:IsPlayer() ) then return false end
-		if ( !ent:IsANPlus( true ) ) then return false end
+		--if ( !ent:IsANPlus( true ) ) then return false end
 		if ( !ent['m_tSaveDataMenu'] || table.Count( ent['m_tSaveDataMenu'] ) == 0 ) then return false end
 		if ( !gamemode.Call( "CanProperty", ply, "anplus_editmenu", ent ) ) then return false end
 

@@ -70,8 +70,11 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					self:SetKeyValue( "parentname" , "" ) -- We don't need it anymore
 					
 				end
-
+				
+				local baseTab = dataTab['Base'] && ANPlusLoadGlobal[ dataTab['Base'] ]
+				local base = baseTab && table.Copy( baseTab )
 				local data = table.Copy( dataTab )
+				data = base && table.Merge( base, data ) || data
 				
 				local colBoundsMin, colBoundsMax = self:GetCollisionBounds()
 				local hull = (SERVER) && self:IsNPC() && self:GetHullType()	|| "Not NPC"	
@@ -252,18 +255,10 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end
 				
 				self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )			
-
 				self.m_fANPlusVelLast = 0
-
-				--local sndTab = data['SoundModification']						
-				--local addTab = { ['SoundModification'] = sndTab }
-				--table.Merge( data, addTab )
 				
 				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
 				self:ANPlusApplyDataTab( data )					
-				
-				self['m_tSaveDataMenu'] = {}
-				self['m_tSaveDataUpdateFuncs'] = {}
 		
 				if isfunction( postCallback ) then
 					postCallback( self )
@@ -272,55 +267,6 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'] != nil then
 					self:ANPlusGetDataTab()['Functions']['OnNPCSpawn'](self, self.m_pMyPlayer)		
 				end	
-					
-				if (SERVER) then
-					self:ANPlusCreateVar( "DefaultVariables", "Category", "[ Default Variables ]-----------------", nil ) 
-					
-					self:ANPlusCreateVar( "kv_squadname", self:GetInternalVariable( "m_SquadName" ), "Squad Name", "NPCs that are in the same squad (i.e., have matching squad names) will share information about enemies and will take turns attacking and covering each other.", nil, nil, nil, 				
-					function(self, nVar) 
-						self:SetSaveValue( "m_SquadName", nVar )
-					end )
-					
-					
-					local val = self:GetInternalVariable( "m_bShouldPatrol" )
-					if val != nil then											
-						self:ANPlusCreateVar( "kv_shouldpatrol", tobool(val), "Should Patrol", "Patrol whenever I'm idle or alert.", nil, nil, nil, 				
-						function(self, nVar) 
-							timer.Simple( 0.5, function() if !IsValid(self) then return end self:SetSaveValue( "m_bShouldPatrol", nVar ) end )
-						end )
-					end
-					
-					self:ANPlusCreateVar( "kv_ignoreunseenenemies", tobool( self:GetInternalVariable( "m_bIgnoreUnseenEnemies" ) ), "Ignore Unseen Enemies", "Prefers visible enemies, regardless of distance or relationship priority.", nil, nil, nil, 				
-					function(self, nVar) 
-						self:SetSaveValue( "m_bIgnoreUnseenEnemies", nVar )
-					end )
-					
-					local sleepList = 
-								"\n Choices:" ..
-								"\n 0: None" ..
-								"\n 1: Waiting for threat" ..
-								"\n 2: Waiting for PVS" ..
-								"\n 3: Waiting for input, ignore PVS" ..
-								"\n 4: Auto PVS" ..
-								"\n 5: Auto PVS after PVS" 
-					
-					self:ANPlusCreateVar( "kv_sleepstate", self:GetInternalVariable( "m_SleepState" ), "Sleep State", "Holds the NPC in stasis until specified condition. See also Wake Radius and Wake Squad." .. sleepList, 0, 5, 0, 				
-					function(self, nVar) 
-						self:SetSaveValue( "m_SleepState", nVar )
-					end )
-					
-					self:ANPlusCreateVar( "kv_wakeradius", self:GetInternalVariable( "m_flWakeRadius" ), "Wake Radius", "Auto-wake if player comes within this distance.", 0, 30000, 0, 				
-					function(self, nVar) 
-						self:SetSaveValue( "m_flWakeRadius", nVar )
-					end )
-					
-					self:ANPlusCreateVar( "kv_wakesquad", tobool( self:GetInternalVariable( "m_bWakeSquad" ) ), "Wake Squad", "Wake all of the NPCs squadmates if the NPC is woken.", nil, nil, nil, 				
-					function(self, nVar) 
-						self:SetSaveValue( "m_bWakeSquad", nVar )
-					end )
-				end
-				
-				self['m_tSaveDataMenu'] = {}
 				
 				if self:ANPlusGetDataTab()['HealthBar'] then
 					self:SetNWFloat( "m_fANPBossHP", self:Health() )
@@ -407,13 +353,11 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					end
 					]]--
 					
-					if self:IsVehicle() then
-						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCDriverButtonUp'] != nil then
-							hook.Add( "PlayerButtonUp", self, self.ANPlusNPCDriverButtonUp )
-						end
-						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCDriverButtonDown'] != nil then
-							hook.Add( "PlayerButtonDown", self, self.ANPlusNPCDriverButtonDown )
-						end
+					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCUserButtonUp'] != nil then
+						hook.Add( "PlayerButtonUp", self, self.ANPlusNPCUserButtonUp )
+					end
+					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCUserButtonDown'] != nil then
+						hook.Add( "PlayerButtonDown", self, self.ANPlusNPCUserButtonDown )
 					end
 					
 					self:ANPlusAddSaveData( "m_bANPlusEntity", true )

@@ -212,10 +212,10 @@ function ENT:ANPlusCustomConfigMenu()
 	colCatSP:SetSize( 235, 250 )
 	colCat:SetContents( colCatSP )
 	
-	local count = 1
+	local count = 0
 	local height = 20
 	
-	colCatSP:ANPlus_CreateLabel( 5, ( height - 2 ) - 20, 200, "[ Custom Variables ]-----------------", ccm_DCol )
+	if ent:IsANPlus(true) then colCatSP:ANPlus_CreateLabel( 5, ( height - 2 ) - 20, 200, "[ Custom Variables ]-----------------", ccm_DCol ); count = 1 end
 	
 	for _, var in ipairs( tab ) do 
 		if var then			
@@ -343,7 +343,7 @@ function ENT:ANPlusCustomConfigMenu()
 			if var then
 				ent[ var['Variable'] ] = var['ValueNew'] || var['ValueNew'] != false && ent[ var['Variable'] ]
 				
-				if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	  
+				if ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'] != nil then	  
 					ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenuApplyVar'](ent, var['Variable'], ply)			
 				end
 			end

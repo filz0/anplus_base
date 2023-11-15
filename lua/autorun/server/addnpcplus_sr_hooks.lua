@@ -237,6 +237,32 @@ hook.Add( "AcceptInput", "ANPlusLoad_AcceptInput", function(ent, input, activato
 	end	
 end)
 
+hook.Add( "AllowPlayerPickup", "ANPlusLoad_AllowPlayerPickup", function(ply, npc)
+	if IsValid(ply) && IsValid(npc) && npc:IsANPlus(true) then		
+		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCAllowPlayerPickup'] != nil then
+			npc:ANPlusGetDataTab()['Functions']['OnNPCAllowPlayerPickup'](ply, npc)		
+		end	
+		return npc:ANPlusGetDataTab()['AllowPlayerPickUp']	
+	end	
+end)
+
+
+hook.Add( "OnPlayerPhysicsPickup", "ANPlusLoad_OnPlayerPhysicsPickup", function(ply, npc)
+	if IsValid(ply) && IsValid(npc) && npc:IsANPlus(true) then		
+		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCOnPlayerPickup'] != nil then
+			npc:ANPlusGetDataTab()['Functions']['OnNPCOnPlayerPickup'](ply, npc)		
+		end	
+	end	
+end)
+
+hook.Add( "OnPlayerPhysicsDrop", "ANPlusLoad_OnPlayerPhysicsDrop", function(ply, npc)
+	if IsValid(ply) && IsValid(npc) && npc:IsANPlus(true) then		
+		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCOnPlayerDrop'] != nil then
+			npc:ANPlusGetDataTab()['Functions']['OnNPCOnPlayerDrop'](ply, npc, thrown)		
+		end	
+	end	
+end)
+
 hook.Add( "PhysgunPickup", "ANPlusLoad_PhysgunPickup", function(ply, npc)
 	if IsValid(ply) && IsValid(npc) && npc:IsANPlus(true) then			
 		return npc:ANPlusGetDataTab()['AllowPhysgunPickup']		
