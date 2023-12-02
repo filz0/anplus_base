@@ -62,7 +62,7 @@ local function CheckDaThing(ent)
 	if !ent:IsANPlus() then return false end 	
 	if !ent:ANPlusGetDataTab()['HealthBar'] then return false end 
 	local barTab = ent:ANPlusGetDataTab()['HealthBar']
-	local state = ent:GetNWFloat( "m_fANPlusNPCState" )
+	local state = ent:GetNW2Float( "m_fANPlusNPCState" )
 	if ( barTab['Mode'] == 2 && state != 3 ) then return false end
 	if ( barTab['Mode'] == 3 && state != 2 ) then return false end
 	if ( barTab['Mode'] == 4 && state != 2 && state != 3 ) then return false end 
@@ -75,7 +75,7 @@ hook.Add( "HUDPaint", "ANPlusLoad_HUDPaint", function()
 	if ( dev:GetFloat() ) > 2 then DrawMaterialOverlay( "effects/anp/grid2.png", 0 ) end
 	
 	local ply = LocalPlayer()
-	if ANPHealthBarStyles && hbBarStyle:GetString() != "Disable All" then
+	if ANPlusHealthBarStyles && hbBarStyle:GetString() != "Disable All" then
 		local lookForBosses = ents.FindInSphere( ply:GetPos(), barDist:GetFloat() )	
 		local ent, distSqr, dist = ANPlusFindClosestEntity( ply:GetPos(), lookForBosses, function(ent) if CheckDaThing(ent) then return true end end )
 		local tr = ply:GetEyeTrace()
@@ -83,7 +83,7 @@ hook.Add( "HUDPaint", "ANPlusLoad_HUDPaint", function()
 		
 		if IsValid(ent) then
 			local barTab = ent:ANPlusGetDataTab()['HealthBar']
-			local barStyle = ANPHealthBarStyles[barTab['StyleOverride'] || hbBarStyle:GetString()]
+			local barStyle = ANPlusHealthBarStyles[barTab['StyleOverride'] || hbBarStyle:GetString()]
 
 			if isfunction( barStyle ) then			
 				barStyle(ent)
@@ -105,8 +105,8 @@ end)
 
 hook.Add( "PopulateNPCs", "ANPlusLoad_PopulateNPCs", function(pnlContent, tree, node)
 	local npcData = list.GetForEdit( "NPC" )
-	for i = 1, #ANPRemoveFromSpawnList do
-		local npcToRemove = ANPRemoveFromSpawnList[ i ]
+	for i = 1, #ANPlusRemoveFromSpawnList do
+		local npcToRemove = ANPlusRemoveFromSpawnList[ i ]
 		if npcData[ npcToRemove ] then
 			print( "ANP REMOVED NPC", npcData[ npcToRemove ]['Name'] )
 			npcData[ npcToRemove ] = nil
@@ -116,8 +116,8 @@ end)
 
 hook.Add( "PopulateEntities", "ANPlusLoad_PopulateEntities", function(pnlContent, tree, node)
 	local entData = list.GetForEdit( "SpawnableEntities" )
-	for i = 1, #ANPRemoveFromSpawnList do
-		local entToRemove = ANPRemoveFromSpawnList[ i ]
+	for i = 1, #ANPlusRemoveFromSpawnList do
+		local entToRemove = ANPlusRemoveFromSpawnList[ i ]
 		if entData[ entToRemove ] then
 			print( "ANP REMOVED ENTITY", entData[ entToRemove ]['PrintName'] )
 			entData[ entToRemove ] = nil
@@ -227,8 +227,8 @@ end)
 
 hook.Add( "PopulateNPCs", "ANPlusLoad_PopulateNPCs", function(pnlContent, tree, node)
 	local npcData = list.GetForEdit( "NPC" )
-	for i = 1, #ANPRemoveFromSpawnList do
-		local npcToRemove = ANPRemoveFromSpawnList[ i ]
+	for i = 1, #ANPlusRemoveFromSpawnList do
+		local npcToRemove = ANPlusRemoveFromSpawnList[ i ]
 		if npcData[ npcToRemove ] then
 			print("REMOVED NPC", npcData[ npcToRemove ])
 			npcData[ npcToRemove ] = nil
@@ -239,8 +239,8 @@ end)
 
 hook.Add( "PopulateEntities", "ANPlusLoad_PopulateEntities", function(pnlContent, tree, node)
 	local entData = list.GetForEdit( "SpawnableEntities" )
-	for i = 1, #ANPRemoveFromSpawnList do
-		local entToRemove = ANPRemoveFromSpawnList[ i ]
+	for i = 1, #ANPlusRemoveFromSpawnList do
+		local entToRemove = ANPlusRemoveFromSpawnList[ i ]
 		if entData[ entToRemove ] then
 			entData[ entToRemove ] = nil
 			--entToRemove = nil

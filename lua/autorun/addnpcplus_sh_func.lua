@@ -70,8 +70,8 @@ function ENT:ANPlusNPCThink()
 		end
 		
 		if (SERVER) && self:ANPlusGetDataTab()['HealthBar'] then
-			if self:GetNWFloat( "m_fANPBossHP" ) < self:Health() then
-				self:SetNWFloat( "m_fANPBossHP", self:Health() )
+			if self:GetNW2Float( "m_fANPBossHP" ) < self:Health() then
+				self:SetNW2Float( "m_fANPBossHP", self:Health() )
 			end 
 		end
 		

@@ -207,7 +207,7 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 				npc:ANPlusGetDataTab()['Functions']['OnNPCDeath'](npc, att, inf)			
 			end
 			
-			if IsValid( npc:ANPlusGetFollowTarget() ) && npc:ANPlusGetFollowTarget():IsPlayer() then ANPlusMSGPlayer( npc:ANPlusGetFollowTarget(), "Following you " .. npc:ANPlusGetName() .. " has died.", Color( 255, 50, 0 ), "ANP.UI.Error" ) end
+			if IsValid( npc:ANPlusGetFollowTarget() ) && npc:ANPlusGetFollowTarget():IsPlayer() then ANPlusMSGPlayer( npc:ANPlusGetFollowTarget(), "Following you " .. npc:ANPlusGetKillfeedName() .. " has died.", Color( 255, 50, 0 ), "ANP.UI.Error" ) end
 			
 			if npc:ANPlusGetDataTab()['UseANPSquadSystem'] then 
 				npc:ANPlusRemoveFromCSquad( npc:ANPlusGetSquadName() )
@@ -426,7 +426,7 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 	local inf = dmginfo:GetInflictor()
 	local dmginfot = dmginfo:GetDamageType()	
 
-	if ent.m_bNPCNoDamage then dmginfo:SetDamage( 0 ) end
+	if ent.m_bNPCNoDamage || IsValid(ent:GetNW2Entity( "m_pRagdollStateEnt" )) then dmginfo:SetDamage( 0 ) end
 	
 	if !GetConVar( "anplus_ff_disabled" ):GetBool() && ent:IsANPlus() && IsValid(att) && ( att:IsNPC() || att:IsPlayer() ) && ent != att && ent:Disposition( att ) == D_LI then
 	
@@ -509,7 +509,7 @@ hook.Add( "PostEntityTakeDamage", "ANPlusLoad_PostEntityTakeDamage", function(en
 		end
 		
 		if ent:ANPlusGetDataTab()['HealthBar'] then
-			ent:SetNWFloat( "m_fANPBossHP", ent:Health() )
+			ent:SetNW2Float( "m_fANPBossHP", ent:Health() )
 			--ent:SetNWFloat( "m_fANPBossHPMax", ent:GetMaxHealth() )
 		end
 	
@@ -532,6 +532,13 @@ hook.Add( "PlayerCanPickupWeapon", "ANPlusLoad_PlayerCanPickupWeapon", function(
 	end		
 end)
 
+hook.Add( "CanPlayerEnterVehicle", "ANPlusLoad_CanPlayerEnterVehicle", function(ply, veh, role)
+	if veh:IsANPlus(true) && veh:ANPlusGetDataTab()['Functions'] && veh:ANPlusGetDataTab()['Functions']['OnNPCPrePlayerEnter'] != nil then		
+		local allow = veh:ANPlusGetDataTab()['Functions']['OnNPCPrePlayerEnter'](ply, veh, role)
+		return allow			
+	end
+end)
+
 hook.Add( "PlayerEnteredVehicle", "ANPlusLoad_PlayerEnteredVehicle", function(ply, veh, role)
 	if veh:IsANPlus(true) && veh:ANPlusGetDataTab()['Functions'] && veh:ANPlusGetDataTab()['Functions']['OnNPCPlayerEnter'] != nil then
 		veh:ANPlusGetDataTab()['Functions']['OnNPCPlayerEnter'](ply, veh, role)			
@@ -545,17 +552,19 @@ hook.Add( "PlayerLeaveVehicle", "ANPlusLoad_PlayerLeaveVehicle", function(ply, v
 end)
 
 hook.Add( "OnNPCFoundEnemy", "ANPlusLoad_OnNPCFoundEnemy", function()
-	local activator, caller = ACTIVATOR, CALLER
+	local activator, caller = ACTIVATOR, CALLER	
+	caller:SetNW2Entity( "m_pEnemyShared", caller:GetEnemy() )
 	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCFoundEnemy'] != nil then
 		local enemy = caller:GetEnemy()
-		caller.m_pLastEnemy = enemy
+		caller.m_pLastEnemy = enemy		
 		caller:ANPlusGetDataTab()['Functions']['OnNPCFoundEnemy'](caller, enemy)			
 	end
 end )
 
 hook.Add( "OnNPCLostEnemy", "ANPlusLoad_OnNPCLostEnemy", function()
 	local activator, caller = ACTIVATOR, CALLER
-	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCLostEnemy'] != nil then
+	caller:SetNW2Entity( "m_pEnemyShared", false )
+	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCLostEnemy'] != nil then		
 		caller:ANPlusGetDataTab()['Functions']['OnNPCLostEnemy'](caller, caller.m_pLastEnemy)			
 	end
 end )

@@ -738,7 +738,8 @@ function metaENT:ANPlusClientParticleSystem(stop, effect, partAttachment, entAtt
 		net.Broadcast()	
 	elseif (CLIENT) then
 		if !stop then 
-			CreateParticleSystem( self, effect, partAttachment, entAttachment, offset )
+			local cps = CreateParticleSystem( self, effect, partAttachment, entAttachment, offset )
+			return cps
 		else
 			if entAttachment == 0 || entAttachment == -1 then
 				self:StopParticlesNamed( effect )
@@ -903,6 +904,7 @@ end
 
 /*
 local entORtab = {
+	['Model'] = "model.mdl"
 	['Skin'] = 3,
 	['Color'] = Color( 255, 255, 255, 255 ),
 	['Material'] = "some/main/material.vtf",
@@ -921,6 +923,8 @@ local entORtab = {
 function metaENT:ANPlusCopyVisualFrom(entORtab)
 
 	if isentity(entORtab) then
+
+		self:SetModel( entORtab:GetModel() )
 		self:SetSkin( entORtab:GetSkin() )
 		self:SetColor( entORtab:GetColor() )
 		self:SetMaterial( entORtab:GetMaterial() )
@@ -935,6 +939,7 @@ function metaENT:ANPlusCopyVisualFrom(entORtab)
 		
 	elseif istable(entORtab) then
 	
+		self:SetModel( entORtab['Model'] )
 		self:SetSkin( entORtab['Skin'] )
 		self:SetColor( entORtab['Color'] )
 		self:SetMaterial( entORtab['Material'] )
@@ -948,26 +953,7 @@ function metaENT:ANPlusCopyVisualFrom(entORtab)
 		end
 		
 	end	
-	if self:ANPlusGetDataTab() then
 	
-		local CurBGS = {}				
-		for i = 1, #self:GetBodyGroups() do		
-			CurBGS[ i ] = self:GetBodygroup( i )	
-		end		
-		
-		local addTab = { ['CurBGS'] = CurBGS }
-		table.Merge( self:ANPlusGetDataTab(), addTab )	
-		
-		local CurSMS = {}			
-		for i = 0, #self:GetMaterials() do		
-			CurSMS[ i + 1 ] = self:GetSubMaterial( i ) || self:GetMaterials()[ i ]
-		end	
-		
-		local addTab = { ['CurSMS'] = CurSMS }
-		table.Merge( self:ANPlusGetDataTab(), addTab )
-		
-		self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
-	end	
 end
 
 function metaENT:ANPlusGetVisual()
@@ -1172,36 +1158,24 @@ function metaENT:ANPlusVisibleInFOV(ent, fovmul, npcfov) -- Big credit to the Ca
 end
 
 --[[
-self.ANPlusDoorKickVL = {
-	sound = { sound1.wav, sound2.wav } one after another, OR sound = { {sound1b.wav sound1a.wav}, sound2.wav } first getting randomised, OR sound = { { sound1.wav, -5 }, sound2.wav } first's duration is reduced by 5 seconds (it wont stop but the second will play if their CHANNELs are not the same)
+ANPlus.AddScriptedSequence( {
+	name	= "",
 	channel = CHAN_AUTO,
-	volume = VOL_NORM,
-	level = 75,
-	pitch = 100
-}
+	volume 	= VOL_NORM,
+	level 	= 75,
+	pitch 	= 100,
+	flags 	= nil,
+	dsp		= 0,
+	sound 	= { sound1.wav, sound2.wav } one after another, OR sound = { {sound1b.wav sound1a.wav}, sound2.wav } first getting randomised, OR sound = { { sound1.wav, -5 }, sound2.wav } first's duration is reduced by 5 seconds (it wont stop but the second will play if their CHANNELs are not the same)
+} )
 ]]--
-function metaENT:ANPlusEmitSoundSentence(stable, callback)
+function metaENT:ANPlusEmitSoundSentence(sentence, pos, overrideTab, CRecipientFilter, callback) -- overrideTab = { [snd] = sndOverride }
 	
-	stopdead = stopdead || false
-	
-	if !IsValid(self) || stable == nil || !istable(stable) || ( !self:ANPlusAlive() && stopdead ) then return end
-	
-	if #stable.sound == 1 then 
-		
-		if istable(stable.sound[1]) then
-	
-			local snd = stable.sound[1]
-			self:EmitSound( snd[math.random(#snd)], stable.level, stable.pitch, stable.volume, stable.channel )
-			
-		else
-		
-			self:EmitSound(self:EmitSound(snd[1],stable.level,stable.pitch,stable.volume,stable.channel),stable.level,stable.pitch,stable.volume,stable.channel)
-			
-		end
+	if !sentence then return end
+	if !IsValid(self) || ( !self:ANPlusAlive() ) then return end
 
-		return 
-		
-	end
+	local stable = ANPlusScriptedSentences[ sentence ]
+	if !stable then return end
 	
 	self:ANPlusStopSoundSentence( true )
 	
@@ -1231,37 +1205,19 @@ function metaENT:ANPlusEmitSoundSentence(stable, callback)
 			if ANPlus_ASS_CurAudio <= #stable.sound then
 				
 				local curAudio = stable.sound[ANPlus_ASS_CurAudio]
+
+				if isnumber( curAudio ) || ( istable( curAudio ) && !isstring( curAudio[ 1 ] ) ) then ANPlus_ASS_CurAudio = ANPlus_ASS_CurAudio + 1 return end
+
+				local nextAudio = stable.sound[ANPlus_ASS_CurAudio + 1]
 				local curRand = math.random( #curAudio )
 				local dur = nil	
 				local snd = nil			
-				local sndtab = nil
+				local sndtab = nil		
+				
+				if istable( curAudio ) then
+					
+					sndtab = curAudio[ curRand ]
 
-				if istable(curAudio) then
-					
-					sndtab = isnumber( curAudio[ 2 ] ) && curAudio[ 1 ] || curAudio[curRand]
-	
-				end
-
-				if istable(curAudio) then
-					
-					if istable( sndtab ) && isnumber( sndtab[ 2 ] ) then
-						dur = ANPlusSoundDuration( sndtab[ 1 ] ) + sndtab[ 2 ]
-					elseif isnumber( curAudio[ 2 ] ) then
-						dur = ANPlusSoundDuration(sndtab) + curAudio[ 2 ]
-					else
-						dur = ANPlusSoundDuration(sndtab)
-					end
-					
-				else
-				
-					dur = ANPlusSoundDuration(curAudio)
-					
-				end
-				
-				ANPlus_ASS_SoundDelay = dur
-				
-				if istable(curAudio) then
-					
 					if istable( sndtab ) then
 						snd = sndtab[ 1 ]
 					else
@@ -1274,10 +1230,30 @@ function metaENT:ANPlusEmitSoundSentence(stable, callback)
 					
 				end
 
+				snd = overrideTab && overrideTab[ snd ] || snd
+
+				if isnumber( nextAudio ) then
+					dur = ANPlusSoundDuration( snd ) + nextAudio
+				elseif istable( nextAudio ) && nextAudio.dur then
+					dur = ANPlusSoundDuration( snd ) + nextAudio.dur
+				else
+					dur = ANPlusSoundDuration( snd )
+				end
+
 				self.m_sASSCurSentence = snd
-				self:EmitSound( snd, stable.level, stable.pitch, stable.volume, stable.channel )
+
+				--self:EmitSound( snd, stable.level, stable.pitch, stable.volume, stable.channel )
+				local channel = istable( nextAudio ) && nextAudio.channel || stable.channel
+				local volume = istable( nextAudio ) && nextAudio.volume || stable.volume
+				local level = istable( nextAudio ) && nextAudio.level || stable.level
+				local flags = istable( nextAudio ) && nextAudio.flags || stable.flags
+				local pitch = istable( nextAudio ) && nextAudio.pitch || stable.pitch
+				local dsp = istable( nextAudio ) && nextAudio.dsp || stable.dsp
+
+				EmitSound( snd, pos || self:GetPos(), self:EntIndex(), channel, volume, level, flags, pitch, dsp, CRecipientFilter )
 				
 				ANPlus_ASS_CurAudio = ANPlus_ASS_CurAudio + 1
+				ANPlus_ASS_SoundDelay = dur
 				ANPlus_ASS_SoundLast = CurTime()
 				
 			end
@@ -1289,15 +1265,18 @@ function metaENT:ANPlusEmitSoundSentence(stable, callback)
 end
 
 function metaENT:ANPlusStopSoundSentence(fullstop)
+
 	if timer.Exists( "ANPEmitSoundSentenceTimer" .. self:EntIndex() ) then 	
 		timer.Remove( "ANPEmitSoundSentenceTimer" .. self:EntIndex() ) 	
-		if fullstop == true && self.m_sASSCurSentence != nil then
-		
+
+		if fullstop == true && self.m_sASSCurSentence != nil then	
 			self:StopSound( self.m_sASSCurSentence )
 			self.m_sASSCurSentence = nil
 			
 		end	
+
 	end	
+
 end
 
 local function applyVar(ent, var, val, label, desc, min, max, deci)
@@ -1310,8 +1289,7 @@ local function applyVar(ent, var, val, label, desc, min, max, deci)
 		val = getBool || getNum || getVec || getAng || getStr		
 		ent['m_tSaveDataMenu'] = ent['m_tSaveDataMenu'] || {}
 		
-		if var && label then
-		
+		if var && label && label != "" then
 			local tabCount = #ent['m_tSaveDataMenu']
 			local exists
 			

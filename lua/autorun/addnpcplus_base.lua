@@ -18,10 +18,11 @@ ANPlusLoadGlobalCount = 0
 
 ANPlusDangerStuffGlobalNameOrClass = { "grenade", "missile", "rocket", "frag", "flashbang", "portal", "spore", "prop_combine_ball", "bolt" }
 ANPlusDangerStuffGlobal = {}
-ANPCustomSquads = { base_squad = {} }
-ANPToolMenuGlobal = {}
-ANPRemoveFromSpawnList = {}
-ANPHealthBarStyles = { ['Disable All'] = true }
+ANPlusCustomSquads = { base_squad = {} }
+ANPlusToolMenuGlobal = {}
+ANPlusRemoveFromSpawnList = {}
+ANPlusHealthBarStyles = { ['Disable All'] = true }
+ANPlusScriptedSentences = {}
 
 ANPDefaultGMODWeapons = {
 ['weapon_pistol'] 		= true,
@@ -48,8 +49,12 @@ ANPlus = {
 			local listType = listType || "NPC"
 			local id = tostring( tab['Name'] ) 	
 			
+			local base = tab['Base'] && ANPlusLoadGlobal[ tab['Base'] ]
+			if base then tab = table.Merge( table.Copy( base ), tab ) end
+
 			local addTab = { [ id ] = tab } 		
 			table.Merge( ANPlusLoadGlobal, addTab )	
+
 			ANPlusLoadGlobalCount = ANPlusLoadGlobalCount + 1
 			
 			if (CLIENT) then				
@@ -210,9 +215,9 @@ ANPlus = {
 	end,
 	
 	AddToolMenu = function(category, name, panel, tab)
-		if ANPToolMenuGlobal then 
-			local addTab = { [ #ANPToolMenuGlobal + 1 ] = { ['Category'] = category, ['Name'] = name, ['Panel'] = panel, ['Table'] = tab } } -- This should help with all these NPC spawner tools :/
-			table.Merge( ANPToolMenuGlobal, addTab )				
+		if ANPlusToolMenuGlobal then 
+			local addTab = { [ #ANPlusToolMenuGlobal + 1 ] = { ['Category'] = category, ['Name'] = name, ['Panel'] = panel, ['Table'] = tab } } -- This should help with all these NPC spawner tools :/
+			table.Merge( ANPlusToolMenuGlobal, addTab )				
 		end
 	end,
 	
@@ -220,8 +225,8 @@ ANPlus = {
 	||||| Wanted to make a ANPC but model/s comes with its own NPC/s? Use this function to get rid of it/them.
 	--]]
 	RemoveFromSpawnList = function(name)	
-		if !ANPRemoveFromSpawnList[ name ] then
-			table.insert( ANPRemoveFromSpawnList, name )
+		if !ANPlusRemoveFromSpawnList[ name ] then
+			table.insert( ANPlusRemoveFromSpawnList, name )
 		end
 	end,
 
@@ -246,9 +251,14 @@ ANPlus = {
 	
 	AddHealthBarStyle = function(id, hpbarTab)
 		if id && hpbarTab then
-			ANPHealthBarStyles[ id ] = hpbarTab 
+			ANPlusHealthBarStyles[ id ] = hpbarTab 
 		end
-		PrintTable(ANPHealthBarStyles)
+		PrintTable(ANPlusHealthBarStyles)
+	end,
+
+	AddScriptedSentence = function(ssTab)
+		if !istable(ssTab) || !ssTab['name'] then return end
+		ANPlusScriptedSentences[ ssTab['name'] ] = ssTab
 	end,
 	
 } 
@@ -300,7 +310,7 @@ function ANPMapLuaCreate()
 end
 
 hook.Add( "InitPostEntity", "ANP_LUA_RUN_ENT", ANPMapLuaCreate )
-hook.Add( "PostCleanupMap", "ANP_LUA_RUN_ENT", ANPMapLuaCreate )
+hook.Add( "PostCleanupMap", "ANP_LUA_RUN_ENT", ANPMapLuaCreate ) 
 
 end
 
@@ -334,7 +344,7 @@ if (CLIENT) then
 		--DComboBox:SetPos( 5, 30 )
 		hpBarList:SetConVar( "anplus_hpbar_def_style" )
 		hpBarList:SetValue( "options" )
-		for id, func in pairs( ANPHealthBarStyles ) do
+		for id, func in pairs( ANPlusHealthBarStyles ) do
 			if id && func then
 				hpBarList:AddChoice( id, func )
 			end
@@ -373,8 +383,8 @@ if (CLIENT) then
 		spawnmenu.AddToolTab( "ANPlus", "ANPlus", "vgui/anp_ico.png" )
 		spawnmenu.AddToolMenuOption( "ANPlus", "[BASE]", "anplus_mainsettings", "Settings", nil, nil, ANPlusMenuDefault_Settings )
 		spawnmenu.AddToolMenuOption( "ANPlus", "[BASE]", "anplus_mainfunctions", "Functions", nil, nil, ANPlusMenuDefault_Functions )
-		for i = 1, #ANPToolMenuGlobal do
-			local toolData = ANPToolMenuGlobal[ i ]
+		for i = 1, #ANPlusToolMenuGlobal do
+			local toolData = ANPlusToolMenuGlobal[ i ]
 			if toolData then spawnmenu.AddToolMenuOption( "ANPlus", toolData['Category'], ANPlusIDCreate( toolData['Category'] ) .. "_menu", toolData['Name'], nil, nil, toolData['Panel'], toolData['Table'] || nil ) end
 		end		
 	end)

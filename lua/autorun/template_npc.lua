@@ -46,7 +46,7 @@ ANPlus.AddNPC( {
 			if (SERVER) then
 			
 				self:ANPlusCreateVar( "m_fRemoveDelay", 6 )
-				self:ANPlusCreateVar( "m_fRadius", self:GetModelRadius() )
+				self:ANPlusCreateVar( "m_fRadius", self:GetModelRadius() || 10 )
 				self:ANPlusCreateVar( "m_fAngularVelocity", Angle( math.random( 250, 400 ), math.random( 250, 400 ), 0 ) )
 				self:ANPlusCreateVar( "m_fVelocity", Vector( math.random( -400, 400 ), math.random( -400, 400 ), math.random( 400, 800 ) ) )
 				self.m_fRemoveLast = CurTime()	
@@ -142,6 +142,7 @@ local font 		= "anphl2defaultABC"
 local font2 	= "anphl2default123"
 
 ANPlus.AddHealthBarStyle( "HL2 Retail", function(ent) 
+	print("lol")
 	local ply = LocalPlayer()
 	local barTab = ent:ANPlusGetDataTab()['HealthBar']
 	
@@ -160,7 +161,7 @@ ANPlus.AddHealthBarStyle( "HL2 Retail", function(ent)
 	local w3 = w - 26 * ANPlusGetFixedScreenW()
 	local h3 = h - 40 * ANPlusGetFixedScreenH() 
 	
-	local hp = ent:GetNWFloat( "m_fANPBossHP" ) || ent:Health()
+	local hp = ent:GetNW2Float( "m_fANPBossHP" ) || ent:Health()
 	local hpMax = ent:GetMaxHealth()
 	local hpper = math.Remap( hp, 0, hpMax, 0, 100 )
 	hpper = math.Round( hpper, 2 )
@@ -228,7 +229,7 @@ ANPlus.AddHealthBarStyle( "HL2 Beta", function(ent)
 	local w3 = w - 26 * ANPlusGetFixedScreenW()
 	local h3 = h - 40 * ANPlusGetFixedScreenH()  
 	
-	local hp = ent:GetNWFloat( "m_fANPBossHP" ) || ent:Health()
+	local hp = ent:GetNW2Float( "m_fANPBossHP" ) || ent:Health()
 	local hpMax = ent:GetMaxHealth()
 	local hpper = math.Remap( hp, 0, hpMax, 0, 100 )
 	hpper = math.Round( hpper, 0 )		

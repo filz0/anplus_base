@@ -71,10 +71,10 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					
 				end
 				
-				local baseTab = dataTab['Base'] && ANPlusLoadGlobal[ dataTab['Base'] ]
-				local base = baseTab && table.Copy( baseTab )
+				--local baseTab = dataTab['Base'] && ANPlusLoadGlobal[ dataTab['Base'] ]
+				--local base = baseTab && table.Copy( baseTab )
 				local data = table.Copy( dataTab )
-				data = base && table.Merge( base, data ) || data
+				--data = base && table.Merge( base, data ) || data
 				
 				local colBoundsMin, colBoundsMax = self:GetCollisionBounds()
 				local hull = (SERVER) && self:IsNPC() && self:GetHullType()	|| "Not NPC"	
@@ -269,13 +269,13 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end	
 				
 				if self:ANPlusGetDataTab()['HealthBar'] then
-					self:SetNWFloat( "m_fANPBossHP", self:Health() )
+					self:SetNW2Float( "m_fANPBossHP", self:Health() )
 					--self:SetNWFloat( "m_fANPBossHPMax", self:GetMaxHealth() )
 				end
 				
 				if (SERVER) then				
 					
-					self:ANPlusSetKillfeedName( data['KillfeedName'] ) 
+					--self:ANPlusSetKillfeedName( data['KillfeedName'] ) 
 					self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) 					
 					---------WIREMOD--------------
 					if WireLib && ( self.Inputs || self.Outputs ) then				
@@ -383,6 +383,44 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					end
 				end
 				
+				if self:ANPlusGetDataTab()['Functions'] then
+					for key, func in pairs( self:ANPlusGetDataTab()['Functions'] ) do	
+						if key && func then
+							if isfunction( func ) then
+								if (CLIENT) then
+									if string.find( key, "CL_Hook_" ) then
+										key = string.gsub( key, "CL_Hook_", "" )
+										hook.Add( key, self, func )
+									elseif string.find( key, "CL_Function_" ) then
+										key = string.gsub( key, "CL_Function_", "" )
+										self[ key ] = func
+									elseif string.find( key, "SH_Hook_" ) then
+										key = string.gsub( key, "SH_Hook_", "" )
+										hook.Add( key, self, func )
+									elseif string.find( key, "SH_Function_" ) then
+										key = string.gsub( key, "SH_Function_", "" )
+										self[ key ] = func									
+									end
+								elseif (SERVER) then
+									if string.find( key, "SV_Hook_" ) then
+										key = string.gsub( key, "SV_Hook_", "" )
+										hook.Add( key, self, func )
+									elseif string.find( key, "SV_Function_" ) then
+										key = string.gsub( key, "SV_Function_", "" )
+										self[ key ] = func
+									elseif string.find( key, "SH_Hook_" ) then
+										key = string.gsub( key, "SH_Hook_", "" )
+										hook.Add( key, self, func )
+									elseif string.find( key, "SH_Function_" ) then
+										key = string.gsub( key, "SH_Function_", "" )
+										self[ key ] = func									
+									end
+								end
+							end
+						end
+					end		
+				end
+
 			end
 		
 		else

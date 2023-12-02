@@ -42,7 +42,7 @@ function ENT:ANPlusGetAll()
 		
 		local v = entsAround[ i ]
 		
-		if ( v:IsNPC() && v != self && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
+		if ( v:IsNPC() && v != self && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
 			
 			entsSelected[count] = v
 			count = count + 1
@@ -205,6 +205,31 @@ function ENT:ANPlusNPCAnimSpeed()
 		
 		if speed != 1 && self:IsGoalActive() && self:GetPathDistanceToGoal() > 10 * speed && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() then--&& self:GetMinMoveStopDist() > 10 then
 			
+			local lastMovTime = self:GetInternalVariable( "m_flTimeLastMovement" )
+			self:SetSaveValue( "m_flTimeLastMovement", lastMovTime * speed )
+				
+		end
+
+		local rate = ( istable( aTab1 ) && aTab1[ 1 ] || aTab1 ) / 100
+		self:SetPlaybackRate( rate )
+		 
+	end
+
+	--[[
+	if self.m_tbANPlusACTMovement && ( self.m_tbANPlusACTMovement[ self:GetMovementActivity() ] || self.m_tbANPlusACTMovement[ self:GetSequenceName( self:GetSequence() ) ] ) then
+		
+		local aTab1 = self.m_tbANPlusACTMovement[ self:GetMovementActivity() ] || self.m_tbANPlusACTMovement[ self:GetSequenceName( self:GetSequence() ) ]
+		local aTab2 = istable( aTab1[ 3 ] ) && aTab1[ 3 ][ math.random( 1, #aTab1[ 3 ] ) ] || aTab1[ 3 ]
+		aTab2 = self:ANPlusTranslateSequence( aTab2 )
+		
+		if aTab1[ 3 ] && self:GetMovementActivity() != aTab2 then self:SetMovementActivity( aTab2 ) end
+		
+		--if CurTime() - self.m_fANPlusVelLast >= 0.01 then
+		
+		local speed = ( istable( aTab1 ) && aTab1[ 2 ] && aTab1[ 2 ] || 100 ) / 100
+		
+		if speed != 1 && self:IsGoalActive() && self:GetPathDistanceToGoal() > 10 * speed && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() then--&& self:GetMinMoveStopDist() > 10 then
+			
 			self:SetMoveVelocity( self:GetGroundSpeedVelocity() * speed ) 
 			local seqName = self:GetSequenceName( self:GetSequence() )
 			local seqID, seqDur = self:LookupSequence( seqName )
@@ -222,6 +247,7 @@ function ENT:ANPlusNPCAnimSpeed()
 		end
 		 
 	end
+	]]
 
 end
 
@@ -319,11 +345,11 @@ end
 function ENT:ANPlusNPCStateChange()		
 	if self:IsNPC() then
 		local newState = self:GetNPCState()
-		if self.m_fCurNPCState != newState then
-			self:SetNWFloat( "m_fANPlusNPCState", newState )
+		if self.m_fCurNPCState != newState then			
 			if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCStateChange'] != nil then
 				self:ANPlusGetDataTab()['Functions']['OnNPCStateChange'](self, newState, self.m_fCurNPCState)			
 			end	
+			self:SetNW2Float( "m_fANPlusNPCState", newState )
 		end
 		self.m_fCurNPCState = newState		
 	end
@@ -432,13 +458,13 @@ function ANPlusSameType(ent1, ent2)
 end
 
 function ENT:ANPlusNPCUserButtonUp(ply, button)
-	if ( ( self:IsVehicle() && IsValid(self:GetDriver()) && ply == self:GetDriver() ) || ( IsValid(ply:GetEntityInUse()) && ply:GetEntityInUse() == self ) ) && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
+	if ( ( self:IsVehicle() && IsValid(self:GetDriver()) && ply == self:GetDriver() ) || ( IsValid(ply:GetEntityInUse()) && ply:GetEntityInUse() == self ) || ( IsValid(self:ANPlusGetFollowTarget()) && self:ANPlusGetFollowTarget() == ply ) ) && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
 		self:ANPlusGetDataTab()['Functions']['OnNPCUserButtonUp'](self, ply, button)	
 	end
 end
 
 function ENT:ANPlusNPCUserButtonDown(ply, button)
-	if ( ( self:IsVehicle() && IsValid(self:GetDriver()) && ply == self:GetDriver() ) || ( IsValid(ply:GetEntityInUse()) && ply:GetEntityInUse() == self ) ) && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
+	if ( ( self:IsVehicle() && IsValid(self:GetDriver()) && ply == self:GetDriver() ) || ( IsValid(ply:GetEntityInUse()) && ply:GetEntityInUse() == self ) || ( IsValid(self:ANPlusGetFollowTarget()) && self:ANPlusGetFollowTarget() == ply ) ) && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
 		self:ANPlusGetDataTab()['Functions']['OnNPCUserButtonDown'](self, ply, button)	
 	end
 end

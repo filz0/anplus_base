@@ -470,7 +470,7 @@ function ANPlusCreateActBusy(abTab)
 end
 
 function ENT:ANPlusGetFollowTarget()
-	return self.anp_fTarget
+	return self.m_pFollowTarget
 end
 
 local function NPCGiveWay(ent)	
@@ -490,16 +490,26 @@ local function NPCGiveWay(ent)
 	end
 end
 
+local illegalACTs = {
+	[30] = true,
+	[31] = true,
+	[32] = true,
+	[33] = true,
+	[34] = true,
+	[35] = true,
+	[36] = true,
+}
+
 function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatdist, followcombatrundist)
 	
 	local timerName = "ANP_NPC_FollowBeh" .. self:EntIndex()
 	if !IsValid(target) then 
 	
 		if self:IsANPlus() && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCFollow'] != nil then
-			self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.anp_fTarget, false)	
+			self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.m_pFollowTarget, false)	
 		end
 		timer.Remove( timerName )
-		self.anp_fTarget = nil 
+		self.m_pFollowTarget = nil 
 		return 
 	end	
 	
@@ -507,39 +517,57 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 	local followdist = followdist || 200
 	local followcombatdist = followcombatdist || 400
 	if self:GetClass() == "npc_citizen" then self:Fire( "RemoveFromPlayerSquad", "", 0.1 ) end
-	self.anp_fTarget = target
+	self.m_pFollowTarget = target
 	self:SetTarget(target)
 	if self:IsANPlus() && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCFollow'] != nil then
-		self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.anp_fTarget, true)	
+		self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.m_pFollowTarget, true)	
 	end
 	
 	timer.Create( timerName, 0.5, 0, function()
-		if !IsValid(self) || !IsValid(self.anp_fTarget) || !self.anp_fTarget:ANPlusAlive() || ( ( self.anp_fTarget:IsNPC() || self.anp_fTarget:IsPlayer() ) && self:Disposition( self.anp_fTarget ) != D_LI ) then 
+		if !IsValid(self) || !IsValid(self.m_pFollowTarget) || !self.m_pFollowTarget:ANPlusAlive() || ( ( self.m_pFollowTarget:IsNPC() || self.m_pFollowTarget:IsPlayer() ) && self:Disposition( self.m_pFollowTarget ) != D_LI ) then 
 			if IsValid(self) then			
-				if IsValid(self.anp_fTarget) then
-					if self.anp_fTarget:IsPlayer() && self:Disposition( self.anp_fTarget ) != D_LI then ANPlusMSGPlayer( self.anp_fTarget, self:ANPlusGetName() .. " is no longer following you because it doens't like you anymore.", Color( 255, 200, 0 ), "ANP.UI.Error" ) end			
+				if IsValid(self.m_pFollowTarget) then
+					if self.m_pFollowTarget:IsPlayer() && self:Disposition( self.m_pFollowTarget ) != D_LI then ANPlusMSGPlayer( self.m_pFollowTarget, self:ANPlusGetKillfeedName() .. " is no longer following you because it doens't like you anymore.", Color( 255, 200, 0 ), "ANP.UI.Error" ) end			
 					
 					if self:IsANPlus() && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCFollow'] != nil then
-						self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.anp_fTarget, false)	
+						self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.m_pFollowTarget, false)	
 					end	
 					
 				end
-				self.anp_fTarget = nil 
+				self.m_pFollowTarget = nil 
 			end
 			timer.Remove( timerName )
 			return 
 		end
 		
-		if ( self.anp_fTarget:IsPlayer() && GetConVar( "ai_ignoreplayers" ):GetBool() ) || GetConVar( "ai_disabled" ):GetBool() || !self.anp_fTarget:OnGround() then return end
+		if ( self.m_pFollowTarget:IsPlayer() && GetConVar( "ai_ignoreplayers" ):GetBool() ) || GetConVar( "ai_disabled" ):GetBool() || !self.m_pFollowTarget:OnGround() || illegalACTs[ self:GetActivity() ] then return end
 		local posSelf = self:GetPos()
-		local posTarget = self.anp_fTarget:GetPos()
+		local posTarget = self.m_pFollowTarget:GetPos()
 		local schWalk = SCHED_FORCED_GO
 		local schRun = SCHED_FORCED_GO_RUN
 		local curSchWalk = self:IsCurrentSchedule( schWalk )
 		local curSchRun = self:IsCurrentSchedule( schRun )
-		local curDist = math.max( posSelf:Distance( posTarget ) - ( self:OBBMaxs().x + self.anp_fTarget:OBBMaxs().x ), 0 )
-		if !IsValid(self:GetEnemy()) then		
-			if curDist > followdist then self:NavSetGoalTarget( self.anp_fTarget, Vector( 0, 0, 0 ) ) end	
+		local curDist = math.max( posSelf:Distance( posTarget ) - ( self:OBBMaxs().x + self.m_pFollowTarget:OBBMaxs().x ), 0 )
+		
+		if !IsValid(self:GetEnemy()) then
+
+			if curDist > followdist then
+				self:NavSetGoalTarget( self.m_pFollowTarget, Vector( 0, 0, 0 ) )
+				timer.Simple( 0.5, function() 
+					if !IsValid(self) || !IsValid(self.m_pFollowTarget) then return end
+					if self.m_pFollowTarget:IsPlayer() then
+						if !self:HasCondition( 49 ) && !self:IsGoalActive() then
+							if !self.m_pFollowTarget:Visible( self ) && !self:Visible( self.m_pFollowTarget ) then -- && ( self:HasCondition( 35 ) || !self:HasCondition( 49 ) )
+								local getNodeType = self:GetNavType() == 2 && #ANPlusAIGetAirNodes() > 0 && 3 || 2
+								local node, dist = ANPlusAIFindClosestNode( posTarget, getNodeType )
+								if node && !ANPlusAINodeOccupied( node['pos'] ) then
+									self:SetPos( node['pos'] + Vector( 0, 0, 10 ) )
+								end
+							end
+						end
+					end
+				end )
+			end	
 			if curDist < followdist && ( curSchWalk || curSchRun ) then
 				self:ClearSchedule()
 				self:ClearGoal()
@@ -558,8 +586,10 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 				--self:RunEngineTask( ai.GetTaskID( "TASK_WAIT_FOR_MOVEMENT" ), 0 )
 				--self:RunEngineTask( ai.GetTaskID( "TASK_FACE_TARGET" ), 1 )
 				---self:RunEngineTask( ai.GetTaskID( "TASK_RUN_PATH" ), 0 )
-			end			
+			end	
+
 		elseif IsValid(self:GetEnemy()) && IsValid(self:GetActiveWeapon()) && !ANPlusNoMeleeWithThese[ self:GetActiveWeapon():GetHoldType() ] then	
+			
 			if curDist < followcombatdist && ( curSchWalk || curSchRun ) then
 				self:ClearSchedule()
 				self:ClearGoal()
@@ -570,18 +600,11 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 			elseif curDist >= followcombatrundist && !curSchRun then
 				self:SetLastPosition( posTarget )
 				self:SetSchedule( schRun )
-			end		
+			end	
+
 		end	
 		
 		NPCGiveWay( self )
-		
-		if self.anp_fTarget:IsPlayer() && ( self:HasCondition( 35 ) || !self:HasCondition( 49 ) ) && !self.anp_fTarget:Visible( self ) && !self:Visible( self.anp_fTarget ) then
-			local getNodeType = self:GetNavType() == 2 && #ANPlusAIGetAirNodes() > 0 && 3 || 2
-			local node, dist = ANPlusAIFindClosestNode( posTarget, getNodeType )
-			if node && !ANPlusAINodeOccupied( node['pos'] ) && !ANPIsAnyoneLookingAtPos( self, {self.anp_fTarget}, node['pos'] ) then
-				self:SetPos( node['pos'] + Vector( 0, 0, 10 ) )
-			end
-		end
 		
 	end)
 end
@@ -612,12 +635,12 @@ function ENT:ANPlusFollowPlayer(ply, followdist, followrundist, followcombatdist
 		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " doesn't like you, therefore it won't follow you.", Color( 255, 50, 0 ), "ANP.UI.Error" )
 	elseif !IsValid(self:ANPlusGetFollowTarget()) || ( IsValid(self:ANPlusGetFollowTarget()) && !self:ANPlusGetFollowTarget():IsPlayer() ) || self:ANPlusGetFollowTarget() != ply then
 		self:ANPlusFollowTarget( ply, followdist, followrundist, followcombatdist, followcombatrundist )
-		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " is following you now.", Color( 50, 255, 0 ), "ANP.UI.Click" )
+		ANPlusMSGPlayer( ply, self:ANPlusGetKillfeedName() .. " is following you now.", Color( 50, 255, 0 ), "ANP.UI.Click" )
 	elseif IsValid(self:ANPlusGetFollowTarget()) && self:ANPlusGetFollowTarget() == ply then
 		self:ANPlusFollowTarget()
-		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " is no longer following you.", Color( 255, 200, 0 ), "ANP.UI.Error" )
+		ANPlusMSGPlayer( ply, self:ANPlusGetKillfeedName() .. " is no longer following you.", Color( 255, 200, 0 ), "ANP.UI.Error" )
 	else
-		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " is following someone else.", Color( 255, 50, 0 ), "ANP.UI.Error" )
+		ANPlusMSGPlayer( ply, self:ANPlusGetKillfeedName() .. " is following someone else.", Color( 255, 50, 0 ), "ANP.UI.Error" )
 	end	
 end
 
@@ -628,6 +651,51 @@ function ENT:ANPlusFaceEntity( ent, speed )
 		self:SetAngles( angleFace )
 	else
 		self:SetAngles( LerpAngle( FrameTime() * speed, self:GetAngles(), angleFace ) )
+	end
+end
+
+function ENT:ANPlusNPCSetRagdollState(bool, wakePos)
+	if bool then
+		if !IsValid(self:GetNW2Entity( "m_pRagdollStateEnt" )) then 		
+			self:SetNW2Entity( "m_pRagdollStateEnt", ents.Create( "prop_ragdoll" ) )
+			self:GetNW2Entity( "m_pRagdollStateEnt" ):ANPlusCopyVisualFrom( self )			
+			self:GetNW2Entity( "m_pRagdollStateEnt" ):SetPos( self:GetPos() )
+			self:GetNW2Entity( "m_pRagdollStateEnt" ):Spawn()
+			self:GetNW2Entity( "m_pRagdollStateEnt" ):SetOwner( self )
+			self:GetNW2Entity( "m_pRagdollStateEnt" ):SetModelScale( 0.5 )
+			self:AddEFlags( 4194304 )
+			self:GetNW2Entity( "m_pRagdollStateEnt" ).m_fOwnerS = self:GetSolid()
+			self:GetNW2Entity( "m_pRagdollStateEnt" ).m_fOwnerMT = self:GetMoveType()
+			self:SetSolid( SOLID_NONE )
+			self:SetMoveType( MOVETYPE_NONE )
+
+			for i = 1, 128 do
+				local bone = self:GetNW2Entity( "m_pRagdollStateEnt" ):GetPhysicsObjectNum( i )
+				if IsValid( bone ) then
+					local bonepos, boneang = self:GetBonePosition( self:GetNW2Entity( "m_pRagdollStateEnt" ):TranslatePhysBoneToBone( i ) )
+					bone:SetPos( bonepos )
+					bone:SetAngles( boneang )
+				end
+			end
+			
+			self:SetParent( self:GetNW2Entity( "m_pRagdollStateEnt" ) )
+			self:AddEffects( EF_BONEMERGE )
+			self:DeleteOnRemove( self:GetNW2Entity( "m_pRagdollStateEnt" ) )
+			self:GetNW2Entity( "m_pRagdollStateEnt" ):CallOnRemove( "ANPlus_OnRemove_RagdollState_Free", function( ent )
+				if IsValid(ent:GetOwner()) then
+					local owner = ent:GetOwner()
+					owner:SetParent( nil )
+					owner:SetSolid( self:GetNW2Entity( "m_pRagdollStateEnt" ).m_fOwnerS || 2 )
+					owner:SetMoveType( self:GetNW2Entity( "m_pRagdollStateEnt" ).m_fOwnerMT || 2 )
+					owner:SetPos( ent:GetPos() )
+					owner:RemoveEFlags( 4194304 )
+				end
+			end )
+		end
+	else
+		if IsValid(self:GetNW2Entity( "m_pRagdollStateEnt" )) then 		
+			SafeRemoveEntity( self:GetNW2Entity( "m_pRagdollStateEnt" ) )
+		end
 	end
 end
 
@@ -658,9 +726,9 @@ function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, cal
 		end
 		
 		self:ResetSequenceInfo()
-		self:SetIdealActivity( act )
-		self:ResetIdealActivity( act )
 		self:SetActivity( act )
+		self:SetIdealActivity( 171 )
+		self:ResetIdealActivity( act )	
 		self:SetCycle( 0 )
 	end
 	
@@ -878,25 +946,25 @@ function ENT:ANPlusGetSquadMembers(callback)
 end
 -- Half-Life:Source squad system is busted af, need to make my own.
 function ENT:ANPlusAddToCSquad(squad)
-	if !ANPCustomSquads[squad] then ANPCustomSquads[squad] = {} end
-	ANPlusTableDeNull( ANPCustomSquads[squad] ) -- Remove NULL NPCs
-	if !table.HasValue( ANPCustomSquads[squad], self ) then
-		table.insert( ANPCustomSquads[squad], self )
-		if !ANPCustomSquads[squad]['leader'] then ANPCustomSquads[squad]['leader'] = self end
-		self.m_tbANPCSquad = ANPCustomSquads[squad] 
+	if !ANPlusCustomSquads[squad] then ANPlusCustomSquads[squad] = {} end
+	ANPlusTableDeNull( ANPlusCustomSquads[squad] ) -- Remove NULL NPCs
+	if !table.HasValue( ANPlusCustomSquads[squad], self ) then
+		table.insert( ANPlusCustomSquads[squad], self )
+		if !ANPlusCustomSquads[squad]['leader'] then ANPlusCustomSquads[squad]['leader'] = self end
+		self.m_tbANPCSquad = ANPlusCustomSquads[squad] 
 	end
 end
 
 function ENT:ANPlusCSquadGetLeader(squad)
-	if squad && ANPCustomSquads[squad] then
-		return ANPCustomSquads[squad]['leader']
+	if squad && ANPlusCustomSquads[squad] then
+		return ANPlusCustomSquads[squad]['leader']
 	elseif !squad then	
 		if self:ANPlusGetCSquad() then return self:ANPlusGetCSquad()['leader'] end
 	end
 end
 
 function ENT:ANPlusGetCSquad()
-	for k, v in pairs( ANPCustomSquads ) do
+	for k, v in pairs( ANPlusCustomSquads ) do
 		if v && table.HasValue( v, self ) then return v end
 	end
 end
@@ -916,7 +984,7 @@ function ENT:ANPlusGetCSquadMembers(callback)
 end
 
 function ENT:ANPlusRemoveFromCSquad(squad)
-	if ANPCustomSquads[squad] && table.HasValue( ANPCustomSquads[squad], self ) then table.RemoveByValue( ANPCustomSquads[squad], self ) end
+	if ANPlusCustomSquads[squad] && table.HasValue( ANPlusCustomSquads[squad], self ) then table.RemoveByValue( ANPlusCustomSquads[squad], self ) end
 end			
 
 function ENT:ANPlusOverrideMoveSpeed(speed, rate, respectGoal)

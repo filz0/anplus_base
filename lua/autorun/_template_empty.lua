@@ -858,15 +858,6 @@ ANPlus.AddNPC( {
 	['Health'] 					= false,
 ----------------------------------------------------------------- Script of your vehicle.	
 	['VehicleScript'] 			= "scripts/vehicles/jeep_test.txt",
------------------------------------------------------------------ Can be an infinite amount of seats, Pos and ExitPos can be a simple Vector() or an attachment name, other options are self explanatory.
---[[ EXAMPLE
-	['ExtraSeats']				= { //Can be an infinite amount of seats, Pos and ExitPos can be a simple Vector() or an attachment name, other options are self explanatory.
-		{Pos = Vector(27,38,32), Ang = Angle(0,0,8), EnterRange = 280, ExitAng = Angle(0,-90,0), Model = "models/props_phx/carseat2.mdl", ModelOffset = Vector(12,0,4), Hide = true, DoorSounds = true, RadioControl = true},
-		{Pos = Vector(0,38,32), Ang = Angle(0,0,8), EnterRange = 280, ExitAng = Angle(0,-90,0), Model = "models/props_phx/carseat2.mdl", ModelOffset = Vector(12,0,4), Hide = true, DoorSounds = false, RadioControl = true},
-		{Pos = Vector(30,-42,29), Ang = Angle(0,90,8), EnterRange = 280, ExitAng = Angle(0,180,0), Model = "models/props_phx/carseat2.mdl", ModelOffset = Vector(12,0,4), Hide = true, DoorSounds = false, RadioControl = true}
-	},
---]]
-	['ExtraSeats']				= false,
 ----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
 --[[ EXAMPLE
 	['KeyValues'] 				= { citizentype = CT_REBEL, SquadName = "resistance" },
@@ -940,6 +931,10 @@ ANPlus.AddNPC( {
 		['OnNPCUserButtonDown'] = function(self, ply, button)	
 		end,
 		
+		------------------------------------------------------------ OnNPCPrePlayerEnter - Called when the player tries to enter the vehicle.
+		['OnNPCPrePlayerEnter'] = function(ply, self, seat)	
+		end,
+
 		------------------------------------------------------------ OnNPCPlayerEnter - Called when the player enters the vehicle.
 		['OnNPCPlayerEnter'] = function(ply, self, seat)	
 		end,

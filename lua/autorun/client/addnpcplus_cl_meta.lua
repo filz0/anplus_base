@@ -247,12 +247,12 @@ render.ANPlusDrawBeamTrail = function(ent, attachmentID, offsetVec, color, width
 	spacing = spacing || 0
 	local pos, ang = nil, nil
 	
-	if attachmentID && attachmentID != -1 then		
+	if attachmentID && attachmentID > 0 then		
 		local attTab = ent:GetAttachment( attachmentID )
 		pos, ang = LocalToWorld( offsetVec, Angle( 0, 0, 0 ), attTab.Pos, attTab.Ang )
 	else
 		pos, ang = LocalToWorld( offsetVec, Angle( 0, 0, 0 ), ent:GetPos(), ent:GetAngles() )
-		attachmentID = -1
+		attachmentID = 0
 	end
 
 	ent['m_vOldPos_att'..attachmentID] = !ent['m_vOldPos_att'..attachmentID] && pos || Lerp( FrameTime() * 2, ent['m_vOldPos_att'..attachmentID], pos )
@@ -260,14 +260,13 @@ render.ANPlusDrawBeamTrail = function(ent, attachmentID, offsetVec, color, width
 	local boxSize = 2
 	local static = pos:WithinAABox( ent['m_vOldPos_att'..attachmentID] - Vector( boxSize, boxSize, boxSize ), ent['m_vOldPos_att'..attachmentID] + Vector( boxSize, boxSize, boxSize ) )
 	
-	if not static then
+	if !static then
 		
 		local gScale = 2 + ( -1 * game.GetTimeScale() )
 		
 		if spacing == 0 || ( ent['m_fLastAdd_att'..attachmentID] || 0 ) < CurTime() then
 			table.insert( ent['m_tPoints_att'..attachmentID], pos )
-			ent['m_fLastAdd_att'..attachmentID] = CurTime() + ( spacing / 1000 )
-			
+			ent['m_fLastAdd_att'..attachmentID] = CurTime() + ( spacing / 1000 )		
 		end
 		
 		local count = #ent['m_tPoints_att'..attachmentID]
