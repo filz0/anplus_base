@@ -98,7 +98,9 @@ local function ANPlusOnLoad(ply, ent, data)
 					local fixBool = val == "true" && true || val == "false" && false
 					val = val != "true" && val != "false" && val || fixBool	
 					ent[ var ] = val	
+
 					if data['m_tSaveDataUpdateFuncs'] && isfunction( data['m_tSaveDataUpdateFuncs'][ var ] ) then
+						print(var, val, data['m_tSaveDataUpdateFuncs'][ var ])
 						data['m_tSaveDataUpdateFuncs'][ var ](ent, val)
 					end
 					

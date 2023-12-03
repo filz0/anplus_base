@@ -209,6 +209,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 			end
 			
 			if ent:IsNPC() then
+				
 				ent:ANPlusCreateVar( "DefaultVariables", "Category", "[ Default Variables ]-----------------", nil ) 
 				
 				ent:ANPlusCreateVar( "kv_targetname", ent:GetInternalVariable( "m_iName" ), "Target Name", "The name that other entities use to refer to this entity.", nil, nil, nil, 				
@@ -245,7 +246,7 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 							"\n 5: Auto PVS after PVS" 
 				
 				ent:ANPlusCreateVar( "kv_sleepstate", ent:GetInternalVariable( "m_SleepState" ), "Sleep State", "Holds the NPC in stasis until specified condition. See also Wake Radius and Wake Squad." .. sleepList, 0, 5, 0, 				
-				function(ent, nVar) 
+				function(ent, nVar) 				
 					ent:SetSaveValue( "m_SleepState", nVar )
 				end )
 				

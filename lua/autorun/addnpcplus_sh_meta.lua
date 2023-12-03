@@ -959,6 +959,7 @@ end
 function metaENT:ANPlusGetVisual()
 	if !IsValid(self) then return end	
 	local visualTab = {
+	['Model'] = self:GetModel(),
 	['Skin'] = self:GetSkin(),
 	['Color'] = self:GetColor(),
 	['Material'] = self:GetMaterial(),
@@ -1241,7 +1242,7 @@ function metaENT:ANPlusEmitSoundSentence(sentence, pos, overrideTab, CRecipientF
 				end
 
 				self.m_sASSCurSentence = snd
-
+				
 				--self:EmitSound( snd, stable.level, stable.pitch, stable.volume, stable.channel )
 				local channel = istable( nextAudio ) && nextAudio.channel || stable.channel
 				local volume = istable( nextAudio ) && nextAudio.volume || stable.volume
@@ -1250,8 +1251,9 @@ function metaENT:ANPlusEmitSoundSentence(sentence, pos, overrideTab, CRecipientF
 				local pitch = istable( nextAudio ) && nextAudio.pitch || stable.pitch
 				local dsp = istable( nextAudio ) && nextAudio.dsp || stable.dsp
 
-				EmitSound( snd, pos || self:GetPos(), self:EntIndex(), channel, volume, level, flags, pitch, dsp, CRecipientFilter )
-				
+				--EmitSound( snd, pos || self:GetPos(), self:EntIndex(), channel, volume, level, flags, pitch, dsp )
+				self:EmitSound( snd, level, pitch, volume, channel, flags, dsp, CRecipientFilter )
+
 				ANPlus_ASS_CurAudio = ANPlus_ASS_CurAudio + 1
 				ANPlus_ASS_SoundDelay = dur
 				ANPlus_ASS_SoundLast = CurTime()
@@ -1279,20 +1281,23 @@ function metaENT:ANPlusStopSoundSentence(fullstop)
 
 end
 
-local function applyVar(ent, var, val, label, desc, min, max, deci)
-	if IsValid(ent) then
-		local getVec = ANPlusStringToVector( val )
-		local getAng = ANPlusStringToAngle( val )
-		local getBool = val == "true"
-		local getNum = isnumber( tonumber( val ) ) && tonumber( val )
-		local getStr = isstring( val ) && val != "true" && val != "false" && val
-		val = getBool || getNum || getVec || getAng || getStr		
+local function applyVar(ent, varTab)
+	if IsValid(ent) && varTab then
+		
+		local var = varTab['Variable'] 
+		local val = varTab['Value'] 
+		local label = varTab['Label'] 
+		local desc = varTab['Description'] 
+		local min = varTab['Min'] 
+		local max = varTab['Max'] 
+		local deci = varTab['Decimals']
+
 		ent['m_tSaveDataMenu'] = ent['m_tSaveDataMenu'] || {}
 		
 		if var && label && label != "" then
 			local tabCount = #ent['m_tSaveDataMenu']
 			local exists
-			
+
 			for i = 0, tabCount do
 			
 				local tabVal = ent['m_tSaveDataMenu'][ i ]
@@ -1315,15 +1320,9 @@ end
 
 local function createVar()
 	local ent = net.ReadEntity()
-	local var =	net.ReadString()
-	local val =	net.ReadString()
-	local label = net.ReadString()
-	local desc = net.ReadString()
-	local min = net.ReadFloat()
-	local max = net.ReadFloat()
-	local deci = net.ReadFloat()
+	local varTab = net.ReadTable()
 	
-	if IsValid(ent) then applyVar(ent, var, val, label, desc, min, max, deci) end
+	if IsValid(ent) && varTab then applyVar( ent, varTab ) end
 end
 
 net.Receive("anplus_savedata_tosv", function(_, ply)
@@ -1336,30 +1335,27 @@ end)
 
 function metaENT:ANPlusCreateVar(var, val, label, desc, min, max, deci, updateCallback)
 	if val == nil then return end
-	
-	val = isangle( val ) && "angle " .. tostring( val ) || isvector( val ) && "vector " .. tostring( val ) || tostring( val )
-	
+
+	local varTab = { ['Variable'] = var, ['Value'] = val, ['Label'] = label, ['Description'] = desc, ['Min'] = min, ['Max'] = max, ['Decimals'] = deci }
+
 	if (SERVER) then 
 		net.Start( "anplus_savedata_tocl" )
 		net.WriteEntity( self )
-		net.WriteString( var )
-		net.WriteString( val )
-		net.WriteString( label || "" )
-		net.WriteString( desc || "" )
-		net.WriteFloat( min || 0 )
-		net.WriteFloat( max || 1 )
-		net.WriteFloat( deci || 0 )
+		net.WriteTable( varTab )
 		net.Broadcast()		
 	end	
 	
-	applyVar(self, var, val, label, desc, min, max, deci)
+	applyVar( self, varTab )
 	
 	if var && label then
+		
 		self['m_tSaveDataUpdateFuncs'] = self['m_tSaveDataUpdateFuncs'] || {}
+
 		if updateCallback && !self['m_tSaveDataUpdateFuncs'][ var ] then
-			local addtab = { [ var ] = updateCallback }
-			table.Merge( self['m_tSaveDataUpdateFuncs'], addtab )
+			local addTab = { [ var ] = updateCallback }
+			table.Merge( self['m_tSaveDataUpdateFuncs'], addTab )
 		end
+
 	end
 	
 end

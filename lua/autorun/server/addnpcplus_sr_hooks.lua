@@ -316,7 +316,7 @@ hook.Add( "ScalePlayerDamage", "ANPlusLoad_ScalePlayerDamage", function(ply, hg,
 	end
 end)
 
-hook.Add( "ScaleNPCDamage", "ANPlusLoad_EntityTakeDamage", function(npc, hg, dmginfo)
+hook.Add( "ScaleNPCDamage", "ANPlusLoad_ScaleNPCDamage", function(npc, hg, dmginfo)
 	
 	local att = dmginfo:GetAttacker()
 	
@@ -426,7 +426,10 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 	local inf = dmginfo:GetInflictor()
 	local dmginfot = dmginfo:GetDamageType()	
 
-	if ent.m_bNPCNoDamage || IsValid(ent:GetNW2Entity( "m_pRagdollStateEnt" )) then dmginfo:SetDamage( 0 ) end
+	if ent.m_bNPCNoDamage || IsValid(ent:GetNW2Entity( "m_pRagdollStateEnt" )) then 	
+		dmginfo:ScaleDamage( 0 ) 
+		dmginfo:SetDamage( 0 ) 
+	end
 	
 	if !GetConVar( "anplus_ff_disabled" ):GetBool() && ent:IsANPlus() && IsValid(att) && ( att:IsNPC() || att:IsPlayer() ) && ent != att && ent:Disposition( att ) == D_LI then
 	
