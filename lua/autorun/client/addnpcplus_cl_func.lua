@@ -132,6 +132,13 @@ net.Receive("anplus_savedata_net", function()
 	if IsValid(ent) && data then table.Merge( ent, data ) end
 end)
 
+net.Receive("anplus_add_caption", function()	
+	local text = net.ReadString()
+	local dur = net.ReadFloat()	
+	local fromPly = net.ReadBool()	
+	ANPlusAddCaption( nil, text, dur, fromPly )
+end)
+
 function ENT:ANPlusNPCHUDPaint()
 	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCHUDPaint'] != nil then
 		self:ANPlusGetDataTab()['Functions']['OnNPCHUDPaint'](self)

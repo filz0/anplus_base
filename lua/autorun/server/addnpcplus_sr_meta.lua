@@ -74,14 +74,18 @@ function metaENT:ANPlusRemoveHealth(val, max)
 	self:SetHealth( math.Approach( self:Health(), max, hpAdd ))
 end
 
-function metaENT:MyVJClass()
+function metaENT:MyVJClass(key)
 
 	if !IsValid(self) || !self.IsVJBaseSNPC then return false end
 	
-	for i = 1, #self.VJ_NPC_Class do
-	
-		return self.VJ_NPC_Class[ i ]
-	
+	if key then
+		return self.VJ_NPC_Class[ key ]
+	else
+		for i = 1, #self.VJ_NPC_Class do
+		
+			return self.VJ_NPC_Class[ i ]
+		
+		end
 	end
 
 end

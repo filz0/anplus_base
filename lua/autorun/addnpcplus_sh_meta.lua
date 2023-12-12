@@ -1175,10 +1175,42 @@ function metaENT:ANPlusEmitSoundSentence(sentence, pos, overrideTab, CRecipientF
 	if !sentence then return end
 	if !IsValid(self) || ( !self:ANPlusAlive() ) then return end
 
-	local stable = ANPlusScriptedSentences[ sentence ]
-	if !stable then return end
+	local sentTab = ANPlusScriptedSentences[ sentence ]
+	if !sentTab then return end
 	
 	self:ANPlusStopSoundSentence( true )
+
+	local stable = table.Copy( sentTab )
+	local captions = stable.caption && stable.caption[ 1 ] || ""
+
+	for _, snd in ipairs( stable.sound ) do
+
+		local num = 1
+
+		if istable( snd ) && isstring( snd[ 1 ] ) then
+			num = math.random( 1, #snd ) 
+			snd = snd[ num ]			
+		end
+
+		local nextSTable = stable.sound[ _ + 1 ]
+
+		local capOver = overrideTab && overrideTab[ snd ] && overrideTab[ snd ][ 2 ] && overrideTab[ snd ][ 2 ].caption
+
+		if nextSTable && istable( nextSTable ) && nextSTable.caption then
+			if istable( nextSTable.caption ) then
+				captions = captions .. ( capOver && capOver[ num ] || nextSTable.caption[ num ] || "" )
+			else
+				captions = captions .. ( capOver || nextSTable.caption || "" )
+			end
+		end
+
+		local sndOver = overrideTab && overrideTab[ snd ] && overrideTab[ snd ][ 1 ]
+
+		sndOver = sndOver && ( istable( sndOver ) && sndOver[ math.random( 1, #sndOver ) ] || sndOver )
+		snd = sndOver || snd
+		stable.sound[ _ ] = snd
+
+	end
 	
 	local ANPlus_ASS_CurAudio = 1
 	local ANPlus_ASS_SoundLast = 0
@@ -1187,6 +1219,8 @@ function metaENT:ANPlusEmitSoundSentence(sentence, pos, overrideTab, CRecipientF
 	local timerName = "ANPEmitSoundSentenceTimer" .. self:EntIndex()
 	
 	timer.Remove( timerName )
+
+	if stable.caption then ANPlusAddCaption( true, captions, stable.caption[ 2 ] ) end
 	
 	timer.Create( timerName, 0, 0, function()	
 		
@@ -1195,7 +1229,7 @@ function metaENT:ANPlusEmitSoundSentence(sentence, pos, overrideTab, CRecipientF
 			timer.Remove(timerName)
 			
 			ANPlus_ASS_CurSound = 1			
-			if isfunction(callback) then			
+			if isfunction( callback ) then			
 				callback()				
 			end
 			
@@ -1205,38 +1239,20 @@ function metaENT:ANPlusEmitSoundSentence(sentence, pos, overrideTab, CRecipientF
 			
 			if ANPlus_ASS_CurAudio <= #stable.sound then
 				
-				local curAudio = stable.sound[ANPlus_ASS_CurAudio]
+				local snd = stable.sound[ANPlus_ASS_CurAudio]
 
-				if isnumber( curAudio ) || ( istable( curAudio ) && !isstring( curAudio[ 1 ] ) ) then ANPlus_ASS_CurAudio = ANPlus_ASS_CurAudio + 1 return end
+				if isnumber( snd ) || ( istable( snd ) && !isstring( snd[ 1 ] ) || snd[ 1 ] == "" ) || snd == "" then ANPlus_ASS_CurAudio = ANPlus_ASS_CurAudio + 1 return end 
 
-				local nextAudio = stable.sound[ANPlus_ASS_CurAudio + 1]
-				local curRand = math.random( #curAudio )
-				local dur = nil	
-				local snd = nil			
-				local sndtab = nil		
+				local sndNext = stable.sound[ANPlus_ASS_CurAudio + 1]
+				local dur = nil				
 				
-				if istable( curAudio ) then
-					
-					sndtab = curAudio[ curRand ]
-
-					if istable( sndtab ) then
-						snd = sndtab[ 1 ]
-					else
-						snd = sndtab
-					end
-					
-				else
+				sndNext = overrideTab && overrideTab[ snd ] && overrideTab[ snd ][ 2 ] || sndNext
 				
-					snd = curAudio
-					
-				end
-
-				snd = overrideTab && overrideTab[ snd ] || snd
-
-				if isnumber( nextAudio ) then
-					dur = ANPlusSoundDuration( snd ) + nextAudio
-				elseif istable( nextAudio ) && nextAudio.dur then
-					dur = ANPlusSoundDuration( snd ) + nextAudio.dur
+				if istable( snd ) then PrintTable(snd) end
+				if isnumber( sndNext ) then
+					dur = ANPlusSoundDuration( snd ) + sndNext
+				elseif istable( sndNext ) && sndNext.dur then
+					dur = ANPlusSoundDuration( snd ) + sndNext.dur
 				else
 					dur = ANPlusSoundDuration( snd )
 				end
@@ -1244,12 +1260,14 @@ function metaENT:ANPlusEmitSoundSentence(sentence, pos, overrideTab, CRecipientF
 				self.m_sASSCurSentence = snd
 				
 				--self:EmitSound( snd, stable.level, stable.pitch, stable.volume, stable.channel )
-				local channel = istable( nextAudio ) && nextAudio.channel || stable.channel
-				local volume = istable( nextAudio ) && nextAudio.volume || stable.volume
-				local level = istable( nextAudio ) && nextAudio.level || stable.level
-				local flags = istable( nextAudio ) && nextAudio.flags || stable.flags
-				local pitch = istable( nextAudio ) && nextAudio.pitch || stable.pitch
-				local dsp = istable( nextAudio ) && nextAudio.dsp || stable.dsp
+				local channel = istable( sndNext ) && sndNext.channel || stable.channel
+				local volume = istable( sndNext ) && sndNext.volume || stable.volume
+				local level = istable( sndNext ) && sndNext.level || stable.level
+				local flags = istable( sndNext ) && sndNext.flags || stable.flags
+				local pitch = istable( sndNext ) && sndNext.pitch || stable.pitch
+				local dsp = istable( sndNext ) && sndNext.dsp || stable.dsp
+				local durFix = dur * ( ( pitch || 100 ) / 100 )
+				dur = durFix > dur && durFix || durFix < dur && dur + durFix || dur
 
 				--EmitSound( snd, pos || self:GetPos(), self:EntIndex(), channel, volume, level, flags, pitch, dsp )
 				self:EmitSound( snd, level, pitch, volume, channel, flags, dsp, CRecipientFilter )
@@ -1478,4 +1496,20 @@ function ANPlusStringToAngle(str)
 	if !isstring( str ) || !string.gsub( str, "angle ", "" ) then return nil end
 	str = string.gsub( str, "angle ", "" )
 	return string.ToAngle(str)
+end
+
+function ANPlusAddCaption(ply, text, dur, fromPly)	
+	if (SERVER) then
+		net.Start( "anplus_add_caption" )
+		net.WriteString( text || "" )
+		net.WriteFloat( dur || 1 )		
+		net.WriteBool( fromPly || false )		
+		if isbool( ply ) then
+			net.Broadcast()
+		elseif ply:IsPlayer() then
+			net.Send( ply )
+		end	
+	elseif (CLIENT) then	
+		gui.AddCaption( text, dur, fromPly )		
+	end
 end

@@ -42,7 +42,7 @@ function ENT:ANPlusGetAll()
 		
 		local v = entsAround[ i ]
 		
-		if ( v:IsNPC() && v != self && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
+		if ( v:IsNPC() && v != self && v:GetKeyValues()['sleepstate'] == 0 && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
 			
 			entsSelected[count] = v
 			count = count + 1
@@ -109,8 +109,8 @@ function ENT:ANPlusNPCRelations()
 			it = it + 1
 		
 			if ent != self then 
-				
-				local dispTab = ent:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetDataTab()['Name'] ] || self:ANPlusGetDataTab()['Relations'][ ent:GetColor() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
+
+				local dispTab = ent:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetDataTab()['Name'] ] || self:ANPlusGetDataTab()['Relations'][ ent:GetColor() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass( 1 ) ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
 
 				if dispTab then
 
@@ -128,12 +128,12 @@ function ENT:ANPlusNPCRelations()
 							
 							if ent.IsVJBaseSNPC == true && ( RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ] == D_LI || RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ] == D_NU ) then
 							
-								ent.VJ_AddCertainEntityAsFriendly[ #ent.VJ_AddCertainEntityAsFriendly + 1 ] = self
-								
+								--ent.VJ_AddCertainEntityAsFriendly[ #ent.VJ_AddCertainEntityAsFriendly + 1 ] = self
+								table.insert( ent.VJ_AddCertainEntityAsFriendly, self ) -- still doesn't work, i don't care anymore.
 							elseif ent.IsVJBaseSNPC == true && ( RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ] == D_HT || RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ] == D_FR ) then
 							
-								ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
-								
+								--ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
+								table.insert( ent.VJ_AddCertainEntityAsEnemy, self )
 							end
 				
 						end

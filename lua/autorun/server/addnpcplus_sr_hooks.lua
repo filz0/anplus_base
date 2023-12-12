@@ -20,6 +20,7 @@ util.AddNetworkString("anplus_net_entity")
 util.AddNetworkString("anplus_propmenu")
 util.AddNetworkString("anplus_savedata_net")
 util.AddNetworkString("anplus_ply_spawnmenu") 
+util.AddNetworkString("anplus_add_caption") 
 
 net.Receive("anplus_ply_spawnmenu", function(len, ply)	
 	local b = net.ReadBool()
