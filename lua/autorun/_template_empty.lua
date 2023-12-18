@@ -198,12 +198,74 @@ ANPlus.AddNPC( {
 	['CanFollowPlayers'] 		= { 100, 200, 400, 800 },
 ----------------------------------------------------------------- This table can be used to set NPC relations with other entities (also players). You can use classname/name/vj_class/classify(class like CLASS_COMBINE).	
 	['Relations'] 		= {
-	
-		['Default'] = { ['MeToNPC'] = { "Default", 0 }, ['NPCToMe'] = { "Default", 0 } }, -- Like/Hate/Fear/Neutral/Default(no change)
-		['player'] = { ['MeToNPC'] = { "Default", 0 } }, -- Like/Hate/Fear/Neutral/Default(no change)
+
 		--['npc_combine_s'] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } },
 		--[9] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, -- Where 9 represents NPC:Classify() of CLASS_COMBINE
 		--['Other ANPlus NPC ID/Name'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Like", 0 } },
+
+		['Class'] = CLASS_PLAYER_ALLY, 												-- My new NPC CLASS,
+		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },	-- Default relations to NPCs/CLASSes not mention below.
+		[1] = { ['MeToNPC'] = { "Like", 0 } }, 										-- CLASS_PLAYER -- Players.
+		[2] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_PLAYER_ALLY -- HL2 player allies - monster_barney, npc_citizen, hacked npc_manhack, and friendly npc_turret_floor.
+		[3] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_PLAYER_ALLY_VITAL -- HL2 vital player allies - npc_magnusson, npc_gman, npc_fisherman, npc_eli, npc_barney, npc_kleiner, npc_mossman, npc_alyx, npc_monk, npc_dog, and npc_vortigaunt at the end of EP2 (controlled by "MakeGameEndAlly" input).
+		[4] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_ANTLION -- HL2 antlions - npc_antlion, npc_antlionguard, and npc_ichthyosaur.
+		[5] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_BARNACLE -- HL2 barnacles - npc_barnacle.
+		--[6] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Fear", 0 } }, 		-- CLASS_BULLSEYE -- HL2 bullseyes - npc_bullseye. THIS CLASS IS DISABLED.
+		[7] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_CITIZEN_PASSIVE -- HL2 passive/non-rebel citizens - npc_citizen in the beginning of HL2.
+		[8] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_CITIZEN_REBEL -- HL2 unused.
+		[9] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_COMBINE -- HL2 combine troops - npc_combine, npc_advisor, apc_missile, npc_apcdriver, hostile npc_turret_floor, hostile npc_rollermine, npc_turret_ground when active, npc_turret_ceiling when active, and npc_strider when active (not being carried by the gunship).
+		[10] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_COMBINE_GUNSHIP -- HL2 combine aircrafts - npc_combinegunship, npc_combinedropship, and npc_helicopter.
+		[11] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_CONSCRIPT -- HL2 unused.
+		[12] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_HEADCRAB -- HL2 headcrabs - visible npc_headcrab.
+		[13] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_MANHACK -- HL2 manhacks - hostile npc_manhack not held by the gravity gun.
+		[14] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_METROPOLICE -- HL2 metro police - npc_metropolice and npc_vehicledriver.
+		[15] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_MILITARY -- HL2 combine military objects - func_guntarget, npc_spotlight, and active npc_combine_camera.
+		[16] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_SCANNER -- HL2 combine scanners - npc_cscanner and npc_clawscanner.
+		[17] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_STALKER -- HL2 stalkers - npc_stalker.
+		[18] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_VORTIGAUNT -- HL2 vortigaunts - npc_vortigaunt before the end of EP2 (controlled by "MakeGameEndAlly" input).
+		[19] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_ZOMBIE -- HL2 zombies - unslumped npc_zombie, npc_poisonzombie, npc_fastzombie, npc_fastzombie_torso, and npc_zombine.
+		[20] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_PROTOSNIPER -- HL2 snipers - npc_sniper and proto_sniper.
+		[21] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_MISSILE -- HL2 missiles - rpg_missile, apc_missile, and grenade_pathfollower.
+		[22] = { ['MeToNPC'] = { "Neutral", 0 }, ['NPCToMe'] = { "Neutral", 0 } }, 	-- CLASS_FLARE -- HL2 flares - env_flare.
+		[23] = { ['MeToNPC'] = { "Neutral", 0 }, ['NPCToMe'] = { "Fear", 0 } }, 	-- CLASS_EARTH_FAUNA -- HL2 animals - npc_crow, npc_seagull, and npc_pigeon.
+		[24] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_HACKED_ROLLERMINE -- HL2 friendly rollermines - hacked npc_rollermine.
+		[25] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_COMBINE_HUNTER -- HL2 hunters - npc_hunter.
+		[26] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_MACHINE -- HL:S turrets - monster_turret, monster_miniturret, monster_sentry.
+		[27] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_HUMAN_PASSIVE -- HL:S friendly humans - monster_scientist.
+		[28] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_HUMAN_MILITARY --	HL:S human military - monster_human_grunt and monster_apache.
+		[29] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_ALIEN_MILITARY --	HL:S alien military - monster_alien_controller, monster_vortigaunt, monster_alien_grunt, monster_nihilanth, and monster_snark if it has an enemy of class CLASS_PLAYER, CLASS_HUMAN_PASSIVE, or CLASS_HUMAN_MILITARY.
+		[30] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_ALIEN_MONSTER -- HL:S monsters - monster_tentacle, monster_barnacle, monster_zombie, monster_gargantua, monster_houndeye, monster_ichthyosaur, and monster_bigmomma.
+		[31] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_ALIEN_PREY -- HL:S headcrabs - monster_headcrab.
+		[32] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_ALIEN_PREDATOR -- HL:S alien predators - monster_bullsquid, xen_tree, and xen_hull.
+		[33] = { ['MeToNPC'] = { "Neutral", 0 }, ['NPCToMe'] = { "Fear", 0 } }, 	-- CLASS_INSECT -- HL:S insects - montser_roach and monster_leech.
+		[34] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_PLAYER_BIOWEAPON -- HL:S player bioweapons - hornet fired by a player.
+		[35] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_ALIEN_BIOWEAPON -- HL:S enemy bioweapons - hornet fired by anyone but a player, or monster_snark with no enemy or an enemy without the class CLASS_PLAYER, CLASS_HUMAN_PASSIVE, or CLASS_HUMAN_MILITARY.
+
+		['CLASS_PLAYER_ALLY'] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } },
+		['CLASS_PLAYER_ALLY_VITAL'] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } },
+		['CLASS_ANTLION'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_BARNACLE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_COMBINE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_COMBINE_GUNSHIP'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_HEADCRAB'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_MANHACK'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_METROPOLICE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_MILITARY'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_SCANNER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_STALKER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_VORTIGAUNT'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_ZOMBIE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_PROTOSNIPER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_EARTH_FAUNA'] = { ['MeToNPC'] = { "Neutral", 0 }, ['NPCToMe'] = { "Fear", 0 } },
+		['CLASS_COMBINE_HUNTER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_MACHINE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_HUMAN_MILITARY'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_ALIEN_MILITARY'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_ALIEN_MONSTER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_ALIEN_PREY'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_ALIEN_PREDATOR'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+		['CLASS_XEN'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
+
 	}, 
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
 --[[ EXAMPLE
@@ -255,6 +317,18 @@ ANPlus.AddNPC( {
 		------------------------------------------------------------ OnNPCUse - This function runs every frame when the player presses its "Use" key on our NPC.
 		['SetUseType'] = SIMPLE_USE,
 		['OnNPCUse'] = function(self, activator, caller, type)		
+		end,
+
+		------------------------------------------------------------ OnNPCUserButtonUp - Called when the user/driver/leader releases a button.
+		['OnNPCUserButtonUp'] = function(self, ply, button)	
+		end,
+		
+		------------------------------------------------------------ OnNPCUserButtonDown - Called when the user/driver/leader presses a button.
+		['OnNPCUserButtonDown'] = function(self, ply, button)	
+		end,
+
+		------------------------------------------------------------ OnNPCPlayerSetupMove - SetupMove is called before the engine process movements. This allows us to override the players movement.
+		['OnNPCPlayerSetupMove'] = function(self, ply, mv, cmd)	
 		end,
 		
 		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
@@ -615,12 +689,16 @@ ANPlus.AddNPC( {
 		['OnNPCUse'] = function(self, activator, caller, type)		
 		end,
 		
-		------------------------------------------------------------ OnNPCUserButtonUp - Called when the user/driver releases a button.
+		------------------------------------------------------------ OnNPCUserButtonUp - Called when the user/driver/leader releases a button.
 		['OnNPCUserButtonUp'] = function(self, ply, button)	
 		end,
 		
-		------------------------------------------------------------ OnNPCUserButtonDown - Called when the user/driver presses a button.
+		------------------------------------------------------------ OnNPCUserButtonDown - Called when the user/driver/leader presses a button.
 		['OnNPCUserButtonDown'] = function(self, ply, button)	
+		end,
+
+		------------------------------------------------------------ OnNPCPlayerSetupMove - SetupMove is called before the engine process movements. This allows us to override the players movement.
+		['OnNPCPlayerSetupMove'] = function(self, ply, mv, cmd)	
 		end,
 		
 		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
@@ -931,6 +1009,10 @@ ANPlus.AddNPC( {
 		['OnNPCUserButtonDown'] = function(self, ply, button)	
 		end,
 		
+		------------------------------------------------------------ OnNPCPlayerSetupMove - SetupMove is called before the engine process movements. This allows us to override the players movement.
+		['OnNPCPlayerSetupMove'] = function(self, ply, mv, cmd)	
+		end,
+
 		------------------------------------------------------------ OnNPCPrePlayerEnter - Called when the player tries to enter the vehicle.
 		['OnNPCPrePlayerEnter'] = function(ply, self, seat)	
 		end,

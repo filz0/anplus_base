@@ -202,7 +202,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self:ANPlusUpdateWeaponProficency( self:GetActiveWeapon(), data['WeaponProficiencyTab'] )						
 						self:SetMaxLookDistance( data['LookDistance'] || GetConVar( "anplus_look_distance_override" ):GetFloat() ) 
 						--if data['LookDistance'] then self:Fire( "SetMaxLookDistance", data['LookDistance'], 0.1 ) end	
-						if (CLIENT) && data['EnableInverseKinematic'] then self:SetIK( data['EnableInverseKinematic'] ) end	
+			
 						--if data['AllowActivityTranslation'] && !IsValid(self:GetWeapon( "ai_translate_act" )) then self:Give( "ai_translate_act" ) end									
 						self.m_tbANPlusRelationsMem = {}				
 						self.m_fANPlusCurMemoryLast = 0
@@ -215,6 +215,10 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self.m_fCurSchedule = self:GetCurrentSchedule()
 						self.m_tTACTData = {}
 						if data['UseANPSquadSystem'] then self:ANPlusAddToCSquad( self:ANPlusGetSquadName() ) end
+						if data['Relations'] && isnumber( data['Relations']['Class'] ) then
+							local class = data['Relations']['Class']
+							self:SetNPCClass(class)
+						end
 					end
 					self.m_fANPUseLast = 0
 					--self:SetUseType(SIMPLE_USE)
@@ -274,8 +278,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end
 				
 				if (SERVER) then				
-					
-					--self:ANPlusSetKillfeedName( data['KillfeedName'] ) 
+	
 					self:AddCallback( "PhysicsCollide", self.ANPlusPhysicsCollide ) 					
 					---------WIREMOD--------------
 					if WireLib && ( self.Inputs || self.Outputs ) then				
@@ -359,6 +362,9 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCUserButtonDown'] != nil then
 						hook.Add( "PlayerButtonDown", self, self.ANPlusNPCUserButtonDown )
 					end
+					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCPlayerSetupMove'] != nil then
+						hook.Add( "SetupMove", self, self.ANPlusNPCPlayerSetupMove )
+					end
 					
 					self:ANPlusAddSaveData( "m_bANPlusEntity", true )
 					self:ANPlusAddSaveData( "m_sANPlusName", self:ANPlusGetDataTab()['Name'] )
@@ -367,6 +373,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				hook.Add( "Think", self, self.ANPlusNPCThink )		
 				
 				if (CLIENT) then -- 
+					if data['EnableInverseKinematic'] then self:SetIK( data['EnableInverseKinematic'] ) end	
 					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCHUDPaint'] != nil then
 						hook.Add( "HUDPaint", self, self.ANPlusNPCHUDPaint )
 					end

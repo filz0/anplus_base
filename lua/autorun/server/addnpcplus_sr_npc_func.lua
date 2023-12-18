@@ -134,7 +134,8 @@ function ENT:ANPlusMeleeAct(target, act, speed, movementVel, rspeed, dist, full3
 	
 	if self:Visible( target ) && self:ANPlusInRange( target, dist ) then
 
-		if target:ANPlusAlive() && validAng && CurTime() - self.m_fANPMeleeLast > self.m_fANPMeleeDelay then		
+		if target:ANPlusAlive() && validAng && CurTime() - self.m_fANPMeleeLast > self.m_fANPMeleeDelay then	
+			print("ATT")	
 			self:ANPlusPlayActivity( act, speed, movementVel, target, rspeed, function(seqID, seqDur)
 				self.m_fANPMeleeDelay = self.m_fANPMeleeDelay == 0 && seqDur || self.m_fANPMeleeDelay
 				if isfunction( callback ) then
@@ -163,6 +164,19 @@ function ENT:ANPlusRangeAct(target, act, speed, movementVel, rspeed, distMax, di
 			end	
 			self.m_fANPRangeLast = CurTime()
 		end)
+	end
+end
+
+function ENT:ANPlusRangeAttack(target, distMax, distMin, full360, cooldown, callback) -- angMax/angMin if full360 is false or nil
+	
+	if !IsValid(self) || !IsValid(target) || self:Health() <= 0 then return end	
+	self.m_fANPRangeAttLast = self.m_fANPRangeAttLast || 0	
+	self.m_fANPRangeAttDelay = self.m_fANPRangeAttDelay || cooldown || 0	
+	local posTarget = target:GetPos()
+	local validAng = isbool( full360 ) || self:ANPlusValidAnglesNormal( posTarget, full360 )
+
+	if self:Visible( target ) && self:ANPlusInRange( target, distMax ) && ( distMin && !self:ANPlusInRange( target, distMin ) ) && target:ANPlusAlive() && validAng && CurTime() - self.m_fANPRangeAttLast > self.m_fANPRangeAttDelay then
+		callback()
 	end
 end
 
@@ -500,7 +514,7 @@ local illegalACTs = {
 	[36] = true,
 }
 
-function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatdist, followcombatrundist)
+function ENT:ANPlusFollowTarget(target, followDist, followRunDIst, followCombatDist, followCombatRunDist)
 	
 	local timerName = "ANP_NPC_FollowBeh" .. self:EntIndex()
 	if !IsValid(target) then 
@@ -514,8 +528,8 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 	end	
 	
 	if ( ( target:IsNPC() || target:IsPlayer() ) && self:Disposition( target ) != D_LI ) then print(self, " doesn't like ", target, " therefore it won't follow it." ) return end
-	local followdist = followdist || 200
-	local followcombatdist = followcombatdist || 400
+	local followDist = followDist || 200
+	local followCombatDist = followCombatDist || 400
 	if self:GetClass() == "npc_citizen" then self:Fire( "RemoveFromPlayerSquad", "", 0.1 ) end
 	self.m_pFollowTarget = target
 	self:SetTarget(target)
@@ -543,20 +557,18 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 		if ( self.m_pFollowTarget:IsPlayer() && GetConVar( "ai_ignoreplayers" ):GetBool() ) || GetConVar( "ai_disabled" ):GetBool() || !self.m_pFollowTarget:OnGround() || illegalACTs[ self:GetActivity() ] then return end
 		local posSelf = self:GetPos()
 		local posTarget = self.m_pFollowTarget:GetPos()
-		local schWalk = SCHED_FORCED_GO
-		local schRun = SCHED_FORCED_GO_RUN
-		local curSchWalk = self:IsCurrentSchedule( schWalk )
-		local curSchRun = self:IsCurrentSchedule( schRun )
+		local schChase = SCHED_TARGET_CHASE
+		local curSchChase = self:IsCurrentSchedule( schChase )
 		local curDist = math.max( posSelf:Distance( posTarget ) - ( self:OBBMaxs().x + self.m_pFollowTarget:OBBMaxs().x ), 0 )
 		
 		if !IsValid(self:GetEnemy()) then
 
-			if curDist > followdist then
+			if curDist > followDist then
 				self:NavSetGoalTarget( self.m_pFollowTarget, Vector( 0, 0, 0 ) )
 				timer.Simple( 0.5, function() 
 					if !IsValid(self) || !IsValid(self.m_pFollowTarget) then return end
 					if self.m_pFollowTarget:IsPlayer() then
-						if !self:HasCondition( 49 ) && !self:IsGoalActive() then
+						if !self:HasCondition( 49 ) && ( self:GetNavType() != 2 && !self:IsGoalActive() ) then
 							if !self.m_pFollowTarget:Visible( self ) && !self:Visible( self.m_pFollowTarget ) then -- && ( self:HasCondition( 35 ) || !self:HasCondition( 49 ) )
 								local getNodeType = self:GetNavType() == 2 && #ANPlusAIGetAirNodes() > 0 && 3 || 2
 								local node, dist = ANPlusAIFindClosestNode( posTarget, getNodeType )
@@ -568,38 +580,42 @@ function ENT:ANPlusFollowTarget(target, followdist, followrundist, followcombatd
 					end
 				end )
 			end	
-			if curDist < followdist && ( curSchWalk || curSchRun ) then
+			if curDist < followDist && curSchChase then
 				self:ClearSchedule()
 				self:ClearGoal()
 				self:StopMoving()		
-			elseif curDist >= followdist && curDist < followrundist && !curSchWalk then	
-				self:SetLastPosition( posTarget )
-				self:SetSchedule( schWalk )
-				--self:RunEngineTask( ai.GetTaskID( "TASK_GET_PATH_TO_GOAL" ), 0 )
-				--self:RunEngineTask( ai.GetTaskID( "TASK_WAIT_FOR_MOVEMENT" ), 0 )
-				--self:RunEngineTask( ai.GetTaskID( "TASK_FACE_TARGET" ), 1 )
-				--self:RunEngineTask( ai.GetTaskID( "TASK_WALK_PATH" ), 0 )	
-			elseif curDist >= followrundist && !curSchRun then	
-				self:SetLastPosition( posTarget )
-				self:SetSchedule( schRun )
-				--self:RunEngineTask( ai.GetTaskID( "TASK_GET_PATH_TO_GOAL" ), 0 )
-				--self:RunEngineTask( ai.GetTaskID( "TASK_WAIT_FOR_MOVEMENT" ), 0 )
-				--self:RunEngineTask( ai.GetTaskID( "TASK_FACE_TARGET" ), 1 )
-				---self:RunEngineTask( ai.GetTaskID( "TASK_RUN_PATH" ), 0 )
+			elseif curDist >= followDist && curDist < followRunDIst then
+				if !curSchChase then	
+					self:SetLastPosition( posTarget )
+					self:SetSchedule( schChase )
+				end
+				if self:ANPlusSequenceExists( 6 ) then self:SetMovementActivity( 6 ) end
+			elseif curDist >= followRunDIst then
+				if !curSchChase then	
+					self:SetLastPosition( posTarget )
+					self:SetSchedule( schChase )
+				end
+				if self:ANPlusSequenceExists( 10 ) then self:SetMovementActivity( 10 ) end
 			end	
 
 		elseif IsValid(self:GetEnemy()) && IsValid(self:GetActiveWeapon()) && !ANPlusNoMeleeWithThese[ self:GetActiveWeapon():GetHoldType() ] then	
 			
-			if curDist < followcombatdist && ( curSchWalk || curSchRun ) then
+			if curDist < followCombatDist && curSchChase then
 				self:ClearSchedule()
 				self:ClearGoal()
 				self:StopMoving()
-			elseif curDist >= followcombatdist && curDist < followcombatrundist && !curSchWalk then
-				self:SetLastPosition( posTarget )
-				self:SetSchedule( schWalk )				
-			elseif curDist >= followcombatrundist && !curSchRun then
-				self:SetLastPosition( posTarget )
-				self:SetSchedule( schRun )
+			elseif curDist >= followCombatDist && curDist < followCombatRunDist then
+				if !curSchChase then	
+					self:SetLastPosition( posTarget )
+					self:SetSchedule( schChase )
+				end				
+				if self:ANPlusSequenceExists( 6 ) then self:SetMovementActivity( 6 ) end
+			elseif curDist >= followCombatRunDist then
+				if !curSchChase then	
+					self:SetLastPosition( posTarget )
+					self:SetSchedule( schChase )
+				end
+				if self:ANPlusSequenceExists( 10 ) then self:SetMovementActivity( 10 ) end
 			end	
 
 		end	
@@ -630,11 +646,36 @@ function ENT:ANPlusNPCGo( vecORent, walkORrun, vecOffset )
 	end
 end
 
-function ENT:ANPlusFollowPlayer(ply, followdist, followrundist, followcombatdist, followcombatrundist)
+function ENT:ANPlusCreateGoalFollow(target, formation)
+	if !self:IsNPC() then return end
+	local followGoal = ents.Create( "ai_goal_follow" )
+	if self:GetChildren() && table.HasValue( self:GetChildren(), followGoal ) then followGoal:Remove() end
+	followGoal:SetPos( self:GetPos() )
+	followGoal:SetParent( self )
+	followGoal:SetOwner( self )
+	--followGoal:Spawn()
+
+	followGoal:SetKeyValue( "SearchType", 0 )
+	followGoal:SetKeyValue( "goal", target:GetName() )
+	followGoal:SetKeyValue( "Formation", formation || 0 )
+
+	local aName = !self:GetName() || self:GetName() == "" && self:GetClass() .. self:EntIndex() || self:GetName()
+	self:SetName( aName )
+	print(aName)
+	followGoal:SetKeyValue( "actor", self:GetName() )
+	--followGoal:Fire( "UpdateActors", "", 1 )
+	followGoal:Fire( "Activate", "", 0.1 )
+	--followGoal:SetKeyValue( "StartActive", 1 )
+
+	self:DeleteOnRemove( followGoal )
+	return followGoal, followGoal:GetInternalVariable( "m_hFollowGoal" )
+end
+
+function ENT:ANPlusFollowPlayer(ply, followDist, followRunDIst, followCombatDist, followCombatRunDist)
 	if self:Disposition( ply ) != D_LI then
 		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " doesn't like you, therefore it won't follow you.", Color( 255, 50, 0 ), "ANP.UI.Error" )
 	elseif !IsValid(self:ANPlusGetFollowTarget()) || ( IsValid(self:ANPlusGetFollowTarget()) && !self:ANPlusGetFollowTarget():IsPlayer() ) || self:ANPlusGetFollowTarget() != ply then
-		self:ANPlusFollowTarget( ply, followdist, followrundist, followcombatdist, followcombatrundist )
+		self:ANPlusFollowTarget( ply, followDist, followRunDIst, followCombatDist, followCombatRunDist )
 		ANPlusMSGPlayer( ply, self:ANPlusGetKillfeedName() .. " is following you now.", Color( 50, 255, 0 ), "ANP.UI.Click" )
 	elseif IsValid(self:ANPlusGetFollowTarget()) && self:ANPlusGetFollowTarget() == ply then
 		self:ANPlusFollowTarget()
@@ -697,6 +738,33 @@ function ENT:ANPlusNPCSetRagdollState(bool, wakePos)
 			SafeRemoveEntity( self:GetNW2Entity( "m_pRagdollStateEnt" ) )
 		end
 	end
+end
+
+function ENT:MyVJClass(key)
+
+	if !IsValid(self) || !self.IsVJBaseSNPC then return false end
+	
+	if key then
+		return self.VJ_NPC_Class[ key ]
+	else
+		for i = 1, #self.VJ_NPC_Class do
+		
+			return self.VJ_NPC_Class[ i ]
+		
+		end
+	end
+
+end
+
+function ENT:SetNPCClass(class)
+	if !isnumber( class ) then return end
+	self:SetSaveValue( "m_iClass", class )
+	self.m_iClass = class
+end
+
+function ENT:ANPlusClassify()
+	if !self:IsNPC() && !self:IsPlayer() then return false end
+	return self.m_iClass != 0 && self.m_iClass || self:MyVJClass( 1 ) || self:IsPlayer() && CLASS_PLAYER || self:Classify()
 end
 
 function ENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, callback, postCallback)

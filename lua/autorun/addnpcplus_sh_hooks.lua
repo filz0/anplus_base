@@ -293,17 +293,17 @@ hook.Add( "EntityFireBullets", "ANPlusLoad_EntityFireBullets", function(npc, dat
 	if IsValid(npc) && npc:IsANPlus(true) && npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'] != nil then
 		
 		--npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc, npc:IsNPC() && npc:GetActiveWeapon() || nil, data)	
-		local allow = npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc, npc:IsNPC() && npc:GetActiveWeapon() || nil, data) 
-
-		return allow
+		local bool = npc:ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc, npc:IsNPC() && npc:GetActiveWeapon() || nil, data) 
+		npc.m_tLastFiredBullet = data
+		return bool == nil && true || bool
 		
 	end		
 	if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus(true) && npc:GetOwner():ANPlusGetDataTab()['Functions'] && npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'] != nil then
 		
 		--npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc:GetOwner(), npc, data)	
-		local allow = npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc:GetOwner(), npc, data) 
-
-		return allow		
+		local bool = npc:GetOwner():ANPlusGetDataTab()['Functions']['OnNPCFireBullets'](npc:GetOwner(), npc, data) 
+		npc.m_tLastFiredBullet = data
+		return bool == nil && true || bool	
 	end
 	npc.m_tLastFiredBullet = data
 end )
@@ -351,9 +351,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 	
 	if ent:IsANPlus(true) then	
 		
-		if ent:GetNW2Bool( "m_bANPMuted" ) then return false end		
-		
-		ent.m_tLastSoundEmitted = data			
+		if ent:GetNW2Bool( "m_bANPMuted" ) then return false end				
 
 		if ent:ANPlusGetDataTab()['SoundModification'] && ent:ANPlusGetDataTab()['SoundModification']['SoundList'] then	
 			
@@ -363,7 +361,7 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 			for _, v in ipairs( sndTab ) do		
 				
 				if v then
-					
+
 					if string.find( string.lower( data.SoundName ), v[ 1 ] ) || !data.SentenceIndex && string.find( data.OriginalSoundName, v[ 1 ] ) || data.SentenceIndex && delDigits == v[ 1 ] then 	
 						
 						if v['Play'] != nil && v['Play'] == false then return false end			
@@ -376,9 +374,11 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 						sndReplace = !v['SoundCharacter'] && sndReplace || v['SoundCharacter'] == true && ( sndChars[ string.Left( data.SoundName, 1 ) ] && string.Left( data.SoundName, 1 ) .. sndReplace || sndReplace ) || isstring( v['SoundCharacter'] ) && v['SoundCharacter'] .. sndReplace 
 						
 						local sndLVL = v['SoundLevel'] && istable( v['SoundLevel'] ) && math.random( v['SoundLevel'][ 1 ], ( v['SoundLevel'][ 2 ] || v['SoundLevel'][ 1 ] ) ) || v['SoundLevel'] || sndScript && sndScript['level'] || data.SoundLevel
-						local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || sndScript && sndScript['pitch'] || data.Pitch
+						local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || sndScript && sndScript['pitch']
+						sndPitch = sndPitch && ( sndPitch < 1 && data.Pitch * sndPitch || sndPitch ) || data.Pitch
 						local sndChannel = v['Channel'] || sndScript && sndScript['channel'] || data.Channel
-						local sndVolume = v['Volume'] && istable( v['Volume'] ) && math.random( v['Volume'][ 1 ], ( v['Volume'][ 2 ] || v['Volume'][ 1 ] ) ) || v['Volume'] || sndScript && sndScript['volume'] || data.Volume
+						local sndVolume = v['Volume'] && istable( v['Volume'] ) && math.random( v['Volume'][ 1 ], ( v['Volume'][ 2 ] || v['Volume'][ 1 ] ) ) || v['Volume'] || sndScript && sndScript['volume']
+						sndVolume = sndVolume && ( sndVolume < 1 && data.Volume * sndVolume || sndVolume ) || data.Volume
 						local sndFlags = v['Flags'] || data.Flags
 						local sndDSP = v['DSP'] || data.DSP
 
@@ -397,9 +397,23 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 								ent:PlaySentence( sndReplace, 0, data.Volume )
 							end
 							
+							if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'] != nil then
+								--ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
+								local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)
+								ent.m_tLastSoundEmitted = data
+								return bool == nil && false || bool
+							end	
+
 							return false
 						end
 						
+						if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'] != nil then
+							--ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
+							local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)
+							ent.m_tLastSoundEmitted = data
+							return bool == nil && true || bool
+						end	
+
 						return true						
 					end	
 					
@@ -410,8 +424,10 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 		if ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'] != nil then
 			--ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)		
 			local bool = ent:ANPlusGetDataTab()['Functions']['OnNPCEmitSound'](ent, data)
-			return bool
+			ent.m_tLastSoundEmitted = data
+			return bool == nil && true || bool
 		end	
+		ent.m_tLastSoundEmitted = data
 	end	
 end ) 
 

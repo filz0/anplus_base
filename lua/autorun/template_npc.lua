@@ -835,7 +835,7 @@ ANPlus.AddNPC( {
 	['Relations'] = { 
 	
 		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, -- "Hate" / "Like" / "Fear" / "Neutral"   
-		['player'] = { ['MeToNPC'] = { "Hate", 0 } },
+		[1] = { ['MeToNPC'] = { "Hate", 0 } },
  
 	},  	
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
@@ -1004,7 +1004,7 @@ ANPlus.AddNPC( {
 	
 		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, -- "Hate" / "Like" / "Fear" / "Neutral"     
 		
-		['player'] = { ['MeToNPC'] = { "Default", 0 } },
+		[1] = { ['MeToNPC'] = { "Default", 0 } },
 		
 		['npc_combine_s'] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } },
 		
@@ -1285,7 +1285,7 @@ ANPlus.AddNPC( {
 	['Relations'] = { 
 	
 		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, -- "Hate" / "Like" / "Fear" / "Neutral"   
-		['player'] = { ['MeToNPC'] = { "Hate", 0 } },		
+		[1] = { ['MeToNPC'] = { "Hate", 0 } },		
 
 	},    
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!

@@ -236,7 +236,7 @@ ANPlus = {
 		end
 	end,
 	
-	AddClientConVar = function(command, defaultValue, help, min, max, flags)
+	AddClientConVar = function(command, defaultValue, flags, help, min, max)
 		if !ConVarExists( command ) && (CLIENT) then
 			CreateClientConVar( command, defaultValue, flags || true, true, help || "", min, max )
 		end
@@ -278,15 +278,15 @@ ANPlus.AddConVar( "anplus_random_placement", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE +
 ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply ANPC's health.", 0.1 )
 ANPlus.AddConVar( "anplus_replacer_enabled", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Enable ANPlus Replacer.", 0, 1 )
 ANPlus.AddConVar( "anplus_look_distance_override", 2048, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Set NPC look/sight distance. This command only affect ANPCs that don't have thier look distance changed by thier code.", 0, 32000 )
-ANPlus.AddClientConVar( "anplus_hpbar_dist", 2048, "Enable light effect used by the muzzle effects from this base.", 0 )
-ANPlus.AddClientConVar( "anplus_hpbar_def_style", "HL2 Retail", "Select a style of NPC's health bar if one has it enabled." )
-ANPlus.AddClientConVar( "anplus_swep_muzzlelight", 1, "Enable light effect used by the muzzle effects from this base.", 0, 1 )
-ANPlus.AddClientConVar( "anplus_swep_shell_smoke", 1, "Allow smoke effect to be emitted from fired bullet casings.", 0, 1 )
-ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance_start", 2048, "Distance at which SWEP's flashlight will start fading.", 512, 10240 )
-ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance", 1024, "SWEP's flashlight fade distance.", 512, 10240 )
-ANPlus.AddClientConVar( "anplus_swep_flight_smartmode", 1, "NPCs will only use flashlights in dark places.", 0, 1 )
-ANPlus.AddClientConVar( "anplus_swep_laser_fade_distance_start", 1024, "Distance at which SWEP's laser will start fading.", 512, 10240 )
-ANPlus.AddClientConVar( "anplus_swep_laser_fade_distance", 512, "SWEP's laser fade distance.", 512, 10240 )
+ANPlus.AddClientConVar( "anplus_hpbar_dist", 2048, false, "Enable light effect used by the muzzle effects from this base.", 0 )
+ANPlus.AddClientConVar( "anplus_hpbar_def_style", "HL2 Retail", false, "Select a style of NPC's health bar if one has it enabled." )
+ANPlus.AddClientConVar( "anplus_swep_muzzlelight", 1, false, "Enable light effect used by the muzzle effects from this base.", 0, 1 )
+ANPlus.AddClientConVar( "anplus_swep_shell_smoke", 1, false, "Allow smoke effect to be emitted from fired bullet casings.", 0, 1 )
+ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance_start", 2048, false, "Distance at which SWEP's flashlight will start fading.", 512, 10240 )
+ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance", 1024, false, "SWEP's flashlight fade distance.", 512, 10240 )
+ANPlus.AddClientConVar( "anplus_swep_flight_smartmode", 1, false, "NPCs will only use flashlights in dark places.", 0, 1 )
+ANPlus.AddClientConVar( "anplus_swep_laser_fade_distance_start", 1024, false, "Distance at which SWEP's laser will start fading.", 512, 10240 )
+ANPlus.AddClientConVar( "anplus_swep_laser_fade_distance", 512, false, "SWEP's laser fade distance.", 512, 10240 )
  
 local invChars = {" ","{","}","[","]","(",")","!","+","=","?",".",",","/","-","`","~"}
 function ANPlusIDCreate(name)

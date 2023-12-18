@@ -2,6 +2,8 @@
 if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
+vec3_origin = Vector( 0, 0, 0 )
+
 if (SERVER) then
 	resource.AddFile( "resource/fonts/frak.ttf" )
 	resource.AddFile( "resource/fonts/ocrbczyk.ttf" )

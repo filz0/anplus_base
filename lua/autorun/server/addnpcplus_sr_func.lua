@@ -42,7 +42,7 @@ function ENT:ANPlusGetAll()
 		
 		local v = entsAround[ i ]
 		
-		if ( v:IsNPC() && v != self && v:GetKeyValues()['sleepstate'] == 0 && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
+		if ( v:IsNPC() && v != self && v:GetKeyValues()['sleepstate'] == 0 && !IsValid(v:GetInternalVariable( "m_hCine" )) && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
 			
 			entsSelected[count] = v
 			count = count + 1
@@ -92,8 +92,8 @@ function ENT:ANPlusNPCRelations()
 	local posEnemies = self:ANPlusGetAll()
 	local it = 1
 	
-	for _, memEnt in pairs( self.m_tbANPlusRelationsMem ) do -- We want to make sure that memory isn't flooded with NULL entities. Possible memory leak?
-		if !IsValid(memEnt) || ( IsValid(memEnt) && !memEnt:ANPlusAlive() ) then table.remove( self.m_tbANPlusRelationsMem, _ ) end
+	for memEnt, disp in pairs( self.m_tbANPlusRelationsMem ) do -- We want to make sure that memory isn't flooded with NULLs. A possible memory leak?
+		if !IsValid(memEnt) || ( IsValid(memEnt) && !memEnt:ANPlusAlive() ) then self.m_tbANPlusRelationsMem[ memEnt ] = nil end
 	end
 	
 	while it <= #posEnemies do
@@ -110,36 +110,45 @@ function ENT:ANPlusNPCRelations()
 		
 			if ent != self then 
 
-				local dispTab = ent:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetDataTab()['Name'] ] || self:ANPlusGetDataTab()['Relations'][ ent:GetColor() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:MyVJClass( 1 ) ] || self:ANPlusGetDataTab()['Relations'][ ent:IsNPC() && ent:Classify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
+				local dispTab = ent:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetDataTab()['Name'] ] || self:ANPlusGetDataTab()['Relations'][ ent:GetColor() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusClassify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
 
 				if dispTab then
 
-					if !table.HasValue( self.m_tbANPlusRelationsMem, ent ) then
+					local addTab = { [ ent ] = { ['NPCToMeOld'] = ent:IsNPC() && ent:Disposition( self ) || true } }
 					
-						if dispTab['MeToNPC'][ 1 ] != "Default" && self:Disposition( ent ) != RelationsTranslate[ dispTab['MeToNPC'][ 1 ] ] then
+					if !self.m_tbANPlusRelationsMem[ ent ] then
+
+						local meToNPC1 = dispTab['MeToNPC'] && RelationsTranslate[ dispTab['MeToNPC'][ 1 ] ]
+						local meToNPC2 = dispTab['MeToNPC'] && dispTab['MeToNPC'][ 2 ]
+						local npcToMe1 = dispTab['NPCToMe'] && RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ]
+						local npcToMe2 = dispTab['NPCToMe'] && dispTab['NPCToMe'][ 2 ]
+						
+						if dispTab['MeToNPC'][ 1 ] != "Default" && self:Disposition( ent ) != meToNPC1 then
 							
-							self:AddEntityRelationship( ent, RelationsTranslate[ dispTab['MeToNPC'][ 1 ] ], dispTab['MeToNPC'][ 2 ] )
-							
+							self:AddEntityRelationship( ent, meToNPC1, meToNPC2 )
+							addTab[ ent ]['MeToNPC'] = meToNPC1
+
 						end
 			
-						if ent:IsNPC() && dispTab['NPCToMe'][ 1 ] != "Default" && ent:Disposition( self ) != RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ] then
+						if ent:IsNPC() && dispTab['NPCToMe'][ 1 ] != "Default" && ent:Disposition( self ) != npcToMe1 then
 
-							ent:AddEntityRelationship( self, RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ], dispTab['NPCToMe'][ 2 ] )
-							
-							if ent.IsVJBaseSNPC == true && ( RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ] == D_LI || RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ] == D_NU ) then
-							
+							ent:AddEntityRelationship( self, npcToMe1, npcToMe2 )
+							addTab[ ent ]['NPCToMe'] = npcToMe1
+
+							if ent.IsVJBaseSNPC == true && ( npcToMe1 == D_LI || npcToMe1 == D_NU ) then
+								ent.VJ_AddCertainEntityAsFriendly = ent.VJ_AddCertainEntityAsFriendly || {}
 								--ent.VJ_AddCertainEntityAsFriendly[ #ent.VJ_AddCertainEntityAsFriendly + 1 ] = self
-								table.insert( ent.VJ_AddCertainEntityAsFriendly, self ) -- still doesn't work, i don't care anymore.
-							elseif ent.IsVJBaseSNPC == true && ( RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ] == D_HT || RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ] == D_FR ) then
-							
+								table.insert( ent.VJ_AddCertainEntityAsFriendly, self ) -- Still doesn't work, I don't care anymore.
+							elseif ent.IsVJBaseSNPC == true && ( npcToMe1 == D_HT || npcToMe1 == D_FR ) then
+								ent.VJ_AddCertainEntityAsEnemy = ent.VJ_AddCertainEntityAsEnemy || {}
 								--ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
 								table.insert( ent.VJ_AddCertainEntityAsEnemy, self )
 							end
 				
 						end
-					
-						table.insert( self.m_tbANPlusRelationsMem, ent )
-						
+
+						table.Merge( self.m_tbANPlusRelationsMem, addTab )
+
 					end
 					
 				end
@@ -467,6 +476,10 @@ function ENT:ANPlusNPCUserButtonDown(ply, button)
 	if ( ( self:IsVehicle() && IsValid(self:GetDriver()) && ply == self:GetDriver() ) || ( IsValid(ply:GetEntityInUse()) && ply:GetEntityInUse() == self ) || ( IsValid(self:ANPlusGetFollowTarget()) && self:ANPlusGetFollowTarget() == ply ) ) && !ply:IsWorldClicking() && !ply:ANPlusIsSpawnMenuOpen() then	
 		self:ANPlusGetDataTab()['Functions']['OnNPCUserButtonDown'](self, ply, button)	
 	end
+end
+
+function ENT:ANPlusNPCPlayerSetupMove(ply, mv, cmd)	
+	self:ANPlusGetDataTab()['Functions']['OnNPCPlayerSetupMove'](self, ply, mv, cmd)	
 end
 
 net.Receive("anplus_propmenu", function(_, ply)

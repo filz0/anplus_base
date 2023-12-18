@@ -208,6 +208,14 @@ function metaPanel:ANPlus_AdjustWidth(w)
 	self:SetWidth( pW + w )
 end
 
+
+function metaPanel:ANPlus_MenuSeparator(tittle)
+	local panel = vgui.Create( "DCategoryList", self )
+	panel:Dock( TOP )
+	panel:Add( tittle || "" )
+	return panel
+end
+
 function metaPanel:ANPlus_SecureMenuItem(callback, help, deniedMsg)
 	if !game.SinglePlayer() && !LocalPlayer():IsAdmin() then
 		local deniedMsg = deniedMsg || "ACCESS DENIED"

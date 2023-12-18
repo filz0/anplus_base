@@ -3,6 +3,7 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
 local metaENT = FindMetaTable("Entity")
+local metaDMG = FindMetaTable("CTakeDamageInfo")
 
 function metaENT:ANPlusSetKillfeedName(name)
 	if !name || name == "" then name = nil end
@@ -72,22 +73,6 @@ end
 function metaENT:ANPlusRemoveHealth(val, max)
 	local hpAdd = math.min( self:Health() - max, val )-- Dont overheal	
 	self:SetHealth( math.Approach( self:Health(), max, hpAdd ))
-end
-
-function metaENT:MyVJClass(key)
-
-	if !IsValid(self) || !self.IsVJBaseSNPC then return false end
-	
-	if key then
-		return self.VJ_NPC_Class[ key ]
-	else
-		for i = 1, #self.VJ_NPC_Class do
-		
-			return self.VJ_NPC_Class[ i ]
-		
-		end
-	end
-
 end
 
 function metaENT:ANPlusCapabilitiesHas(cap) 
@@ -857,4 +842,16 @@ function metaENT:ANPlusWiremodSetOutputs(add, outputs, descs)
 			WireLib.CreateOutputs( self, outputs, descs )
 		end
 	end
+end
+
+function metaDMG:ANPlusDontGib()
+	local dmgT = self:GetDamageType()
+
+	dmgT = bit.band( dmgT, DMG_NEVERGIB ) != DMG_NEVERGIB && dmgT + DMG_NEVERGIB || dmgT
+	dmgT = bit.band( dmgT, DMG_ALWAYSGIB ) == DMG_ALWAYSGIB && dmgT - DMG_ALWAYSGIB || dmgT
+	self:SetDamageType( dmgT )	
+end
+
+function metaENT:ANPlusNeverGib(bool)
+	self.m_bANPplusNeverGib = bool
 end
