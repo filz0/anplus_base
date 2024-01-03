@@ -171,8 +171,11 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 end)
 
 hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
+
 	if IsValid(npc) then
+
 		if npc:IsANPlus() then
+
 			if npc:ANPlusGetDataTab() && npc:ANPlusGetDataTab()['CurModel'] then
 				
 				local CurBones = {}			
@@ -192,7 +195,7 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 				
 				local addTab = { ['CurBones'] = CurBones }
 				table.Merge( npc:ANPlusGetDataTab(), addTab )
-				
+				  
 				if npc:ANPlusFakeModel() then
 					local addTab = { ['CurFakeModel'] = { ['Model'] = npc:ANPlusFakeModel() && npc:ANPlusFakeModel():GetModel() || "", ['VisualTab'] = npc:ANPlusGetVisual() } }			
 					table.Merge( npc:ANPlusGetDataTab(), addTab )
@@ -217,7 +220,7 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 			if IsValid(npc:ANPlusFakeModel()) then npc:ANPlusFakeModel():Remove() end
 			
 		end
-	
+		
 		if IsValid(att) && att:IsANPlus(true) then
 			if att:ANPlusGetDataTab()['Functions'] && att:ANPlusGetDataTab()['Functions']['OnNPCKilledNPC'] != nil then			
 				att:ANPlusGetDataTab()['Functions']['OnNPCKilledNPC'](att, npc, inf)			
@@ -456,9 +459,14 @@ hook.Add( "EntityTakeDamage", "ANPlusLoad_EntityTakeDamage", function(ent, dmgin
 		return ent.m_bNPCNoDamage || IsValid(ent:GetNW2Entity( "m_pRagdollStateEnt" ))
 	end
 	
-	if ent.m_bANPplusNeverGib then
+	if ent.m_bANPlusNeverGib then
 		dmgT = bit.band( dmgT, DMG_NEVERGIB ) != DMG_NEVERGIB && dmgT + DMG_NEVERGIB || dmgT
 		dmgT = bit.band( dmgT, DMG_ALWAYSGIB ) == DMG_ALWAYSGIB && dmgT - DMG_ALWAYSGIB || dmgT
+		dmginfo:SetDamageType( dmgT )	
+	end
+
+	if ent.m_bANPlusNeverRagdoll then
+		dmgT = bit.band( dmgT, DMG_REMOVENORAGDOLL ) != DMG_REMOVENORAGDOLL && dmgT + DMG_REMOVENORAGDOLL || dmgT
 		dmginfo:SetDamageType( dmgT )	
 	end
 	

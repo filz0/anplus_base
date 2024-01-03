@@ -86,12 +86,18 @@ SWEP.LaserTab 			= {
 }
 ]]--
 -- SWEP NPC Settings
-SWEP.NPCWeaponProficiencyTab 	= {
+SWEP.WeaponCapabilities				= SERVER && CAP_WEAPON_RANGE_ATTACK1
+SWEP.NPCCapabilities				= SERVER && CAP_WEAPON_RANGE_ATTACK1
+SWEP.NPCWeaponProficiencyTab 		= {
 	[WEAPON_PROFICIENCY_POOR] 		= {
 		['Spread']			= 0.1,
 		['SpreadMoveMult']	= 1.1,
-		['RangeMin']		= nil,
+		['Spread2']			= 0.1,
+		['SpreadMoveMult2']	= 1.1,
+		['RangeMin']		= 0,
 		['RangeMax']		= nil,
+		['RangeMin2']		= 0,
+		['RangeMax2']		= nil,
 		['BurstRestMin']	= 0.8,
 		['BurstRestMax']	= 1.2,
 		['BurstMin']		= 1,
@@ -101,8 +107,12 @@ SWEP.NPCWeaponProficiencyTab 	= {
 	[WEAPON_PROFICIENCY_AVERAGE] 	= {
 		['Spread']			= 0.06,
 		['SpreadMoveMult']	= 1.1,
-		['RangeMin']		= nil,
+		['Spread2']			= 0.06,
+		['SpreadMoveMult2']	= 1.1,
+		['RangeMin']		= 0,
 		['RangeMax']		= nil,
+		['RangeMin2']		= 0,
+		['RangeMax2']		= nil,
 		['BurstRestMin']	= 0.5,
 		['BurstRestMax']	= 0.8,
 		['BurstMin']		= 2,
@@ -112,8 +122,12 @@ SWEP.NPCWeaponProficiencyTab 	= {
 	[WEAPON_PROFICIENCY_GOOD] 		= {
 		['Spread']			= 0.04,
 		['SpreadMoveMult']	= 1.1,
-		['RangeMin']		= nil,
+		['Spread2']			= 0.04,
+		['SpreadMoveMult2']	= 1.1,
+		['RangeMin']		= 0,
 		['RangeMax']		= nil,
+		['RangeMin2']		= 0,
+		['RangeMax2']		= nil,
 		['BurstRestMin']	= 0.3,
 		['BurstRestMax']	= 0.6,
 		['BurstMin']		= 4,
@@ -123,8 +137,12 @@ SWEP.NPCWeaponProficiencyTab 	= {
 	[WEAPON_PROFICIENCY_VERY_GOOD] 	= {
 		['Spread']			= 0.02,
 		['SpreadMoveMult']	= 1.1,
-		['RangeMin']		= nil,
+		['Spread2']			= 0.02,
+		['SpreadMoveMult2']	= 1.1,
+		['RangeMin']		= 0,
 		['RangeMax']		= nil,
+		['RangeMin2']		= 0,
+		['RangeMax2']		= nil,
 		['BurstRestMin']	= 0.2,
 		['BurstRestMax']	= 0.3,
 		['BurstMin']		= 6,
@@ -134,8 +152,12 @@ SWEP.NPCWeaponProficiencyTab 	= {
 	[WEAPON_PROFICIENCY_PERFECT] 	= {
 		['Spread']			= 0.01,
 		['SpreadMoveMult']	= 1.1,
-		['RangeMin']		= nil,
+		['Spread2']			= 0.01,
+		['SpreadMoveMult2']	= 1.1,
+		['RangeMin']		= 0,
 		['RangeMax']		= nil,
+		['RangeMin2']		= 0,
+		['RangeMax2']		= nil,
 		['BurstRestMin']	= 0.1,
 		['BurstRestMax']	= 0.1,
 		['BurstMin']		= 6,
@@ -150,17 +172,22 @@ SWEP.Primary.FireLoopSound			= nil
 SWEP.Primary.PreFireSound			= nil
 SWEP.Primary.PostFireSound			= nil
 SWEP.Primary.ReloadSound			= nil
-SWEP.Primary.DistantSound			= nil
+SWEP.Primary.DSound					= nil -- Can be set to "Auto". Base will generate a distant sound using the SWEP.Primary.FireSound.
 SWEP.Primary.AttackGesture			= nil
 
 SWEP.Primary.Damage					= 5
+SWEP.Primary.Force					= 1
 SWEP.Primary.EntitySpeed			= 3000
 SWEP.Primary.NumShots				= 1
+SWEP.Primary.AmmoPerShot			= 1
+SWEP.Primary.ClipSize				= 30
+SWEP.Primary.DefaultClip			= 30
+SWEP.Primary.InfiniteAmmo			= false
 SWEP.Primary.Delay					= 0.05
 SWEP.Primary.PreFireDelay			= 0
 SWEP.Primary.PreFireReset			= 0.1
-SWEP.Primary.ClipSize				= 30
-SWEP.Primary.InfiniteAmmo			= false
+SWEP.Primary.SecondaryCooldown		= 0
+
 SWEP.Primary.Tracer					= 1
 SWEP.Primary.TracerName				= "ToolTracer"
 --[[
@@ -190,11 +217,28 @@ SWEP.ANPTracerSettingTab			= { -- anp_tracer_3d
 	['FunctionRender']			= nil --function(self, dir, trStartPos, trEndPos, startPos, endPos) end,
 }
 ]]--
-SWEP.Primary.Force					= 5
-SWEP.Primary.AmmoPerShot			= 1
-SWEP.Primary.Automatic				= true
-SWEP.Primary.AmmoType				= "AR2"
-SWEP.Primary.DefaultClip			= 10
+
+
+SWEP.Secondary.FireSound			= nil
+SWEP.Secondary.FireLoopSound		= nil
+SWEP.Secondary.PreFireSound			= nil
+SWEP.Secondary.PostFireSound		= nil
+SWEP.Secondary.ReloadSound			= nil
+SWEP.Secondary.DSound				= nil
+SWEP.Secondary.Attack				= nil
+SWEP.Secondary.AttackGesture		= nil
+
+SWEP.Secondary.Damage				= 30
+SWEP.Secondary.Force				= 1
+SWEP.Secondary.EntitySpeed			= 3000
+SWEP.Secondary.NumShots				= 1
+SWEP.Secondary.Delay				= 5
+SWEP.Secondary.PreFireDelay			= 0.5
+SWEP.Secondary.PreFireReset			= 0.1
+SWEP.Secondary.PrimaryCooldown		= 0
+
+SWEP.Secondary.Tracer				= 1
+SWEP.Secondary.TracerName			= "ToolTracer"
 
 -- Don't touch
 SWEP.m_bWeaponReady = false
@@ -203,12 +247,16 @@ SWEP.m_fCurBurstCount = 1
 SWEP.m_fCurRestCalc = 0
 SWEP.m_fCurBurstCalc = 0
 SWEP.m_fPreFireLast = 0
+SWEP.m_fPreFireLast2 = 0
 SWEP.m_bPFDSoundPlayed = false
+SWEP.m_bPFDSoundPlayed2 = false
 SWEP.NPCFireRate = SWEP.Primary.Delay
 SWEP.m_fProfScale = 1
 SWEP.m_fHChance = 50
 SWEP.m_fPrimarySpread = 0.02
 SWEP.m_fPrimarySpreadMMult = 1.1
+SWEP.m_fSecondarySpread = 0.02
+SWEP.m_fSecondarySpreadMMult = 1.1
 SWEP.m_fCheckLightLast = 0
 SWEP.m_fCheckLightDelay = 1.5
 SWEP.m_fAttachmentFlickerLast = 0
@@ -282,10 +330,11 @@ function SWEP:TranslateActivity(act)
 
 end
 ]]--
-function SWEP:ANPlusResetPrimaryFire()
+function SWEP:ANPlusResetFire()
 	self.m_bPFDSoundPlayed = false	
 	if self.Primary.PreFireSound then self:StopSound( self.Primary.PreFireSound ) end
 	if self.FireLoopSound then self.FireLoopSound:Stop() end
+	self.m_fPreFireLast = CurTime() + self.Primary.PreFireDelay
 end
 
 function SWEP:ANPlusNPCPreAttack()
@@ -298,22 +347,31 @@ end
 function SWEP:ANPlusNPCPostFire()
 end
 
-function SWEP:ANPlusNPCFire()
+function SWEP:ANPlusCanPrimaryFire()
+	return true
+end
+
+function SWEP:ANPlusNPCFire(hShot)
 end
 
 function SWEP:PrimaryAttack()
-	if !IsValid(self) || !IsValid(self:GetOwner()) || !self:CanPrimaryAttack() || !self:ANPlusNPCPreAttack() then return false end	
+
+	local owner = self:GetOwner()
+
+	if !IsValid(self) || !IsValid(owner) || !self:CanPrimaryAttack() || !self:ANPlusNPCPreAttack() then return false end	
+
 	timer.Create( "ANPlusPreFireReset" .. self:EntIndex(), self.Primary.PreFireReset || self.Primary.Delay, 1, function() -- NPCs can't fire faster that 0.01 using this function?	
 		if !IsValid(self) then return end
 		if self.Primary.PostFireSound && (SERVER) then
-			if ( IsValid(self:GetOwner()) && !self:GetOwner():IsCurrentSchedule(SCHED_RELOAD) ) && !self.m_bClipReloaded then
+			if ( IsValid(owner) && !owner:IsCurrentSchedule( SCHED_RELOAD ) ) && !self.m_bClipReloaded then
 				self:EmitSound( self.Primary.PostFireSound ) 
-				self:GetOwner():ClearSchedule()
+				owner:ClearSchedule()
 			end
 		end
 		self:ANPlusNPCPostFire()
-		self:ANPlusResetPrimaryFire()	
+		self:ANPlusResetFire()	
 	end)
+
 	if self.Primary.PreFireDelay && self.Primary.PreFireDelay > 0 && !self.m_bPFDSoundPlayed then
 		--self:SetNextPrimaryFire( CurTime() + self.Primary.PreFireDelay )
 		if self.Primary.PreFireSound && (SERVER) then self:EmitSound( self.Primary.PreFireSound ) end
@@ -322,24 +380,132 @@ function SWEP:PrimaryAttack()
 		self.m_fPreFireLast = CurTime() + self.Primary.PreFireDelay
 		return 
 	end
+
 	if self.m_fPreFireLast > CurTime() then return end
-	if self.Primary.DSound && (SERVER) then sound.Play( self.Primary.DSound, self:GetPos() ) end
+
+	--if self.Primary.DSound && (SERVER) then sound.Play( self.Primary.DSound, self:GetPos() ) end
+	if self.Primary.DSound && (SERVER) then
+		if self.Primary.DSound == "Auto" then
+			EmitSound( self.Primary.FireSound, self:GetPos(), -3, nil, 0.2, 140, nil, nil, 31 )
+		else
+			EmitSound( self.Primary.DSound, self:GetPos() )
+		end
+	end
+
 	if self.Primary.FireSound && (SERVER) then self:EmitSound( self.Primary.FireSound ) end		
+
 	if (SERVER) && self.FireLoopSound && !self.FireLoopSound:IsPlaying() then self.FireLoopSound:Play() end
 	
-	if IsValid(self:GetOwner()) && self.Primary.AttackGesture != false then self:GetOwner():ANPlusRestartGesture( self.Primary.AttackGesture || self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1], true, true ) end
+	if self.Primary.AttackGesture != false then owner:ANPlusRestartGesture( self.Primary.AttackGesture || self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK1], true, true ) end
 	--self:ANPlusRemoveMuzzleSmoke()
 	local hShot = ANPlusPercentageChance( self.m_fHChance )
 	
 	self:ANPlusNPCFire(hShot)
+
 	self.m_bClipReloaded = false
-	timer.Simple( self.Primary.Delay, function() if !IsValid(self) || !IsValid(self:GetOwner()) then return end	self:SetClip1( !self.Primary.InfiniteAmmo && self:Clip1() - self.Primary.AmmoPerShot || self:Clip1() ) end ) -- Making sure that fire animation will play on last bullet.
+
+	timer.Simple( self.Primary.Delay, function() if !IsValid(self) || !IsValid(owner) then return end self:SetClip1( !self.Primary.InfiniteAmmo && self:Clip1() - self.Primary.AmmoPerShot || self:Clip1() ) end ) -- Making sure that fire animation will play on last bullet.
+	
 	self.m_fCurBurstCount = self.NPCBurstMax > 0 && self.NPCRestMax > 0 && self.m_fCurBurstCount - 1 || 99
+
 	self:SetNextPrimaryFire( CurTime() + self.Primary.Delay )
+	if CurTime() >= self:GetNextSecondaryFire() then self:SetNextSecondaryFire( CurTime() + self.Primary.SecondaryCooldown ) end
+
+end
+
+function SWEP:ANPlusResetFire2()
+	self.m_bPFDSoundPlayed2 = false	
+	if self.Secondary.PreFireSound then self:StopSound( self.Secondary.PreFireSound ) end
+	self.m_fPreFireLast2 = CurTime() + self.Secondary.PreFireDelay
+end
+
+function SWEP:ANPlusNPCPreAttack2()
+	return true
+end
+
+function SWEP:ANPlusNPCPreFire2()
+end
+
+function SWEP:ANPlusNPCPostFire2()
+end
+
+function SWEP:ANPlusCanSecondaryFire()
+	return false
+end
+
+function SWEP:ANPlusNPCFire2(hShot)
+end
+
+function SWEP:SecondaryAttack()
+
+	local owner = self:GetOwner()
+
+	if !IsValid(self) || !IsValid(owner) || !self:CanSecondaryAttack() || !self:ANPlusNPCPreAttack2() then return false end	
+	
+	timer.Create( "ANPlusPreFireReset2" .. self:EntIndex(), self.Secondary.PreFireReset || self.Secondary.Delay, 1, function() -- NPCs can't fire faster that 0.01 using this function?	
+		if !IsValid(self) then return end
+		if self.Secondary.PostFireSound && (SERVER) then
+			if ( IsValid(owner) && !owner:IsCurrentSchedule( SCHED_RELOAD ) ) && !self.m_bClipReloaded then
+				self:EmitSound( self.Secondary.PostFireSound ) 
+				owner:ClearSchedule()
+			end
+		end
+		self:ANPlusNPCPostFire2()
+	end)
+	
+	if self.Secondary.PreFireDelay && self.Secondary.PreFireDelay > 0 && !self.m_bPFDSoundPlayed2 then
+		--self:SetNextPrimaryFire( CurTime() + self.Primary.PreFireDelay )
+		if self.Secondary.PreFireSound && (SERVER) then self:EmitSound( self.Secondary.PreFireSound ) end
+		self:ANPlusNPCPreFire2()
+		self.m_bPFDSoundPlayed2 = true
+		self.m_fPreFireLast2 = CurTime() + self.Secondary.PreFireDelay
+		return 
+	end
+	
+	if self.m_fPreFireLast2 > CurTime() then return end
+
+	if self.Secondary.DSound && (SERVER) then
+		if self.Secondary.DSound == "Auto" then
+			EmitSound( self.Secondary.FireSound, self:GetPos(), -3, nil, 0.2, 140, nil, nil, 31 )
+		else
+			EmitSound( self.Secondary.DSound, self:GetPos() )
+		end
+	end
+
+	if self.Secondary.FireSound && (SERVER) then self:EmitSound( self.Secondary.FireSound ) end		
+	
+	owner:SetSchedule( SCHED_RANGE_ATTACK1 )
+
+	if owner:ANPlusIsNPCCrouching() then
+		owner:ResetIdealActivity( 450 )
+		owner:SetActivity( 450 )
+	else
+		owner:ResetIdealActivity( 449 )
+		owner:SetActivity( 449 )
+	end
+
+	if self.Secondary.AttackGesture != false then owner:ANPlusRestartGesture( self.Secondary.AttackGesture || self.ActivityTranslateAI[ACT_GESTURE_RANGE_ATTACK2], true, true ) end
+	
+	local hShot = ANPlusPercentageChance( self.m_fHChance )
+	
+	self:ANPlusNPCFire2(hShot)
+
+	self:SetNextSecondaryFire( CurTime() + self.Secondary.Delay )
+	self:SetNextPrimaryFire( CurTime() + self.Secondary.PrimaryCooldown )
+
+	owner:ANPlusGetSquadMembers( function( npc )
+		local wep = npc:GetActiveWeapon()
+		if IsValid(wep) && wep.Base == "swep_anp_base" then
+			if wep.Secondary.Delay then
+				wep:SetNextSecondaryFire( CurTime() + wep.Secondary.Delay )
+			end
+		end
+	end )
 
 end
 
 SWEP.BlackListACTs = { -- What are these I have no f*** idea.
+	[2] = true,
 	[66] = true,
 	[67] = true,
 	[68] = true,
@@ -347,16 +513,12 @@ SWEP.BlackListACTs = { -- What are these I have no f*** idea.
 }
 
 SWEP.BlackListSchedules = { -- What are these I have no f*** idea.
-	[44] = true,
 	[41] = true,
 	[42] = true,
+	[44] = true,
 	[50] = true,
 	[51] = true,
 }
-
-function SWEP:ANPlusCanPrimaryFire()
-	return true
-end
 
 local angCheck = {
 	['Pitch'] 	= { 180, -180 },
@@ -365,32 +527,67 @@ local angCheck = {
 }
 
 function SWEP:CanPrimaryAttack()	
+	if !self.m_bWeaponReady then return false end
 
 	if !IsValid(self:GetOwner()) || !IsValid(self:GetOwner():GetEnemy()) then return false end
 		
 	local owner = self:GetOwner()
 	local enemy = owner:GetEnemy()
 
-	if owner:IsMoving() && !owner:ANPlusCapabilitiesHas( 64 ) || !self.m_bWeaponReady then return false end
+	if owner:IsMoving() && !owner:ANPlusCapabilitiesHas( 64 ) || ( self:ANPlusCapabilitiesHas( 8192 ) && !owner:ANPlusCapabilitiesHas( 8192 ) ) || ( self:ANPlusCapabilitiesHas( 32768 ) && !owner:ANPlusCapabilitiesHas( 32768 ) ) then return false end
 	
-	if CurTime() < self:GetNextPrimaryFire() || !self:ANPlusCanPrimaryFire() || ( ( self:Clip1() <= 0 || ( self:Clip1() - self.Primary.AmmoPerShot ) < 0 ) && !self.Primary.InfiniteAmmo ) || self.m_fCurBurstCount <= 0 then	
+	if !self:ANPlusCanPrimaryFire() || self:CanSecondaryAttack() || CurTime() < self:GetNextPrimaryFire() || ( ( self:Clip1() <= 0 || ( self:Clip1() - self.Primary.AmmoPerShot ) < 0 ) && !self.Primary.InfiniteAmmo ) || self.m_fCurBurstCount <= 0 then	
 		return false
 	end	
+	
+	if self.BlackListSchedules[ owner:GetCurrentSchedule() ] || self.BlackListACTs[ owner:GetActivity() ] || owner:HasCondition( 42 ) || !owner:HasCondition( 21 ) || !owner:ANPlusAlive() || ( !enemy:ANPlusAlive() ) then
+		return false
+	end
 
 	local posTarget = enemy:GetPos()
-	if !self:ANPlusValidAnglesNormal( posTarget, angCheck ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange1" ) ) || ( !owner:Visible( enemy ) && !owner:IsCurrentSchedule( 39 ) ) then		
+	if !self:ANPlusValidAnglesNormal( posTarget, angCheck ) || owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin'] ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange1" ) ) || ( !owner:Visible( enemy ) && !owner:IsCurrentSchedule( 39 ) ) then			
+		if owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin'] ) && !owner:IsCurrentSchedule( SCHED_MOVE_AWAY ) then
+			owner:SetSchedule( SCHED_MOVE_AWAY )
+		end
 		return false
 	end
-	
-	if !self:ANPlusCanPrimaryFire() || self.BlackListSchedules[ owner:GetCurrentSchedule() ] || self.BlackListACTs[ owner:GetActivity() ] || !owner:HasCondition( 21 ) || !owner:ANPlusAlive() || ( !enemy:ANPlusAlive() ) then
-		return false
-	end
+
 	return true  		
+end
+
+function SWEP:CanSecondaryAttack()
+
+	if !self.m_bWeaponReady then return false end
+
+	if !IsValid(self:GetOwner()) || !IsValid(self:GetOwner():GetEnemy()) then return false end
+		
+	local owner = self:GetOwner()
+	local enemy = owner:GetEnemy()
+
+	if owner:IsMoving() && !owner:ANPlusCapabilitiesHas( 64 ) || ( self:ANPlusCapabilitiesHas( 16384 ) && !owner:ANPlusCapabilitiesHas( 16384 ) ) || ( self:ANPlusCapabilitiesHas( 65536 ) && !owner:ANPlusCapabilitiesHas( 65536 ) ) then return false end
+
+	if !self:ANPlusCanSecondaryFire() || CurTime() < self:GetNextSecondaryFire() then	
+		return false
+	end	
+	
+	if self.BlackListSchedules[ owner:GetCurrentSchedule() ] || self.BlackListACTs[ owner:GetActivity() ] || owner:HasCondition( 21 ) || owner:HasCondition( 42 ) || !owner:ANPlusAlive() || ( !enemy:ANPlusAlive() ) then
+		return false
+	end
+
+	local posTarget = enemy:GetPos()
+	if !self:ANPlusValidAnglesNormal( posTarget, angCheck ) || owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin2'] ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange2" ) ) || ( !owner:Visible( enemy ) && !owner:IsCurrentSchedule( 39 ) ) then		
+		if owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin2'] ) && !owner:IsCurrentSchedule( SCHED_MOVE_AWAY ) then
+			owner:SetSchedule( SCHED_MOVE_AWAY )
+		end
+		return false
+	end
+
+	return true 
 end
 
 function SWEP:ANPlusWeaponShell(att, bone, type, scale, angVec)
 
-	local boneid = self:LookupBone( bone || "" )
+	local boneid = isnumber( bone ) && bone || self:LookupBone( bone || "" )
 
 	local fx = EffectData()
 	fx:SetEntity( self )
@@ -436,20 +633,51 @@ function SWEP:ANPlusWeaponShootEffect(att, flags, scale, effect, muzzleSmokeDela
 	end	
 end
 
+function SWEP:ANPlusWeaponShootEffect2(att, flags, scale, effect, muzzleSmokeDelay, muzzleSmokeDur)	-- flags for default hl2 muzzle = type. For ANP muzzles = boneID (instead of the attachment).
+	
+	if effect then
+		local fx = EffectData()
+		fx:SetEntity( self )
+		fx:SetAttachment( att || -1 )
+		fx:SetFlags( flags || -1 )
+		fx:SetScale( scale || 1 )
+		util.Effect( effect, fx )	
+	end
+	
+	if muzzleSmokeDelay then
+		if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
+		muzzleSmokeDelay = muzzleSmokeDelay == -1 && ( self.Secondary.PreFireReset || self.Secondary.Delay * 2 + self:GetNPCCurRestTime() ) || muzzleSmokeDelay
+		muzzleSmokeDur = muzzleSmokeDur || 1
+		timer.Create( "ANPlusSmokeEffectTimer" .. self:EntIndex(), muzzleSmokeDelay, 1, function()			
+			if !IsValid(self) || IsValid(self.m_pMuzzleSmoke) then return end			
+			--ParticleEffectAttach( "weapon_muzzle_smoke_b", 4, self, att )  	
+			self.m_pMuzzleSmoke = ANPlusCreateParticle( "weapon_muzzle_smoke_b", nil, muzzleSmokeDur, self, att )
+		end )		
+	end	
+end
+
 --function SWEP:ANPlusRemoveMuzzleSmoke()
 --	if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
 --end
 
-function SWEP:ANPlusWeaponFireEntity(entity, posOffset, hShotChan, entPreCallback, entPostCallback, callback, att)
+function SWEP:ANPlusWeaponFireEntity(entity, addVel, hShotChan, entPreCallback, entPostCallback, callback, att)
 	
 	local att = att || self:GetAttachment( self.MuzzleAttachment )
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
-	posOffset = posOffset || Vector( 0, 0, 0 )
+	addVel = addVel || Vector( 0, 0, 0 )
 	local projectiles = {}	
 	spread = owner:IsMoving() && self.m_fPrimarySpread * self.m_fPrimarySpreadMMult || self.m_fPrimarySpread
 	local muzzlePos = IsValid(enemy) && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
-	local targetPos = ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	--local targetPos = ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || 
+	enemy:ANPlusGetHitGroupBone( 2 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 2 ) ) && enemy:ANPlusGetHitGroupBone( 2 ) || 
+	enemy:ANPlusGetHitGroupBone( 3 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 3 ) ) && enemy:ANPlusGetHitGroupBone( 3 ) || 
+	enemy:ANPlusGetHitGroupBone( 4 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 4 ) ) && enemy:ANPlusGetHitGroupBone( 4 ) || 
+	enemy:ANPlusGetHitGroupBone( 5 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 5 ) ) && enemy:ANPlusGetHitGroupBone( 5 ) || 
+	enemy:ANPlusGetHitGroupBone( 6 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 6 ) ) && enemy:ANPlusGetHitGroupBone( 6 ) || 
+	enemy:ANPlusGetHitGroupBone( 7 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 7 ) ) && enemy:ANPlusGetHitGroupBone( 7 ) || 
+	enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
 	local shootAng = targetPos && ( ( targetPos - muzzlePos ):GetNormalized() ):Angle() || owner:GetAimVector():Angle()
 	local dir = shootAng:Forward()
 	--local shootAng = owner:GetAimVector():Angle()
@@ -471,9 +699,76 @@ function SWEP:ANPlusWeaponFireEntity(entity, posOffset, hShotChan, entPreCallbac
 		local phys = ent:GetPhysicsObject()
 		
 		if phys:IsValid() then
-			phys:SetVelocity( ent:GetForward() * self.Primary.EntitySpeed || Vector( 0, 0, 0 ) )
+			phys:SetVelocity( ( ent:GetForward() * self.Primary.EntitySpeed ) + addVel )
 		else
-			ent:SetVelocity( ent:GetForward() * self.Primary.EntitySpeed || Vector( 0, 0, 0 ) )
+			ent:SetVelocity( ( ent:GetForward() * self.Primary.EntitySpeed ) + addVel )
+		end
+		
+		if isfunction( entPostCallback ) then			
+			ent.m_cPostSpawnCB = entPostCallback
+			ent:m_cPostSpawnCB( ent )			
+		end
+		
+		for _, proj in pairs( projectiles ) do
+
+			constraint.NoCollide( ent, proj, 0, 0 )
+
+        end
+
+        table.insert( projectiles, ent )
+		
+	end
+	
+	if isfunction( callback ) then
+		
+		callback( muzzlePos, shootAng, dir, att )
+			
+	end
+	
+end
+
+function SWEP:ANPlusWeaponFireEntity2(entity, addVel, hShotChan, entPreCallback, entPostCallback, callback, att)
+	
+	local att = att || self:GetAttachment( self.MuzzleAttachment )
+	local owner = self:GetOwner()
+    local enemy = owner:GetEnemy()
+	addVel = addVel || Vector( 0, 0, 0 )
+	local projectiles = {}	
+	spread = owner:IsMoving() && self.m_fSecondarySpread * self.m_fSecondarySpreadMMult || self.m_fSecondarySpread
+	local muzzlePos = IsValid(enemy) && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
+	--local targetPos = ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || 
+	enemy:ANPlusGetHitGroupBone( 2 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 2 ) ) && enemy:ANPlusGetHitGroupBone( 2 ) || 
+	enemy:ANPlusGetHitGroupBone( 3 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 3 ) ) && enemy:ANPlusGetHitGroupBone( 3 ) || 
+	enemy:ANPlusGetHitGroupBone( 4 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 4 ) ) && enemy:ANPlusGetHitGroupBone( 4 ) || 
+	enemy:ANPlusGetHitGroupBone( 5 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 5 ) ) && enemy:ANPlusGetHitGroupBone( 5 ) || 
+	enemy:ANPlusGetHitGroupBone( 6 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 6 ) ) && enemy:ANPlusGetHitGroupBone( 6 ) || 
+	enemy:ANPlusGetHitGroupBone( 7 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 7 ) ) && enemy:ANPlusGetHitGroupBone( 7 ) || 
+	enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	local shootAng = targetPos && ( ( targetPos - muzzlePos ):GetNormalized() ):Angle() || owner:GetAimVector():Angle()
+	local dir = shootAng:Forward()
+	--local shootAng = owner:GetAimVector():Angle()
+    shootAng.p = shootAng.p + math.Rand( -spread, spread )
+    shootAng.y = shootAng.y + math.Rand( -spread, spread )
+	
+	for i = 1, self.Secondary.NumShots do
+
+		local ent = ents.Create( entity )	
+		ent:SetPos( muzzlePos + att.Ang:Forward() * 20 )
+		ent:SetAngles( shootAng )
+		ent:SetOwner( owner )
+		if isfunction( entPreCallback ) then			
+			ent.m_cPreSpawnCB = entPreCallback
+			ent:m_cPreSpawnCB( ent )			
+		end
+		ent:Spawn()
+		
+		local phys = ent:GetPhysicsObject()
+		
+		if phys:IsValid() then
+			phys:SetVelocity( ( ent:GetForward() * self.Secondary.EntitySpeed ) + addVel )
+		else
+			ent:SetVelocity( ( ent:GetForward() * self.Secondary.EntitySpeed ) + addVel )
 		end
 		
 		if isfunction( entPostCallback ) then			
@@ -504,7 +799,14 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback, att) -
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
 	local muzzlePos = enemy && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
-	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || 
+	enemy:ANPlusGetHitGroupBone( 2 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 2 ) ) && enemy:ANPlusGetHitGroupBone( 2 ) || 
+	enemy:ANPlusGetHitGroupBone( 3 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 3 ) ) && enemy:ANPlusGetHitGroupBone( 3 ) || 
+	enemy:ANPlusGetHitGroupBone( 4 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 4 ) ) && enemy:ANPlusGetHitGroupBone( 4 ) || 
+	enemy:ANPlusGetHitGroupBone( 5 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 5 ) ) && enemy:ANPlusGetHitGroupBone( 5 ) || 
+	enemy:ANPlusGetHitGroupBone( 6 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 6 ) ) && enemy:ANPlusGetHitGroupBone( 6 ) || 
+	enemy:ANPlusGetHitGroupBone( 7 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 7 ) ) && enemy:ANPlusGetHitGroupBone( 7 ) || 
+	enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
 	spread = self:GetOwner():IsMoving() && self.m_fPrimarySpread * self.m_fPrimarySpreadMMult || self.m_fPrimarySpread	
 	local direction = targetPos && ( targetPos - muzzlePos ):GetNormalized() || owner:GetAimVector()
 	
@@ -531,13 +833,89 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback, att) -
 	
 end
 
+function SWEP:ANPlusWeaponFireBullet2(hShotChan, bulletcallback, callback, att) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
+	local att = att || self:GetAttachment( self.MuzzleAttachment )
+	local owner = self:GetOwner()
+    local enemy = owner:GetEnemy()
+	local muzzlePos = enemy && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
+	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || 
+	enemy:ANPlusGetHitGroupBone( 2 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 2 ) ) && enemy:ANPlusGetHitGroupBone( 2 ) || 
+	enemy:ANPlusGetHitGroupBone( 3 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 3 ) ) && enemy:ANPlusGetHitGroupBone( 3 ) || 
+	enemy:ANPlusGetHitGroupBone( 4 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 4 ) ) && enemy:ANPlusGetHitGroupBone( 4 ) || 
+	enemy:ANPlusGetHitGroupBone( 5 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 5 ) ) && enemy:ANPlusGetHitGroupBone( 5 ) || 
+	enemy:ANPlusGetHitGroupBone( 6 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 6 ) ) && enemy:ANPlusGetHitGroupBone( 6 ) || 
+	enemy:ANPlusGetHitGroupBone( 7 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 7 ) ) && enemy:ANPlusGetHitGroupBone( 7 ) || 
+	enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	spread = self:GetOwner():IsMoving() && self.m_fSecondarySpread * self.m_fSecondarySpreadMMult || self.m_fSecondarySpread	
+	local direction = targetPos && ( targetPos - muzzlePos ):GetNormalized() || owner:GetAimVector()
+	
+	local bullet = {}
+		bullet.Attacker 	= self:GetOwner()
+		bullet.Num 			= self.Secondary.NumShots
+		bullet.Src 			= muzzlePos
+		bullet.Dir 			= direction
+		bullet.Tracer 		= self.Secondary.Tracer
+		bullet.TracerName 	= self.Secondary.TracerName
+		bullet.Spread 		= Vector( spread, spread, 0 )
+		bullet.Damage 		= self.Secondary.Damage
+		bullet.Force 		= self.Secondary.Force
+		bullet.AmmoType 	= self.Secondary.AmmoType 
+		bullet.Callback 	= bulletcallback || nil
+
+	self:FireBullets( bullet )
+	
+	if isfunction( callback ) then
+		
+		callback( muzzlePos, dir, att )
+			
+	end
+	
+end
+
 function SWEP:ANPlusWeaponFireCustom(hShotChan, callback, att) -- callback( muzzlePos, dirSprd, dir, att )
 	local att = att || self:GetAttachment( self.MuzzleAttachment )
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
 	local muzzlePos = enemy && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
-	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || 
+	enemy:ANPlusGetHitGroupBone( 2 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 2 ) ) && enemy:ANPlusGetHitGroupBone( 2 ) || 
+	enemy:ANPlusGetHitGroupBone( 3 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 3 ) ) && enemy:ANPlusGetHitGroupBone( 3 ) || 
+	enemy:ANPlusGetHitGroupBone( 4 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 4 ) ) && enemy:ANPlusGetHitGroupBone( 4 ) || 
+	enemy:ANPlusGetHitGroupBone( 5 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 5 ) ) && enemy:ANPlusGetHitGroupBone( 5 ) || 
+	enemy:ANPlusGetHitGroupBone( 6 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 6 ) ) && enemy:ANPlusGetHitGroupBone( 6 ) || 
+	enemy:ANPlusGetHitGroupBone( 7 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 7 ) ) && enemy:ANPlusGetHitGroupBone( 7 ) || 
+	enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	
 	spread = self:GetOwner():IsMoving() && self.m_fPrimarySpread * self.m_fPrimarySpreadMMult || self.m_fPrimarySpread	
+	local dirSprd = targetPos && ( targetPos - muzzlePos ):GetNormalized() || owner:GetAimVector()
+	local dir = dirSprd
+	--local shootAngle = owner:GetAimVector():Angle()
+    dirSprd.x = dirSprd.x + math.Rand( -spread, spread )
+    dirSprd.y = dirSprd.y + math.Rand( -spread, spread )
+	
+	if isfunction( callback ) then
+		
+		callback( muzzlePos, dirSprd, dir, att )
+			
+	end
+	
+end
+
+function SWEP:ANPlusWeaponFireCustom2(hShotChan, callback, att) -- callback( muzzlePos, dirSprd, dir, att )
+	local att = att || self:GetAttachment( self.MuzzleAttachment )
+	local owner = self:GetOwner()
+    local enemy = owner:GetEnemy()
+	local muzzlePos = enemy && owner:ANPlusInRange( enemy, 16384 ) && att.Pos || owner:WorldSpaceCenter()	
+	local targetPos = enemy && ( ( ( isbool( hShotChan ) && hShotChan == true && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && enemy:ANPlusGetHitGroupBone( 1 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 1 ) ) && enemy:ANPlusGetHitGroupBone( 1 ) ) || 
+	enemy:ANPlusGetHitGroupBone( 2 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 2 ) ) && enemy:ANPlusGetHitGroupBone( 2 ) || 
+	enemy:ANPlusGetHitGroupBone( 3 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 3 ) ) && enemy:ANPlusGetHitGroupBone( 3 ) || 
+	enemy:ANPlusGetHitGroupBone( 4 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 4 ) ) && enemy:ANPlusGetHitGroupBone( 4 ) || 
+	enemy:ANPlusGetHitGroupBone( 5 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 5 ) ) && enemy:ANPlusGetHitGroupBone( 5 ) || 
+	enemy:ANPlusGetHitGroupBone( 6 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 6 ) ) && enemy:ANPlusGetHitGroupBone( 6 ) || 
+	enemy:ANPlusGetHitGroupBone( 7 ) && self:VisibleVec( enemy:ANPlusGetHitGroupBone( 7 ) ) && enemy:ANPlusGetHitGroupBone( 7 ) || 
+	enemy:BodyTarget( muzzlePos ) || enemy:WorldSpaceCenter() || enemy:GetPos() )
+	
+	spread = self:GetOwner():IsMoving() && self.m_fSecondarySpread * self.m_fSecondarySpreadMMult || self.m_fSecondarySpread	
 	local dirSprd = targetPos && ( targetPos - muzzlePos ):GetNormalized() || owner:GetAimVector()
 	local dir = dirSprd
 	--local shootAngle = owner:GetAimVector():Angle()
@@ -559,7 +937,7 @@ function SWEP:Reload()
 
 	if self:Clip1() >= self:GetMaxClip1() || self.Primary.InfiniteAmmo || self.m_bClipReloaded then return end
 	
-	self:ANPlusResetPrimaryFire()
+	self:ANPlusResetFire()
 	self:GenerateBurst()
 	self:ANPlusReload()	
 
@@ -594,11 +972,18 @@ function SWEP:ThinkServer()
         end
 		
 		if IsValid(owner:GetEnemy()) && owner:Visible( owner:GetEnemy() ) then
+
 			local enemy = owner:GetEnemy()
 			self:SetNW2Vector( "m_vecANPSWEPEnemyPos", enemy:ANPlusGetHitGroupBone( 1 ) || enemy:ANPlusGetHitGroupBone( 2 ) || enemy:GetPos() + enemy:OBBCenter() ) 
+
 		elseif !IsValid(owner:GetInternalVariable( "m_hLookTarget" )) || !owner:Visible( owner:GetInternalVariable( "m_hLookTarget" ) ) then
 
 			self:SetNW2Vector( "m_vecANPSWEPEnemyPos", vector_zero ) 
+
+		end
+		
+		if self:CanSecondaryAttack() then
+			self:SecondaryAttack()
 		end
 		
 	end
@@ -624,21 +1009,28 @@ function SWEP:NPCShoot_Primary( shootPos, shootDir )
 	if self.m_fCurBurstCount <= 0 then 
 	
 		timer.Create( "ANPlusCancelFire" .. self:EntIndex(), self:GetNPCCurRestTime(), 1, function() -- NPCs can't fire faster that 0.01 using this function?	
-			if !IsValid(self) || !IsValid(self:GetOwner()) then return end	
+			
+			if !IsValid(self) || !IsValid(self:GetOwner()) then timer.Remove( "ANPlusFire" .. self:EntIndex() ) return end	
+
 			timer.Remove( "ANPlusFire" .. self:EntIndex() )
+
 			self:GenerateBurst() -- Prepare new current burst count for our new burst.
+
 		end)	
 		
-		return false 
-		
+		return false 	
+
 	end
 	
 	timer.Create( "ANPlusFire" .. self:EntIndex(), 0, 0, function()
-		if !IsValid(self) || !IsValid(owner) || !self:CanPrimaryAttack() then		
-			return false 
-		end --!self.AllowedSchedules[ self:GetOwner():GetCurrentSchedule() ] then return false end		
 
+		if !IsValid(self) || !IsValid(owner) || !self:CanPrimaryAttack() then	
+			--timer.Remove( "ANPlusFire" .. self:EntIndex() )	
+			return false 
+		end	
+		
 		self:PrimaryAttack()
+
 	end)
 end
 
@@ -665,7 +1057,12 @@ function SWEP:GetNPCCurBurst() -- Maybe read from it?
 end
 
 function SWEP:GetCapabilities()
-	return bit.bor( CAP_WEAPON_RANGE_ATTACK1, CAP_INNATE_RANGE_ATTACK1 )
+	return self.WeaponCapabilities
+end
+
+function SWEP:GetOwnerProfTab()
+	if !IsValid(self:GetOwner()) then return end
+	return self.NPCWeaponProficiencyTab[ self:GetOwner():GetCurrentWeaponProficiency() ]
 end
 
 function SWEP:GetNPCBulletSpread( wp )
@@ -673,17 +1070,21 @@ function SWEP:GetNPCBulletSpread( wp )
 	-- return value is in degrees
 	local profNPC = self.NPCWeaponProficiencyTab[ wp ]
 	if profNPC then
-		self.m_fPrimarySpread 		= profNPC['Spread']
-		self.m_fPrimarySpreadMMult  = profNPC['SpreadMoveMult']
-		self.NPCRestMin				= profNPC['BurstRestMin']
-		self.NPCRestMax				= profNPC['BurstRestMax']
-		self.NPCBurstMin			= profNPC['BurstMin']
-		self.NPCBurstMax			= profNPC['BurstMax']
-		self.m_fHChance				= profNPC['HeadshotChance']
+		self.m_fPrimarySpread 			= profNPC['Spread']
+		self.m_fPrimarySpreadMMult  	= profNPC['SpreadMoveMult']
+		self.m_fSecondarySpread 		= profNPC['Spread2'] || profNPC['Spread']
+		self.m_fSecondarySpreadMMult	= profNPC['SpreadMoveMult2'] || profNPC['SpreadMoveMult']
+		self.NPCRestMin					= profNPC['BurstRestMin']
+		self.NPCRestMax					= profNPC['BurstRestMax']
+		self.NPCBurstMin				= profNPC['BurstMin']
+		self.NPCBurstMax				= profNPC['BurstMax']
+		self.m_fHChance					= profNPC['HeadshotChance']
 
-		self:SetSaveValue( "m_fMinRange1", profNPC['RangeMin'] || self:GetInternalVariable( "m_fMinRange1" ) )
+		self:SetSaveValue( "m_fMinRange1", 0 )
 		self:SetSaveValue( "m_fMaxRange1", profNPC['RangeMax'] || self:GetInternalVariable( "m_fMaxRange1" ) )
-	
+		self:SetSaveValue( "m_fMinRange2", 0 )
+		self:SetSaveValue( "m_fMaxRange2", profNPC['RangeMax2'] || self:GetInternalVariable( "m_fMaxRange2" ) )
+
 		local defDeg = 10
 		local spread = self.m_fPrimarySpread * defDeg
 		if !self.m_bWeaponReady then
@@ -755,17 +1156,28 @@ function SWEP:ANPlusEquip(ent)
 end
 
 function SWEP:Equip(ent)
+
 	if ent:IsPlayer() then self:Remove() return false end	
 	if ent:GetClass() == "npc_citizen" then ent:Fire("DisableWeaponPickup") end
+	if self.NPCCapabilities then ent:CapabilitiesAdd( self.NPCCapabilities ) end
+
 	timer.Remove( "ANPlusRemoveOnDrop" .. self:EntIndex() )
+
 	hook.Add( "Think", self, self.ThinkServer )
+
 	if self.ActivityTranslateAIOverride then
+
 		timer.Simple( 0.1, function()
+
 			if !IsValid(self) || !IsValid(ent) then return end
 			self:SetupWeaponHoldTypeForAI( self:GetHoldType() )
+
 		end )
+
 	end
+
 	self:ANPlusEquip( ent )
+
 end
 
 function SWEP:CanBePickedUpByNPCs()

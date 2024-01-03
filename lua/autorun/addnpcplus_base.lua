@@ -5,12 +5,10 @@ AddCSLuaFile("autorun/addnpcplus_replacer.lua")
 AddCSLuaFile("autorun/addnpcplus_sh_func.lua")
 AddCSLuaFile("autorun/addnpcplus_sh_hooks.lua")
 AddCSLuaFile("autorun/addnpcplus_sh_meta.lua")
-AddCSLuaFile("autorun/addnpcplus_sh_npc_func.lua")
 --SERVER
 AddCSLuaFile("autorun/server/addnpcplus_sr_func.lua")
 AddCSLuaFile("autorun/server/addnpcplus_sr_hooks.lua")
 AddCSLuaFile("autorun/server/addnpcplus_sr_meta.lua")
-AddCSLuaFile("autorun/server/addnpcplus_sr_npc_func.lua")
 ------------------------------------------------------------------------------=#
 
 ANPlusLoadGlobal = {}
@@ -65,10 +63,10 @@ ANPlus = {
 			--	
 			if listType == "NPC" then -- Default stuff that We need for other stuff to not break.
 				if tab['Relations'] then
-					if !tab['Relations'][ tab['Name'] ] then			
-						local addTab = { [''.. tab['Name'] ..''] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, } 
-						table.Merge( tab['Relations'], addTab )		
-					end
+					--if !tab['Relations'][ tab['Name'] ] then			
+					--	local addTab = { [''.. tab['Name'] ..''] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, } 
+					--	table.Merge( tab['Relations'], addTab )		
+					--end
 					if !tab['Relations']['Default'] then
 						local addTab = { ['Default'] = { ['MeToNPC'] = { "Default", 0 }, ['NPCToMe'] = { "Default", 0 } }, } 
 						table.Merge( tab['Relations'], addTab )	
@@ -176,7 +174,7 @@ ANPlus = {
 	--[[////////////////////////
 	||||| Used to add NPC weapons to the spawn menu while also checking if added weapon has its base installed. If not, it won't be added.
 	]]--\\\\\\\\\\\\\\\\\\\\\\\\
-	AddNPCWeapon = function( base, name, entclass, killcon, killconcolor )
+	AddNPCWeapon = function( base, name, entclass, killcon, killconcolor, killconfont, killconscale )
 		
 		local checkIfBaseExists = base && file.Exists( "lua/weapons/" .. base, "GAME" ) || !base && true
 		if !checkIfBaseExists then return end
@@ -187,8 +185,19 @@ ANPlus = {
 		
 		local tab = { title = name, class = entclass }
 		
-		list.Set("NPCUsableWeapons", tab.class, tab )
-		if (CLIENT) then killicon.Add( tab.class, killcon || "HUD/killicons/default", killconcolor || Color( 255, 80, 0, 255 ) ) end
+		list.Set( "NPCUsableWeapons", tab.class, tab )
+		
+		if (CLIENT) then
+
+			local isTexturePath = string.find( string.lower( killcon ), "hud/killicons/" )
+
+			if isTexturePath then
+				killicon.Add( tab.class, killcon || "HUD/killicons/default", killconcolor || Color( 255, 80, 0, 255 ) ) 
+			else
+				killicon.AddFont( tab.class, killconfont || "HL2MPTypeDeath", killcon || "-", killconcolor || Color( 255, 80, 0, 255 ), killconscal || 1 )
+			end
+			
+		end
 		
 	end,  
 	

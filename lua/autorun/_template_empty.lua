@@ -203,7 +203,8 @@ ANPlus.AddNPC( {
 		--[9] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, -- Where 9 represents NPC:Classify() of CLASS_COMBINE
 		--['Other ANPlus NPC ID/Name'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Like", 0 } },
 
-		['Class'] = CLASS_PLAYER_ALLY, 												-- My new NPC CLASS,
+		['MyClass'] = CLASS_PLAYER_ALLY,
+		['MyVJClass'] = "CLASS_PLAYER_ALLY",											-- My new NPC CLASS,
 		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },	-- Default relations to NPCs/CLASSes not mention below.
 		[1] = { ['MeToNPC'] = { "Like", 0 } }, 										-- CLASS_PLAYER -- Players.
 		[2] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_PLAYER_ALLY -- HL2 player allies - monster_barney, npc_citizen, hacked npc_manhack, and friendly npc_turret_floor.
@@ -240,31 +241,6 @@ ANPlus.AddNPC( {
 		[33] = { ['MeToNPC'] = { "Neutral", 0 }, ['NPCToMe'] = { "Fear", 0 } }, 	-- CLASS_INSECT -- HL:S insects - montser_roach and monster_leech.
 		[34] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } }, 		-- CLASS_PLAYER_BIOWEAPON -- HL:S player bioweapons - hornet fired by a player.
 		[35] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, 		-- CLASS_ALIEN_BIOWEAPON -- HL:S enemy bioweapons - hornet fired by anyone but a player, or monster_snark with no enemy or an enemy without the class CLASS_PLAYER, CLASS_HUMAN_PASSIVE, or CLASS_HUMAN_MILITARY.
-
-		['CLASS_PLAYER_ALLY'] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } },
-		['CLASS_PLAYER_ALLY_VITAL'] = { ['MeToNPC'] = { "Like", 0 }, ['NPCToMe'] = { "Like", 0 } },
-		['CLASS_ANTLION'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_BARNACLE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_COMBINE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_COMBINE_GUNSHIP'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_HEADCRAB'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_MANHACK'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_METROPOLICE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_MILITARY'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_SCANNER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_STALKER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_VORTIGAUNT'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_ZOMBIE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_PROTOSNIPER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_EARTH_FAUNA'] = { ['MeToNPC'] = { "Neutral", 0 }, ['NPCToMe'] = { "Fear", 0 } },
-		['CLASS_COMBINE_HUNTER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_MACHINE'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_HUMAN_MILITARY'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_ALIEN_MILITARY'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_ALIEN_MONSTER'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_ALIEN_PREY'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_ALIEN_PREDATOR'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
-		['CLASS_XEN'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },
 
 	}, 
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
@@ -331,7 +307,7 @@ ANPlus.AddNPC( {
 		['OnNPCPlayerSetupMove'] = function(self, ply, mv, cmd)	
 		end,
 		
-		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
+		------------------------------------------------------------ OnNPCThink - Called every frame on the client. Called about 5-6 times per second on the server.
 		['OnNPCThink'] = function(self) -- ( CLIENT & SERVER )    	
 		end,
 		
@@ -701,7 +677,7 @@ ANPlus.AddNPC( {
 		['OnNPCPlayerSetupMove'] = function(self, ply, mv, cmd)	
 		end,
 		
-		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
+		------------------------------------------------------------ OnNPCThink - Called every frame on the client. Called about 5-6 times per second on the server.
 		['OnNPCThink'] = function(self) -- ( CLIENT & SERVER )   	
 		end, 
 		
@@ -1025,7 +1001,7 @@ ANPlus.AddNPC( {
 		['OnNPCPlayerLeave'] = function(ply, self)	
 		end,
 		
-		------------------------------------------------------------ OnNPCThink - This function runs almost every frame.
+		------------------------------------------------------------ OnNPCThink - Called every frame on the client. Called about 5-6 times per second on the server.
 		['OnNPCThink'] = function(self) -- ( CLIENT & SERVER )   	
 		end, 
 		

@@ -44,6 +44,11 @@ function ANPdevMsg(arg, lvl)
 	end
 end
 
+function ANPdev(func, lvl)
+	if GetConVar("developer"):GetFloat() != lvl then return end
+	if isfunction( func ) then func() end
+end
+
 --[[////////////////////////
 ||||| QOL function that runs only when rolled value is equal || lower than the given value.
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1421,6 +1426,10 @@ function metaPLAYER:ANPlusControlled(ent)
 	end
 end
 
+function metaENT:ANPlusGetHeight()
+	return math.abs( self:OBBMins().z ) + self:OBBMaxs().z
+end
+
 function metaENT:ANPlusIsRagdoll()
 	local c = self:GetClass()
 	return c == "prop_ragdoll"
@@ -1434,6 +1443,11 @@ end
 function metaENT:ANPlusIsDoor()	
 	local c = self:GetClass()	
 	return c == "func_door" || c == "func_door_rotating" || c == "prop_door" || c == "prop_door_rotating"	
+end
+
+function metaENT:SequenceGetFrames(seqID, anim)
+	local animID = self:GetSequenceInfo( seqID ).anims[ anim || 1 ]
+	return self:GetAnimInfo( animID ).numframes
 end
 
 function metaENT:ANPlusSetColorFade(color, delta)
@@ -1511,5 +1525,237 @@ function ANPlusAddCaption(ply, text, dur, fromPly)
 		end	
 	elseif (CLIENT) then	
 		gui.AddCaption( text, dur, fromPly )		
+	end
+end
+
+function metaENT:ANPlusCallFunction( name, ... )
+	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions'][name] != nil then	
+		self:ANPlusGetDataTab()['Functions'][name](...)
+	end
+end
+
+function metaENT:ANPMuteSound(bool)
+	self:SetNW2Bool( "m_bANPMuted", bool )
+end
+
+function metaENT:ANPlusApplyFlexData(flexTab, scale)
+
+	if !flexTab then return end
+	
+	self:SetFlexScale( scale || 1 )
+	
+	for i = 1, #flexTab do
+
+		self:SetFlexWeight( i - 1, flexTab[ i ] )
+		
+	end
+
+end
+
+function metaENT:ANPlusShootEffect(att, flags, scale, effect, muzzleSmokeDelay, muzzleSmokeDur)	-- flags for default hl2 muzzle = flags. For ANP muzzles = boneID (instead of the attachment).
+	
+	local att = isnumber(att) && att > 0 && att || isstring(att) && self:LookupAttachment( att ) || nil 
+	
+	if effect then		
+		--local attTab = att && att > -1 && self:GetAttachment( att ) || nil 
+		local fx = EffectData()
+		fx:SetEntity( self )
+		fx:SetAttachment( att || -1 )
+		fx:SetFlags( flags || 0 )
+		fx:SetScale( scale || 1 )
+		util.Effect( effect, fx )	
+	end
+	
+	if muzzleSmokeDelay then
+		if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
+		muzzleSmokeDelay = muzzleSmokeDelay == -1 && ( self.Primary.PreFireReset || self.Primary.Delay * 2 + self:GetNPCCurRestTime() ) || muzzleSmokeDelay
+		muzzleSmokeDur = muzzleSmokeDur || 1
+		timer.Create( "ANPlusSmokeEffectTimer" .. self:EntIndex(), muzzleSmokeDelay, 1, function()			
+			if !IsValid(self) || IsValid(self.m_pMuzzleSmoke) then return end			
+			--ParticleEffectAttach( "weapon_muzzle_smoke_b", 4, self, att )  	
+			self.m_pMuzzleSmoke = ANPlusCreateParticle( "weapon_muzzle_smoke_b", nil, muzzleSmokeDur, self, att )
+		end )		
+	end	
+end
+
+--[[
+function metaENT:ANPlusHitEffect( tr, scale )
+	
+	if tr && tr.Hit && !tr.HitSky then 
+	
+		local fx = EffectData()
+		fx:SetOrigin( tr.HitPos )
+		fx:SetNormal( tr.HitNormal )
+		fx:SetScale( scale || 0 )
+		util.Effect( "anp_hit_effect", fx )
+	
+	end
+
+end
+--]]  
+--[[
+1 = models/shells/shell_9mm.mdl
+2 = models/shells/shell_57.mdl
+3 = models/shells/shell_556.mdl
+4 = models/shells/shell_762nato.mdl
+5 = models/shells/shell_12gauge.mdl
+6 = models/shells/shell_338mag.mdl
+7 = models/weapons/rifleshell.mdl
+--]]
+
+function metaENT:ANPlusShell( att, bone, type, scale, angVec )
+	
+	local boneid = isnumber(bone) && bone || isstring(bone) && self:LookupBone( bone || "" ) || nil 
+	local att = isnumber(att) && att > -1 && att || isstring(att) && self:LookupAttachment( att ) || nil 
+
+	local fx = EffectData()
+	fx:SetEntity( self )
+	fx:SetAttachment( att || -1 )
+	fx:SetColor( boneid || -1 )
+	fx:SetRadius( type || 1 ) 
+	fx:SetScale( scale || 1 )
+	fx:SetStart( angVec || Vector( 0, 0, 0 ) )
+	util.Effect( "anp_npc_shell", fx )	
+
+end
+
+function metaENT:ANPlusHitEffect(effect, tr, scale)	
+	if tr && !tr.HitSky then 	
+		local fx = EffectData()
+		fx:SetOrigin( tr.HitPos )
+		fx:SetNormal( tr.HitNormal )
+		fx:SetScale( scale || 1 )
+		util.Effect( effect, fx )	
+	end
+end
+
+function metaENT:ANPlusFireBullet(bullet, target, hShotChan, muzzlePos, delay, burstCount, burstReset, fireSND, distFireSND, callback) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
+
+	if !bullet then return end
+	
+	self.m_fANPBulletLast = self.m_fANPBulletLast || 0
+	self.m_fANPCurBulletBurst = self.m_fANPCurBulletBurst || burstCount
+	if bullet && ( delay && CurTime() - self.m_fANPBulletLast >= delay ) && ( !burstCount || ( burstCount > 0 && self.m_fANPCurBulletBurst > 0 ) ) then
+
+		local target = self:IsNPC() && IsValid(self:GetEnemy()) && self:GetEnemy() || self:IsNPC() && IsValid(self:GetTarget()) && self:GetTarget() || target || false
+		muzzlePos = target && self:ANPlusInRange( target, 16384 ) && muzzlePos || self:WorldSpaceCenter()	
+		local targetPos = target && ( ( ( isbool( hShotChan ) && hShotChan == true && target:ANPlusGetHitGroupBone( 1 ) ) || isnumber( hShotChan ) && ANPlusPercentageChance( hShotChan ) && target:ANPlusGetHitGroupBone( 1 ) ) || target:ANPlusGetHitGroupBone( 2 ) || target:BodyTarget( muzzlePos ) || target:WorldSpaceCenter() || target:GetPos() )
+		local direction = targetPos && ( targetPos - muzzlePos ):GetNormalized() || self:GetAimVector()
+		
+		bullet.Src 			= muzzlePos
+		bullet.Dir 			= direction
+
+		self:FireBullets( bullet )
+		
+		if IsValid(self.m_pMuzzleSmoke) then self.m_pMuzzleSmoke:Remove() end
+		
+		if isfunction( callback ) then
+			
+			callback( muzzlePos, direction, pos )
+				
+		end
+		
+		if burstCount && burstCount > 0 then		
+			self.m_fANPCurBulletBurst = self.m_fANPCurBulletBurst - 1
+			timer.Create( "ANP_BulletBurstReset" .. self:EntIndex(), burstReset, 1, function()	
+				if IsValid(self) then				
+					self.m_fANPCurBulletBurst = burstCount || 0							
+				end		
+			end)		
+		end
+		
+		if (SERVER) then
+			if distFireSND then sound.Play( distFireSND, self:GetPos() ) end
+			if fireSND then self:EmitSound( fireSND ) end
+		end
+		
+		self.m_fANPBulletLast = CurTime()
+	end
+	
+end
+
+function metaENT:ANPlusGetEmittedLastSound()
+	return self.m_tLastSoundEmitted
+end
+
+function metaENT:ANPlusGetHearDistance()
+	return self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['HearDistance'] || nil
+end 
+ 
+function metaENT:ANPlusFakeModel(model, visualTab)
+
+	if (SERVER) then
+	
+		if model && !IsValid(self.m_pFakeModel) then
+			self.m_pFakeModel = ents.Create( "prop_dynamic" )
+			self.m_pFakeModel:SetModel( model )
+			if visualTab then self.m_pFakeModel:ANPlusCopyVisualFrom( visualTab ) end
+			self.m_pFakeModel:Spawn()
+			self.m_pFakeModel:SetSolid( SOLID_NONE )
+			self.m_pFakeModel:SetMoveType( MOVETYPE_NONE )
+			self.m_pFakeModel:SetNotSolid( true )
+			self.m_pFakeModel:SetParent( self )
+			self.m_pFakeModel:AddEffects( EF_BONEMERGE )
+			self.m_pFakeModel:SetOwner( self )
+			self:SetNoDraw( true )
+			self:DrawShadow( false )
+			self:DeleteOnRemove( self.m_pFakeModel )
+			
+			if self:IsNPC() then
+				local addTab = { ['CurFakeModel'] = { ['Model'] = model, ['VisualTab'] = self.m_pFakeModel:ANPlusGetVisual() } }
+				table.Merge( self:ANPlusGetDataTab(), addTab )			
+				self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
+			end
+			
+		elseif model && IsValid(self.m_pFakeModel) then
+		
+			self.m_pFakeModel:SetModel( model )
+			if visualTab then self.m_pFakeModel:ANPlusCopyVisualFrom( visualTab ) end
+			if self:IsNPC() then
+				local addTab = { ['CurFakeModel'] = { ['Model'] = model, ['VisualTab'] = self.m_pFakeModel:ANPlusGetVisual() } }
+				table.Merge( self:ANPlusGetDataTab(), addTab )			
+				self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
+			end
+		end
+		
+		return IsValid(self.m_pFakeModel) && self.m_pFakeModel || false
+		
+	elseif (CLIENT) then
+	
+		if model && !IsValid(self.m_pCFakeModel) then
+			self.m_pCFakeModel = ents.CreateClientProp( model )
+			self.m_pCFakeModel:ANPlusCopyVisualFrom( visualTab || self )
+			self.m_pCFakeModel:Spawn()
+			self.m_pCFakeModel:SetSolid( SOLID_NONE )
+			self.m_pCFakeModel:SetMoveType( MOVETYPE_NONE )
+			self.m_pCFakeModel:SetNotSolid( true )
+			self.m_pCFakeModel:SetParent( self )
+			self.m_pCFakeModel:AddEffects( EF_BONEMERGE )
+			self.m_pCFakeModel:SetOwner( self )
+			self:SetNoDraw( true )
+			self:DrawShadow( false )
+			
+			function self.m_pCFakeModel:ANPlus_CheckCRemoval() -- Because C_Ragdolls return nothing in Remove hooks.
+				if !IsValid(self:GetParent()) then self:Remove() end
+			end
+			
+			hook.Add( "Think", self.m_pCFakeModel, self.m_pCFakeModel.ANPlus_CheckCRemoval )
+			
+		elseif model && IsValid(self.m_pCFakeModel) then
+			self.m_pCFakeModel:SetModel( model )
+			if visualTab then self.m_pFakeModel:ANPlusCopyVisualFrom( visualTab ) end
+		end
+		
+		return IsValid(self.m_pCFakeModel) && self.m_pCFakeModel || false
+		
+	end
+	
+end
+
+function metaENT:ANPlusGetRagdollEntity()
+	if (SERVER) then
+		return self.m_pSRagdollEntity
+	elseif (CLIENT) then
+		return self.m_pCRagdollEntity
 	end
 end

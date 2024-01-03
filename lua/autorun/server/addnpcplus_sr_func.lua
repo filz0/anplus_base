@@ -41,8 +41,8 @@ function ENT:ANPlusGetAll()
 		if !entsAround[ i ]:IsNPC() && !entsAround[ i ]:IsPlayer() then continue end
 		
 		local v = entsAround[ i ]
-		
-		if ( v:IsNPC() && v != self && v:GetKeyValues()['sleepstate'] == 0 && !IsValid(v:GetInternalVariable( "m_hCine" )) && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
+		-- && v:GetKeyValues()['sleepstate'] == 0 && !IsValid(v:GetInternalVariable( "m_hCine" ))
+		if ( v:IsNPC() && v != self && v:ANPlusClassify() != 0 && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
 			
 			entsSelected[count] = v
 			count = count + 1
@@ -109,44 +109,80 @@ function ENT:ANPlusNPCRelations()
 			it = it + 1
 		
 			if ent != self then 
-
-				local dispTab = ent:ANPlusGetDataTab() && self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetDataTab()['Name'] ] || self:ANPlusGetDataTab()['Relations'][ ent:GetColor() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusClassify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
-
+				
+				local dispTab = self:ANPlusGetDataTab()['Relations'][ ent:GetColor() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusClassify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
+				
 				if dispTab then
-
+	
 					local addTab = { [ ent ] = { ['NPCToMeOld'] = ent:IsNPC() && ent:Disposition( self ) || true } }
 					
 					if !self.m_tbANPlusRelationsMem[ ent ] then
 
+						local meToNPC = dispTab['MeToNPC'] && dispTab['MeToNPC'][ 1 ] || "Default"
 						local meToNPC1 = dispTab['MeToNPC'] && RelationsTranslate[ dispTab['MeToNPC'][ 1 ] ]
 						local meToNPC2 = dispTab['MeToNPC'] && dispTab['MeToNPC'][ 2 ]
+
+						local npcToMe = dispTab['NPCToMe'] && dispTab['NPCToMe'][ 1 ] || "Default"
 						local npcToMe1 = dispTab['NPCToMe'] && RelationsTranslate[ dispTab['NPCToMe'][ 1 ] ]
 						local npcToMe2 = dispTab['NPCToMe'] && dispTab['NPCToMe'][ 2 ]
+
+						--print( ent, ent:ANPlusClassify(), ent:IsNPC() && ent:Disposition( self ), npcStr, meToNPC2, npcToMe2 )
 						
-						if dispTab['MeToNPC'][ 1 ] != "Default" && self:Disposition( ent ) != meToNPC1 then
-							
-							self:AddEntityRelationship( ent, meToNPC1, meToNPC2 )
-							addTab[ ent ]['MeToNPC'] = meToNPC1
+						if ent:MyVJClass( 1 ) && self:MyVJClass( 1 ) && self:MyVJClass( 1 ) == ent:MyVJClass( 1 ) then
+							self:AddEntityRelationship( ent, D_LI, 99 )
+							addTab[ ent ]['MeToNPC'] = D_LI
 
-						end
-			
-						if ent:IsNPC() && dispTab['NPCToMe'][ 1 ] != "Default" && ent:Disposition( self ) != npcToMe1 then
+							if ent:IsNPC() then
+								ent:AddEntityRelationship( self, D_LI, 0 )
+								addTab[ ent ]['NPCToMe'] = D_LI
 
-							ent:AddEntityRelationship( self, npcToMe1, npcToMe2 )
-							addTab[ ent ]['NPCToMe'] = npcToMe1
-
-							if ent.IsVJBaseSNPC == true && ( npcToMe1 == D_LI || npcToMe1 == D_NU ) then
 								ent.VJ_AddCertainEntityAsFriendly = ent.VJ_AddCertainEntityAsFriendly || {}
-								--ent.VJ_AddCertainEntityAsFriendly[ #ent.VJ_AddCertainEntityAsFriendly + 1 ] = self
-								table.insert( ent.VJ_AddCertainEntityAsFriendly, self ) -- Still doesn't work, I don't care anymore.
-							elseif ent.IsVJBaseSNPC == true && ( npcToMe1 == D_HT || npcToMe1 == D_FR ) then
-								ent.VJ_AddCertainEntityAsEnemy = ent.VJ_AddCertainEntityAsEnemy || {}
-								--ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
-								table.insert( ent.VJ_AddCertainEntityAsEnemy, self )
+								ent.VJ_AddCertainEntityAsFriendly[ #ent.VJ_AddCertainEntityAsFriendly + 1 ] = self
 							end
-				
-						end
 
+						elseif ent:MyVJClass( 1 ) && self:MyVJClass( 1 ) && self:MyVJClass( 1 ) != ent:MyVJClass( 1 ) then
+							self:AddEntityRelationship( ent, D_HT, 99 )
+							addTab[ ent ]['MeToNPC'] = D_HT
+
+							if ent:IsNPC() then						
+								ent:AddEntityRelationship( self, D_HT, 0 )
+								addTab[ ent ]['NPCToMe'] = D_HT
+
+								ent.VJ_AddCertainEntityAsEnemy = ent.VJ_AddCertainEntityAsEnemy || {}
+								ent.VJ_AddCertainEntityAsEnemy[ #ent.VJ_AddCertainEntityAsEnemy + 1 ] = self
+							end
+							
+						elseif ent:ANPlusClassify() == self:ANPlusClassify() || ent:ANPlusGetName() == self:ANPlusGetName() then
+							self:AddEntityRelationship( ent, D_LI, 0 )
+							addTab[ ent ]['MeToNPC'] = D_LI
+
+							if ent:IsNPC() then
+								ent:AddEntityRelationship( self, D_LI, 0 )
+								addTab[ ent ]['NPCToMe'] = D_LI
+							end
+
+						else
+							
+							if meToNPC != "Default" then
+
+								self:AddEntityRelationship( ent, meToNPC1, meToNPC2 )
+								addTab[ ent ]['MeToNPC'] = meToNPC1
+
+							end
+
+							if ent:IsNPC() && !ent:MyVJClass() then
+
+								if npcToMe != "Default" then
+
+									ent:AddEntityRelationship( self, npcToMe1, npcToMe2 )
+									addTab[ ent ]['NPCToMe'] = npcToMe1
+
+								end
+					
+							end
+
+						end
+						
 						table.Merge( self.m_tbANPlusRelationsMem, addTab )
 
 					end
@@ -302,12 +338,13 @@ end
 function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for this glorius thing.
 	if self.m_tbAnimEvents then
 		local seq = self:GetSequenceName( self:GetSequence() )
-		if ( self.m_tbAnimEvents[ seq ] ) then			
+		if ( self.m_tbAnimEvents[ seq ] ) then		
+	
 			if ( self.m_seqLast != seq ) then self.m_seqLast = seq; self.m_frameLast = -1 end				
 			local frameNew = math.floor( self:GetCycle() * self.m_tbAnimationFrames[ seq ] )	-- Despite what the wiki says, GetCycle doesn't return the frame, but a float between 0 and 1
-			for frame = self.m_frameLast + 1, frameNew do	-- a loop, just in case the think function is too slow to catch all frame changes						
-				if ( self.m_tbAnimEvents[ seq ][ frame ] ) then					
-					for _, ev in ipairs(self.m_tbAnimEvents[ seq ][ frame ]) do
+			for frame = self.m_frameLast + 1, frameNew do	-- a loop, just in case the think function is too slow to catch all frame changes					
+				if ( self.m_tbAnimEvents[ seq ][ frame ] ) then								
+					for _, ev in ipairs( self.m_tbAnimEvents[ seq ][ frame ] ) do
 						self:ANPlusHandleAnimationEvent( seq, ev )
 					end
 				end

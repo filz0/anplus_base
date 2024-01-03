@@ -37,7 +37,10 @@ function SWEP:SetWeaponHoldType( t )
 		index = ActIndex[ t ]
 	end
 
-	self:SetupWeaponHoldTypeForAI( t )
+	timer.Simple( 0, function() 
+		if !IsValid(self) then return end
+		self:SetupWeaponHoldTypeForAI( t ) 
+	end )
 
 end
 

@@ -5,39 +5,183 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 --[[////////////////////////
 ||||| SANDBOX functions override. 
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
 hook.Add( "InitPostEntity", "ANPlusLoad_GamemodeInitPostEntity", function()
 
-	timer.Simple( 0, function()
-		
-		function GAMEMODE:GetDeathNoticeEntityName( ent )
+	DEATH_NOTICE_FRIENDLY_VICTIM = 1
+	DEATH_NOTICE_FRIENDLY_ATTACKER = 2
+
+	if (CLIENT) then
+
+		timer.Simple( 1, function()
+
+			net.Receive( "DeathNoticeEvent", function()
+
+				local attacker = nil
+				local attackerType = net.ReadUInt( 2 )
+				if ( attackerType == 1 ) then
+					attacker = net.ReadString()
+				elseif ( attackerType == 2 ) then
+					attacker = net.ReadEntity()
+				end
+
+				local inflictor	= net.ReadString()
+
+				local victim = nil
+				local victimType = net.ReadUInt( 2 )
+				if ( victimType == 1 ) then
+					victim = net.ReadString()
+				elseif ( victimType == 2 ) then
+					victim = net.ReadEntity()
+				end
+
+				local flags = net.ReadUInt( 8 )
+
+				local team_a = -1
+				local team_v = -1
+				if ( bit.band( flags, DEATH_NOTICE_FRIENDLY_VICTIM ) != 0 ) then team_v = -2 end
+				if ( bit.band( flags, DEATH_NOTICE_FRIENDLY_ATTACKER ) != 0 ) then team_a = -2 end
+				if ( isentity( attacker ) ) then team_a = attacker:Team() attacker = attacker:Name() end
+				if ( isentity( victim ) ) then team_v = victim:Team() victim = victim:Name()  end
+
+				hook.Run( "AddDeathNotice", attacker, team_a, inflictor, victim, team_v, flags )
+
+			end )
+
+		end )
+
+	end
+
+	if (SERVER) then
+
+		timer.Simple( 1, function()
+
+			util.AddNetworkString( "DeathNoticeEvent" )
+
+			function GAMEMODE:SendDeathNotice( attacker, inflictor, victim, flags )
+
+				net.Start( "DeathNoticeEvent" )
 			
-			if ent:IsANPlus( true ) then 
-				return ent:ANPlusGetKillfeedName()
-			end
+					if ( !attacker ) then
+						net.WriteUInt( 0, 2 )
+					elseif ( isstring( attacker ) ) then
+						net.WriteUInt( 1, 2 )
+						net.WriteString( attacker )
+					elseif ( IsValid( attacker ) ) then
+						net.WriteUInt( 2, 2 )
+						net.WriteEntity( attacker )
+					end
 			
-			-- Some specific HL2 NPCs, just for fun
-			-- TODO: Localization strings?
-			if ( ent:GetClass() == "npc_citizen" ) then
-				if ( ent:GetName() == "griggs" ) then return "Griggs" end
-				if ( ent:GetName() == "sheckley" ) then return "Sheckley" end
-				if ( ent:GetName() == "tobias" ) then return "Laszlo" end
-				if ( ent:GetName() == "stanley" ) then return "Sandy" end
-
-				if ( ent:GetModel() == "models/odessa.mdl" ) then return "Odessa Cubbage" end
+					net.WriteString( inflictor )
+			
+					if ( !victim ) then
+						net.WriteUInt( 0, 2 )
+					elseif ( isstring( victim ) ) then
+						net.WriteUInt( 1, 2 )
+						net.WriteString( victim )
+					elseif ( IsValid( victim ) ) then
+						net.WriteUInt( 2, 2 )
+						net.WriteEntity( victim )
+					end
+			
+					net.WriteUInt( flags, 8 )
+			
+				net.Broadcast()
+			
 			end
 
-			-- Custom vehicle and NPC names
-			if ( ent:IsVehicle() and ent.VehicleTable and ent.VehicleTable.Name ) then
-				return ent.VehicleTable.Name
-			end
-			if ( ent:IsNPC() and ent.NPCTable and ent.NPCTable.Name ) then
-				return ent.NPCTable.Name
+			function GAMEMODE:GetDeathNoticeEntityName( ent )
+				
+				if ent:IsANPlus( true ) then 
+					return ent:ANPlusGetKillfeedName()
+				end
+
+				-- Some specific HL2 NPCs, just for fun
+				-- TODO: Localization strings?
+				if ( ent:GetClass() == "npc_citizen" ) then
+					if ( ent:GetName() == "griggs" ) then return "Griggs" end
+					if ( ent:GetName() == "sheckley" ) then return "Sheckley" end
+					if ( ent:GetName() == "tobias" ) then return "Laszlo" end
+					if ( ent:GetName() == "stanley" ) then return "Sandy" end
+
+					if ( ent:GetModel() == "models/odessa.mdl" ) then return "Odessa Cubbage" end
+				end
+
+				-- Custom vehicle and NPC names
+				if ( ent:IsVehicle() and ent.VehicleTable and ent.VehicleTable.Name ) then
+					return ent.VehicleTable.Name
+				end
+				if ( ent:IsNPC() and ent.NPCTable and ent.NPCTable.Name ) then
+					return ent.NPCTable.Name
+				end
+
+				-- Fallback to old behavior
+				return "#" .. ent:GetClass()
+
 			end
 
-			-- Fallback to old behavior
-			return "#" .. ent:GetClass()
+			function GAMEMODE:OnNPCKilled( ent, attacker, inflictor )
 
-		end
+				-- Don't spam the killfeed with scripted stuff
+				if ( ent:GetClass() == "npc_bullseye" || ent:GetClass() == "npc_launcher" ) then return end
+			
+				-- If killed by trigger_hurt, act as if NPC killed itself
+				if ( IsValid( attacker ) && attacker:GetClass() == "trigger_hurt" ) then attacker = ent end
+			
+				-- NPC got run over..
+				if ( IsValid( attacker ) && attacker:IsVehicle() && IsValid( attacker:GetDriver() ) ) then
+					attacker = attacker:GetDriver()
+				end
+			
+				if ( !IsValid( inflictor ) && IsValid( attacker ) ) then
+					inflictor = attacker
+				end
+			
+				-- Convert the inflictor to the weapon that they're holding if we can.
+				if ( IsValid( inflictor ) && attacker == inflictor && ( inflictor:IsPlayer() || inflictor:IsNPC() ) ) then
+			
+					inflictor = inflictor:GetActiveWeapon()
+					if ( !IsValid( attacker ) ) then inflictor = attacker end
+			
+				end
+			
+				local InflictorClass = "worldspawn"
+				local AttackerClass = game.GetWorld()
+			
+				if ( IsValid( inflictor ) ) then InflictorClass = inflictor:GetClass() end
+				if ( IsValid( attacker ) ) then
+			
+					AttackerClass = attacker
+			
+					-- If there is no valid inflictor, use the attacker (i.e. manhacks)
+					if ( !IsValid( inflictor ) ) then InflictorClass = attacker:GetClass() end
+			
+					if ( attacker:IsPlayer() ) then
+			
+						local flags = 0
+						if ( ent:IsNPC() and ent:Disposition( attacker ) != D_HT ) then flags = flags + DEATH_NOTICE_FRIENDLY_VICTIM end
+			
+						self:SendDeathNotice( attacker, InflictorClass, self:GetDeathNoticeEntityName( ent ), flags )
+			
+						return
+					end
+			
+				end
+			
+				-- Floor turret got knocked over
+				if ( ent:GetClass() == "npc_turret_floor" ) then AttackerClass = ent end
+			
+				-- It was NPC suicide..
+				if ( ent == AttackerClass ) then InflictorClass = "suicide" end
+			
+				local flags = 0
+				if ( IsValid( Entity( 1 ) ) and ent:IsNPC() and ent:Disposition( Entity( 1 ) ) != D_HT ) then flags = flags + DEATH_NOTICE_FRIENDLY_VICTIM end
+				if ( IsValid( Entity( 1 ) ) and AttackerClass:IsNPC() and AttackerClass:Disposition( Entity( 1 ) ) != D_HT ) then flags = flags + DEATH_NOTICE_FRIENDLY_ATTACKER end
+			
+				self:SendDeathNotice( self:GetDeathNoticeEntityName( AttackerClass ), InflictorClass, self:GetDeathNoticeEntityName( ent ), flags )
+			
+			end
+		end )
 		
 		local function MakeVehicle( ply, Pos, Ang, model, Class, VName, VTable, data )
 
@@ -148,8 +292,8 @@ hook.Add( "InitPostEntity", "ANPlusLoad_GamemodeInitPostEntity", function()
 		
 		concommand.Remove( "gm_spawnvehicle" )
 		concommand.Add( "gm_spawnvehicle", function( ply, cmd, args ) Spawn_Vehicle( ply, args[1] ) end )
-		
-	end )
+
+	end
 end)
 
 --[[////////////////////////

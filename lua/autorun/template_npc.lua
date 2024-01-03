@@ -96,38 +96,38 @@ ANPlus.AddNPC( {
  
 if (CLIENT) then
 	surface.CreateFont("anphl2defaultABC", {
-		font = "dejavusans",
-		size = 22 * ANPlusGetFixedScreenW(),
+		font 		= "dejavusans",
+		size 		= 22 * ANPlusGetFixedScreenW(),
 		--scanlines = 3
 	})
 	surface.CreateFont("anphl2default123", {
-		font = "halflife2",
-		size = 22 * ANPlusGetFixedScreenW(),
+		font 		= "halflife2",
+		size 		= 22 * ANPlusGetFixedScreenW(),
 		--scanlines = 3
 	})
 	surface.CreateFont("anphl2betaABC", {
-		font 		= "ocrbczyk",
+		font 		= "OCR-BczykNorm",
 		size 		= 42 * ANPlusGetFixedScreenW(),
 		scanlines 	= 3,
 		blursize 	= 2
 	})
 	surface.CreateFont("anphl2betaABCBG", {
-		font 		= "ocrbczyk",
+		font 		= "OCR-BczykNorm",
 		size 		= 42 * ANPlusGetFixedScreenW(),
 		scanlines 	= 3,
 		blursize 	= 8,
 	})
 	surface.CreateFont("anphl2beta123", {
-		font = "ocrbczyk_bold",
+		font 		= "OCR-BczykBold",
 		size 		= 42 * ANPlusGetFixedScreenW(),
 		scanlines 	= 3,
 		blursize 	= 2
 	})
 	surface.CreateFont("anphl2beta123BG", {
-		font 		= "ocrbczyk_bold",
+		font 		= "OCR-BczykBold",
 		size 		= 42 * ANPlusGetFixedScreenW(),
 		scanlines 	= 3,
-		blursize 	= 1
+		blursize 	= 4
 	})
 end
 
@@ -243,7 +243,7 @@ ANPlus.AddHealthBarStyle( "HL2 Beta", function(ent)
 	draw.SimpleText( text, font, tx, y, textCol, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 
 	local x2 = x + 300 * ANPlusGetFixedScreenW()
-	local x3 = x + 328 * ANPlusGetFixedScreenW()
+	local x3 = x + 340 * ANPlusGetFixedScreenW()
 	local y2 = y + 35 * ANPlusGetFixedScreenH()	
 	
 	local col = col ||  textCol	
@@ -256,9 +256,9 @@ ANPlus.AddHealthBarStyle( "HL2 Beta", function(ent)
 	
 	if hpTime > CurTime() then
 		if hpBuff < 0 then
-			col = Color( 255, math.Clamp( (hpTime - CurTime()) * 255, 220, 255 ), math.Clamp( (hpTime - CurTime()) * 255, 0, 255 ), 255 )  
+			col = Color( 255, math.Clamp( (hpTime - CurTime()) * 255, 220, 255 ), math.Clamp( (hpTime - CurTime()) * 255, 0, 255 ), 170 )  
 		elseif hpBuff > 0 then
-			col = Color( math.Clamp( 255 - ( 255 * (hpTime - CurTime()) ), 0, 255 ), math.Clamp( 255 + ( 255 * (hpTime - CurTime()) ), 0, 220 ), 0, 255 )
+			col = Color( math.Clamp( 255 - ( 255 * (hpTime - CurTime()) ), 0, 255 ), math.Clamp( 255 + ( 255 * (hpTime - CurTime()) ), 0, 220 ), 0, 170 )
 		end
 	else
 		hpBuff = 0
@@ -266,9 +266,9 @@ ANPlus.AddHealthBarStyle( "HL2 Beta", function(ent)
 	
 	draw.SimpleText( "+ 000 +", font2BG, x2, y2, textBGCol2, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 	draw.SimpleText( "+ 222 +", font2BG, x2, y2, textBGCol2, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
-	draw.SimpleText( "+ 000 +", fontBG, x2, y2, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+	--draw.SimpleText( "+ 000 +", font2BG, x2, y2, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 	draw.SimpleText( hpper, font2, x3, y2, col, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
-	draw.SimpleText( "+       +", font2, x2, y2, textCol, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+	draw.SimpleText( "+        +", font2, x2, y2, textCol, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 	
 	local x3 = x2 + 10 * ANPlusGetFixedScreenW()
 	
