@@ -21,7 +21,7 @@ Features
 * Ability to edit bones, 
 >Scale, position, angle, or to enable jigglebones.
 * Ability to add custom dispositions/relations, 
->Based on names, entity classes, NPC classes, and VJ classes.
+>Based on names, entity classes, NPC factions, and VJ classes.
 * Ability to increase/decrease the speed or even replace certain activities like reloading,
 * Ability to set weapon proficiency and range,
 * Full save and dupe support,
@@ -31,9 +31,9 @@ Features
 * Support for in-engine entities,
 >Ever wanted a spawnable Citadel Super Suit Charger?
 * Support for the Hammer Editor? 
->In theory you can change NPC's/Entity's parentname KeyValue to a certain ANP NPC/Entity name and it will be applied on the map load.
+>In theory you can change NPC's/Entity's parentname KeyValue to a certain ANP NPC/Entity name, which will be applied on the map load.
 * Level Transition support,
->In theory you can change NPC's/Entity's parentname KeyValue to a certain ANP NPC/Entity name and it will be applied on the map load.
+>Half-Life 2 campaign maps for example.
 
 Commands
 -
