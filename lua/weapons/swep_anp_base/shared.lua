@@ -388,7 +388,7 @@ function SWEP:PrimaryAttack()
 		if self.Primary.DSound == "Auto" then
 			EmitSound( self.Primary.FireSound, self:GetPos(), -3, nil, 0.2, 140, nil, nil, 31 )
 		else
-			EmitSound( self.Primary.DSound, self:GetPos() )
+			EmitSound( self.Primary.DSound, self:GetPos(), self:EntIndex() )
 		end
 	end
 
@@ -468,7 +468,7 @@ function SWEP:SecondaryAttack()
 		if self.Secondary.DSound == "Auto" then
 			EmitSound( self.Secondary.FireSound, self:GetPos(), -3, nil, 0.2, 140, nil, nil, 31 )
 		else
-			EmitSound( self.Secondary.DSound, self:GetPos() )
+			EmitSound( self.Secondary.DSound, self:GetPos(), self:EntIndex() )
 		end
 	end
 
@@ -1060,25 +1060,27 @@ function SWEP:GetCapabilities()
 	return self.WeaponCapabilities
 end
 
-function SWEP:GetOwnerProfTab()
+function SWEP:GetOwnerProfTab(wp)
 	if !IsValid(self:GetOwner()) then return end
-	return self.NPCWeaponProficiencyTab[ self:GetOwner():GetCurrentWeaponProficiency() ]
+	return self.NPCWeaponProficiencyTab[ wp || self:GetOwner():GetCurrentWeaponProficiency() ] || self.NPCWeaponProficiencyTab[ 4 ]
 end
 
-function SWEP:GetNPCBulletSpread( wp )
+function SWEP:GetNPCBulletSpread(wp)
 	-- Handles the bullet spread based on the given proficiency (wp)
 	-- return value is in degrees
-	local profNPC = self.NPCWeaponProficiencyTab[ wp ]
+
+	local profNPC = self:GetOwnerProfTab( wp )
+
 	if profNPC then
-		self.m_fPrimarySpread 			= profNPC['Spread']
-		self.m_fPrimarySpreadMMult  	= profNPC['SpreadMoveMult']
+		self.m_fPrimarySpread 			= profNPC['Spread'] || 0.01
+		self.m_fPrimarySpreadMMult  	= profNPC['SpreadMoveMult'] || 1
 		self.m_fSecondarySpread 		= profNPC['Spread2'] || profNPC['Spread']
 		self.m_fSecondarySpreadMMult	= profNPC['SpreadMoveMult2'] || profNPC['SpreadMoveMult']
-		self.NPCRestMin					= profNPC['BurstRestMin']
-		self.NPCRestMax					= profNPC['BurstRestMax']
-		self.NPCBurstMin				= profNPC['BurstMin']
-		self.NPCBurstMax				= profNPC['BurstMax']
-		self.m_fHChance					= profNPC['HeadshotChance']
+		self.NPCRestMin					= profNPC['BurstRestMin'] || 0.1
+		self.NPCRestMax					= profNPC['BurstRestMax'] || 0.1
+		self.NPCBurstMin				= profNPC['BurstMin'] || 3
+		self.NPCBurstMax				= profNPC['BurstMax'] || 3
+		self.m_fHChance					= profNPC['HeadshotChance'] || 20
 
 		self:SetSaveValue( "m_fMinRange1", 0 )
 		self:SetSaveValue( "m_fMaxRange1", profNPC['RangeMax'] || self:GetInternalVariable( "m_fMaxRange1" ) )

@@ -99,12 +99,23 @@ ANPlus.AddNPC( {
 ----------------------------------------------------------------- Will display NPC's name and health in the middle of the screen. 
 --[[
 	['HealthBar']			= { 
-	['Mode'] 			 = 1, -- 1 = always, 2 = only when in combat, 3 = only when alerted, 4 = when in combat and alerted.
+	['Mode'] 			 = 1, -- Start when: 1 = always, 2 = when in combat, 3 = when alerted, 4 = when in combat or alerted.
 	['StyleOverride'] 	 = false -- Enforce a health bar style. 
 	},	
 ]]--
 ----EXAMPLE /\
 	['HealthBar']				= false,
+----------------------------------------------------------------- Will play a battle/boss/chase music when conditions set by "Mode" are meet. 
+	['BossMusic']				= { 
+		['Music']		= { "music/hl2_song20_submix0.mp3", "music/hl2_song29.mp3", "music/hl2_song3.mp3" }, 	-- Sound file that will be played. Can be a table with multiple sounds. 
+		['Mode']		= 5,								-- 1 = always, 2 = when in combat, 3 = when alerted, 4 = when in combat and alerted, 5 = when seen the player atleast once.
+		['Repeat']		= false,							-- Repeat the music after it stops. Ment for non-looped wav files. Doesn't work with mp3s.
+		['Volume']		= 1,								-- Music's volume.
+		['Range'] 		= 2048,								-- Music's range, maps have size limit of around 32000.
+		['FadeRange'] 	= 0,  								-- Fade distance where ( Range - Fade ) = Beginning of the music fade range
+		['ResetDelay']	= 2,								-- When the Player's out of the range music will reset and stop after this time, otherwise it will resume.
+		['StopDelay']	= 2, 								-- When killed, music will fade and stop after this time.
+	}, 
 ----------------------------------------------------------------- KeyValues to give your NPC. Refer to Valve's wiki for more information.	
 --[[ EXAMPLE
 	['KeyValues'] 			= { citizentype = CT_REBEL, SquadName = "resistance" },

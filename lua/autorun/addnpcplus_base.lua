@@ -262,7 +262,6 @@ ANPlus = {
 		if id && hpbarTab then
 			ANPlusHealthBarStyles[ id ] = hpbarTab 
 		end
-		PrintTable(ANPlusHealthBarStyles)
 	end,
 
 	AddScriptedSentence = function(ssTab)
@@ -287,8 +286,10 @@ ANPlus.AddConVar( "anplus_random_placement", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE +
 ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply ANPC's health.", 0.1 )
 ANPlus.AddConVar( "anplus_replacer_enabled", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Enable ANPlus Replacer.", 0, 1 )
 ANPlus.AddConVar( "anplus_look_distance_override", 2048, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Set NPC look/sight distance. This command only affect ANPCs that don't have thier look distance changed by thier code.", 0, 32000 )
+ANPlus.AddConVar( "anplus_follower_collisions", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Enable collisions on following You ANPCs.", 0, 1 )
 ANPlus.AddClientConVar( "anplus_hpbar_dist", 2048, false, "Enable light effect used by the muzzle effects from this base.", 0 )
 ANPlus.AddClientConVar( "anplus_hpbar_def_style", "HL2 Retail", false, "Select a style of NPC's health bar if one has it enabled." )
+ANPlus.AddClientConVar( "anplus_bm_volume", "1", false, "Volume of the boss music." )
 ANPlus.AddClientConVar( "anplus_swep_muzzlelight", 1, false, "Enable light effect used by the muzzle effects from this base.", 0, 1 )
 ANPlus.AddClientConVar( "anplus_swep_shell_smoke", 1, false, "Allow smoke effect to be emitted from fired bullet casings.", 0, 1 )
 ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance_start", 2048, false, "Distance at which SWEP's flashlight will start fading.", 512, 10240 )
@@ -346,6 +347,7 @@ if (CLIENT) then
 		
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Disable Anti-FriendlyFire", "anplus_ff_disabled" ), "Disable Anti-FriendlyFire feature built-in to the base." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Random Placement", "anplus_random_placement" ), "If enabled, ANPCs spawned by the Players will be placed randomly if possible." )		
+		panel:ANPlus_SecureMenuItem( panel:CheckBox( "Follower Collisions", "anplus_follower_collisions" ), "Enables collisions on following You ANPCs." )		
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Health Multiplier", "anplus_hp_mul", 1, 10, 2 ), "Multiply health values of ANPCs." )
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Look Distance", "anplus_look_distance_override", 0, 32000, 0 ), "Sets the Look Distance of ANPCs. This setting only affect ANPCs which don't have thier look distance already changed in thier code." )		
 
@@ -369,6 +371,7 @@ if (CLIENT) then
 		panel:AddItem( hpBarLabel )
 		panel:AddItem( hpBarList )
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Health Bar Render Distance", "anplus_hpbar_dist", 0, 4096, 0 ), "Distance at which the special Health Bar will show on Player's screen." )
+		panel:ANPlus_SecureMenuItem( panel:NumSlider( "Boss/Chase Music Volume", "anplus_bm_volume", 0, 1, 2 ), "Volume of the boss music." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Muzzle Light Effect", "anplus_swep_muzzlelight" ), "If enabled, muzzle effects from this base will emit light." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Casing/Shell Smoke", "anplus_swep_shell_smoke" ), "If enabled, spent casings/shells from this base will generate smoke particle effect." )
 		panel:ANPlus_SecureMenuItem( panel:CheckBox( "SWEP Flashlight Smart Mode", "anplus_swep_flight_smartmode" ), "If enabled, NPCs will only use flashlights in dark places." )

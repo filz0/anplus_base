@@ -231,6 +231,45 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 	end
 end)
 
+hook.Add( "PlayerInitialSpawn", "ANPlusLoad_PlayerInitialSpawn", function(ply, transition) -- Transitions were really that easy, lol.
+
+	if transition then
+
+		--for _, ent in ents.Iterator() do -- Not in the current branch. Dev and x86 only. Why people would play x32 is beyond me.
+		
+		for _, ent in ipairs( ents.GetAll() ) do	
+
+			if IsValid(ent) && ent:GetClass() == "npc_combine_s" && ent:GetKeyValues() && ent:GetKeyValues()['parentname'] && ent:GetKeyValues()['parentname'] != "" then
+				
+				--local wep = ent:IsNPC() && ent:GetActiveWeapon()
+
+				--if IsValid(wep) then -- Gotta reset that weapon cuz stuff get funny.
+					--local mWep = wep:GetClass()
+					--print( mWep, wep )
+					--SafeRemoveEntity( wep )
+					--timer.Simple( 1, function() ent:Give( mWep ) end )
+					--ent:SelectWeapon( mWep )
+				--end
+				
+				ANPlusFilterInternal( ent, ent:GetKeyValues()['parentname'], transition )
+
+				if IsValid(ent:ANPlusGetFollowTarget()) then
+
+					local fTab = ent:ANPlusGetDataTab()['CanFollowPlayers']
+					local target = ent:ANPlusGetFollowTarget()
+					ent:ANPlusFollowTarget()
+					ent:ANPlusFollowTarget( target, fTab[ 1 ], fTab[ 2 ], fTab[ 3 ], fTab[ 4 ] )
+					
+				end
+
+			end
+
+		end
+
+	end
+
+end )
+
 hook.Add( "AcceptInput", "ANPlusLoad_AcceptInput", function(ent, input, activator, caller, data)
 	if ( ent && ent:IsANPlus(true) && ent:ANPlusGetDataTab()['Functions'] && ent:ANPlusGetDataTab()['Functions']['OnNPCInput'] != nil ) then
 		ent:ANPlusGetDataTab()['Functions']['OnNPCInput'](ent, input, activator, caller, data)					
@@ -628,7 +667,7 @@ end )
 
 hook.Add( "OnNPCLostEnemy", "ANPlusLoad_OnNPCLostEnemy", function()
 	local activator, caller = ACTIVATOR, CALLER
-	caller:SetNW2Entity( "m_pEnemyShared", false )
+	caller:SetNW2Entity( "m_pEnemyShared", NULL )
 	if caller:IsANPlus() && caller:ANPlusGetDataTab()['Functions'] && caller:ANPlusGetDataTab()['Functions']['OnNPCLostEnemy'] != nil then		
 		caller:ANPlusGetDataTab()['Functions']['OnNPCLostEnemy'](caller, caller.m_pLastEnemy)			
 	end

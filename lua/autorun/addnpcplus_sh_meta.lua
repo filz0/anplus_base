@@ -1253,7 +1253,7 @@ function metaENT:ANPlusEmitSoundSentence(sentence, pos, overrideTab, CRecipientF
 				
 				sndNext = overrideTab && overrideTab[ snd ] && overrideTab[ snd ][ 2 ] || sndNext
 				
-				if istable( snd ) then PrintTable(snd) end
+				--if istable( snd ) then PrintTable(snd) end
 				if isnumber( sndNext ) then
 					dur = ANPlusSoundDuration( snd ) + sndNext
 				elseif istable( sndNext ) && sndNext.dur then

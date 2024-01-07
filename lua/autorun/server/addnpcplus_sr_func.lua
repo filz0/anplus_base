@@ -5,6 +5,102 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 local ENT = FindMetaTable("Entity")
 local ZERO_VEC = Vector( 0, 0, 0 )
 
+
+function ANPlusFilterInternal(ent, pn, transition)
+
+	if ANPDefaultOutputs then
+
+		local hookTab = ent:IsNPC() && ANPDefaultOutputs['BaseNPC']
+
+		if hookTab then
+			for i = 1, #hookTab do
+				local hookData = hookTab[ i ]
+				if hookData then
+					ent:ANPlusCreateOutputHook( hookData[ 1 ], hookData[ 2 ] )
+				end
+			end
+		end
+
+	end
+
+	for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
+		local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
+		if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
+			table.insert( ANPlusDangerStuffGlobal, ent )
+		end			
+	end
+
+	if !ent:IsANPlus(true) || transition then
+
+		if !transition then ent:ANPlusIgnoreTillSet() end
+		ent:ANPlusNPCApply( pn, false, transition )					
+		
+	end
+	
+	if ent:IsNPC() then
+		
+		ent:ANPlusCreateVar( "DefaultVariables", "Category", "[ Default Variables ]-----------------", nil ) 
+		
+		ent:ANPlusCreateVar( "kv_targetname", ent:GetInternalVariable( "m_iName" ), "Target Name", "The name that other entities use to refer to this entity.", nil, nil, nil, 				
+		function(ent, nVar) 
+			ent:SetSaveValue( "m_iName", nVar )
+		end )
+		
+		ent:ANPlusCreateVar( "kv_squadname", ent:GetInternalVariable( "m_SquadName" ), "Squad Name", "NPCs that are in the same squad (i.e., have matching squad names) will share information about enemies and will take turns attacking and covering each other.", nil, nil, nil, 				
+		function(ent, nVar) 
+			ent:SetSaveValue( "m_SquadName", nVar )
+		end )
+		
+		
+		local val = ent:GetInternalVariable( "m_bShouldPatrol" )
+		if val != nil then											
+			ent:ANPlusCreateVar( "kv_shouldpatrol", tobool(val), "Should Patrol", "Patrol whenever I'm idle or alert.", nil, nil, nil, 				
+			function(ent, nVar) 
+				timer.Simple( 0.5, function() if !IsValid(ent) then return end ent:SetSaveValue( "m_bShouldPatrol", nVar ) end )
+			end )
+		end
+		
+		ent:ANPlusCreateVar( "kv_ignoreunseenenemies", tobool( ent:GetInternalVariable( "m_bIgnoreUnseenEnemies" ) ), "Ignore Unseen Enemies", "Prefers visible enemies, regardless of distance or relationship priority.", nil, nil, nil, 				
+		function(ent, nVar) 
+			ent:SetSaveValue( "m_bIgnoreUnseenEnemies", nVar )
+		end )
+		
+		local sleepList = 
+					"\n Choices:" ..
+					"\n 0: None" ..
+					"\n 1: Waiting for threat" ..
+					"\n 2: Waiting for PVS" ..
+					"\n 3: Waiting for input, ignore PVS" ..
+					"\n 4: Auto PVS" ..
+					"\n 5: Auto PVS after PVS" 
+		
+		ent:ANPlusCreateVar( "kv_sleepstate", ent:GetInternalVariable( "m_SleepState" ), "Sleep State", "Holds the NPC in stasis until specified condition. See also Wake Radius and Wake Squad." .. sleepList, 0, 5, 0, 				
+		function(ent, nVar) 				
+			ent:SetSaveValue( "m_SleepState", nVar )
+		end )
+		
+		ent:ANPlusCreateVar( "kv_wakeradius", ent:GetInternalVariable( "m_flWakeRadius" ), "Wake Radius", "Auto-wake if player comes within this distance.", 0, 30000, 0, 				
+		function(ent, nVar) 
+			ent:SetSaveValue( "m_flWakeRadius", nVar )
+		end )
+		
+		ent:ANPlusCreateVar( "kv_wakesquad", tobool( ent:GetInternalVariable( "m_bWakeSquad" ) ), "Wake Squad", "Wake all of the NPCs squadmates if the NPC is woken.", nil, nil, nil, 				
+		function(ent, nVar) 
+			ent:SetSaveValue( "m_bWakeSquad", nVar )
+		end )
+		
+		ent:ANPlusCreateVar( "kv_fireinput", "", "Fire Input", "Fires an entity's input, conforming to the map IO event queue system. You can find inputs for most entities on the Valve Developer Wiki.", nil, nil, nil, 				
+		function(ent, nVar) 
+			if nVar != "" then
+				nVar = string.Split( nVar, " " )
+				ent:Fire( nVar[ 1 ], nVar[ 2 ] || ( !nVar[ 2 ] || nVar[ 2 ] == "nil" ) && nil, nVar[ 3 ] || 0 )
+			end
+		end )
+
+	end
+
+end
+
 function ENT:ANPlusNPCHealthRegen()
 
 	if self:ANPlusGetDataTab()['HealthRegen'] then
@@ -30,7 +126,7 @@ function ENT:ANPlusPhysicsCollide(data, physobj)
 	end
 end
 
-function ENT:ANPlusGetAll()
+function ANPlusGetAll()
 
 	local entsAround = ents.GetAll()
 	local entsSelected = {}
@@ -42,7 +138,7 @@ function ENT:ANPlusGetAll()
 		
 		local v = entsAround[ i ]
 		-- && v:GetKeyValues()['sleepstate'] == 0 && !IsValid(v:GetInternalVariable( "m_hCine" ))
-		if ( v:IsNPC() && v != self && v:ANPlusClassify() != 0 && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
+		if ( v:IsNPC() && v:ANPlusClassify() != 0 && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
 			
 			entsSelected[count] = v
 			count = count + 1
@@ -59,7 +155,7 @@ function ENT:ANPlusIgnoreTillSet()
 	
 	if !self:IsNPC() then return end
 	local entsAround = ents.GetAll()
-	local count = 1
+	--local count = 1
 
 	for i = 1, #entsAround do
 	
@@ -71,6 +167,7 @@ function ENT:ANPlusIgnoreTillSet()
 
 			if v:ANPlusGetDataTab()['Relations']['Default']['NPCToMe'][ 1 ] != "Default" then self:AddEntityRelationship( v, D_NU, 99 ) end
 			if v:ANPlusGetDataTab()['Relations']['Default']['MeToNPC'][ 1 ] != "Default" then v:AddEntityRelationship( self, D_NU, 99 ) end
+			v.m_tbANPlusRelationsMem = {}
 		 
 		end
 		
@@ -89,7 +186,7 @@ function ENT:ANPlusNPCRelations()
 	
 	if !self:IsANPlus() || !self:ANPlusGetDataTab()['Relations'] || CurTime() - self.m_fANPlusCurMemoryLast < self.m_fANPlusCurMemoryDelay then return end
 	
-	local posEnemies = self:ANPlusGetAll()
+	local posEnemies = ANPlusGetAll()
 	local it = 1
 	
 	for memEnt, disp in pairs( self.m_tbANPlusRelationsMem ) do -- We want to make sure that memory isn't flooded with NULLs. A possible memory leak?
@@ -456,12 +553,24 @@ end
 
 function ENT:ANPlusOnUse(activator, caller, type)
 	if IsValid(activator) && ( type == 3 && CurTime() - self.m_fANPUseLast >= 0.05 || type != 3 ) then 
-		if self:ANPlusGetDataTab()['CanFollowPlayers'] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ] && self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] then self:ANPlusFollowPlayer( activator, self:ANPlusGetDataTab()['CanFollowPlayers'][ 1 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 2 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 3 ], self:ANPlusGetDataTab()['CanFollowPlayers'][ 4 ] ) end
+		
+		if self:ANPlusGetDataTab()['CanFollowPlayers'] then
+			
+			local fTab = self:ANPlusGetDataTab()['CanFollowPlayers']
+			
+			if fTab[ 1 ] && fTab[ 2 ] && fTab[ 3 ] && fTab[ 4 ] then
+				self:ANPlusFollowPlayer( activator, fTab[ 1 ], fTab[ 2 ], fTab[ 3 ], fTab[ 4 ] ) 
+			end
+
+		end
+
 		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCUse'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCUse'](self, activator, caller, type)					
-		end		
+		end	
+
 		if activator:IsPlayer() && type == 3 then activator:ConCommand( "-use" ) end
 		self.m_fANPUseLast = CurTime()
+
 	end
 end
 

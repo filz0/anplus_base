@@ -1,6 +1,6 @@
 local ENT = FindMetaTable("Entity")
 
-function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
+function ENT:ANPlusNPCApply(name, override, transition, preCallback, postCallback)
 	
 	if ANPlusLoadGlobal && IsValid(self) then
 			
@@ -21,7 +21,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end
 			end
 		end
-		
+
 		if name && isstring( name ) then	
 			
 			local dataTab = ANPlusLoadGlobal[ name ]
@@ -63,7 +63,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					net.WriteString( name )
 					net.Broadcast()
 				
-					self:SetKeyValue( "parentname" , "" ) -- We don't need it anymore
+					--self:SetKeyValue( "parentname" , "" ) -- We don't need it anymore
 					
 				end
 				
@@ -86,7 +86,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				
 				local addTab = { ['CurName'] = data['Name'] }
 				table.Merge( data, addTab )	
-
+				
 				if data['Models'] then
 
 					if (SERVER) then
@@ -180,7 +180,9 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 				end
 				
 				if (SERVER) then
-					if self:IsNPC() then		
+
+					if self:IsNPC() then	
+						
 						if data['RemoveCapabilities'] then self:CapabilitiesRemove( data['RemoveCapabilities'] ) end
 						if data['AddCapabilities'] then self:CapabilitiesAdd( data['AddCapabilities'] ) end														
 						if !data['ForceDefaultWeapons'] && !IsValid(self:GetActiveWeapon()) && self:GetKeyValues() && self:GetKeyValues()['additionalequipment'] != "" && self:ANPlusCapabilitiesHas( 2097152 ) then
@@ -203,7 +205,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self.m_tbANPlusRelationsMem = {}				
 						self.m_fANPlusCurMemoryLast = 0
 						self.m_fANPlusCurMemoryDelay = 1
-						self.m_fANPlusDangerDetectLast = 0
+						self.m_fANPlusDangerDetectLast = 0						
 						self.m_fANPlusDangerDetectDelay = data['Functions'] && data['Functions']['DetectionDelay'] || 1
 						self.m_tbANPlusACTOther = data['ActivityOther']
 						self.m_tbANPlusACTMovement = data['ActivityMovement']	
@@ -217,8 +219,9 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						self:SetNPCClass( class, vjClass )
 
 					end
+
 					self.m_fANPUseLast = 0
-					--self:SetUseType(SIMPLE_USE)
+					self.m_fANPlusVelLast = 0
 					
 					if self:GetSequenceList() then
 						self.m_tbAnimationFrames = {}
@@ -248,6 +251,8 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 						end		
 					end						
 				end
+
+				self.m_fANPlusBossMusicLast = 0
 				
 				for _, v in pairs( data['KeyValues'] ) do
 					if _ != "targetname" then -- We don't have to do that anymore.
@@ -255,8 +260,7 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 					end
 				end
 				
-				self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )			
-				self.m_fANPlusVelLast = 0
+				self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )							
 				
 				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
 				self:ANPlusApplyDataTab( data )					
@@ -342,16 +346,26 @@ function ENT:ANPlusNPCApply(name, override, preCallback, postCallback)
 							self:ANPlusGetDataTab()['Functions']['OnNPCPostLoad'](ply, self, createdEntities)
 						end					
 					end
-					--[[
-					function self:OnRestore()				
+					
+					if transition then -- Let's try it this way. Lol idk.	
+						
+						for i = 1, #self:GetChildren() do
+							local child = self:GetChildren()[ i ]
+							if IsValid(child) then
+								SafeRemoveEntity( child )
+							end
+						end
+
 						if self:ANPlusIsWiremodCompEnt() then
 							WireLib.Restored( self )
 						end
+
 						if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCRestore'] != nil then -- Does it work?
 							self:ANPlusGetDataTab()['Functions']['OnNPCRestore'](self)
-						end			
+						end		
+
 					end
-					]]--
+					
 					
 					if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCUserButtonUp'] != nil then
 						hook.Add( "PlayerButtonUp", self, self.ANPlusNPCUserButtonUp )
@@ -451,6 +465,150 @@ function ENT:ANPlusApplyDataTab( tab )
 	end
 end
 
+local anplus_bm_volume = GetConVar( "anplus_bm_volume" )
+
+local function CheckDaThing(ent, stop)	-- 1 = always, 2 = when in combat, 3 = when alerted, 4 = when in combat and alerted, 5 = when in combat and only if the player is the enemy.
+	if stop || !IsValid(ent) || !ent:ANPlusAlive() || !ent:IsANPlus() then return false end 	
+	
+	local tab = ent:ANPlusGetDataTab()['BossMusic']
+
+	if !tab then return false end 
+
+	local ply = LocalPlayer()	
+	local state = ent:GetNW2Float( "m_fANPlusNPCState" )
+	local enemy = ent:GetNW2Entity( "m_pEnemyShared" )
+	local mode = tab['Mode']
+
+	ent.m_bSeenPlayer = ent.m_bSeenPlayer || IsValid(enemy) && enemy == ply
+
+	if ( mode == 5 && !ent.m_bSeenPlayer ) then return false end
+	if ( mode == 2 && state != 3 ) then return false end	
+	if ( mode == 3 && state != 2 ) then return false end
+	if ( mode == 4 && state != 2 && state != 3 ) then return false end 
+
+	return true
+end
+
+local function CurMusic() -- CSoundPatch [music/hl2_song20_submix4.mp3]
+	local ply = LocalPlayer()
+	if !IsValid(ply) then return false end
+	if !ply.m_sndANPlusBossMusic  then return false end
+	snd = tostring( ply.m_sndANPlusBossMusic )
+	local cs = string.Replace( snd, "CSoundPatch ", "" )
+	cs = string.Replace( cs, "[", "" )
+	cs = string.Replace( cs, "]", "" )
+	return cs
+end
+
+local function SameMusic(string) -- CSoundPatch [music/hl2_song20_submix4.mp3]
+	local ply = LocalPlayer()
+	if !IsValid(ply) then return false end
+	return CurMusic() == string
+end
+
+function ENT:ANPlusBossMusic(stop)
+
+	local ply = LocalPlayer()
+	local stop = stop
+
+	if !IsValid(ply) then return end
+
+	local bmTab = self:ANPlusGetDataTab()['BossMusic']
+
+	local MUSIC 				= bmTab['Music']
+	local MUSIC_REPEAT			= bmTab['Repeat']
+	local MUSIC_VOLUME 			= bmTab['Volume']
+	local MUSIC_MAX_DISTANCE 	= bmTab['Range']
+	local MUSIC_CUTOFF_DISTANCE = bmTab['FadeRange']
+	local MUSIC_RESTART_DELAY	= bmTab['ResetDelay']
+	local MUSIC_STOP_FADE_DELAY	= bmTab['StopDelay']
+
+	local totalDistanceScore = 0
+	local nearEntities = ents.FindInSphere( ply:GetPos(), MUSIC_MAX_DISTANCE )
+	
+	local ent, distSqr, dist = ANPlusFindClosestEntity( ply:GetPos(), nearEntities, function(ent) if ent:ANPlusGetName() == self:ANPlusGetName() then return true end end ) 
+	if IsValid(ent) then
+		local dstSqr, dist = ply:ANPlusGetRange( ent )
+		local distanceScore = math.max( 0, MUSIC_MAX_DISTANCE - dist ) 
+		totalDistanceScore = totalDistanceScore + distanceScore
+		if ent != self then
+			stop = false 
+			timer.Remove( "ANP_PLAYER_BOSS_MUSIC_FADE" )
+		end
+	end
+	
+	if !ply.m_sndANPlusBossMusic then
+
+		if CheckDaThing( self ) then			
+			ply.m_sANPlusBossMusicCur		= ply.m_sANPlusBossMusicCur || istable( MUSIC ) && MUSIC[ math.random( 1, #MUSIC ) ] || MUSIC
+			ply.m_sndANPlusBossMusic 		= CreateSound( ply, ply.m_sANPlusBossMusicCur )
+			ply.m_sndANPlusBossMusic:Stop()
+			ply.m_fANPlusBossMusicDur 		= ANPlusSoundDuration( ply.m_sANPlusBossMusicCur )
+			ply.m_fANPlusBossMusicDurLast 	= CurTime()
+		else
+
+			return
+		end
+	
+	elseif ply.m_sndANPlusBossMusic && SameMusic( ply.m_sANPlusBossMusicCur ) && !CheckDaThing( self, stop ) then
+		
+		if MUSIC_STOP_FADE_DELAY > 0 then ply.m_sndANPlusBossMusic:FadeOut( MUSIC_STOP_FADE_DELAY ) end
+		
+		timer.Create( "ANP_PLAYER_BOSS_MUSIC_FADE", MUSIC_STOP_FADE_DELAY, 1, function()
+			if !IsValid(ply) then return end
+			ply.m_sndANPlusBossMusic:Stop()
+			ply.m_sANPlusBossMusicCur = nil
+			ply.m_sndANPlusBossMusic = nil
+		end )
+
+		return
+	elseif !SameMusic( ply.m_sANPlusBossMusicCur ) then
+
+		return
+	end
+	
+	local musicVolume = math.min( 1, totalDistanceScore / MUSIC_CUTOFF_DISTANCE )
+
+	local shouldRestartMusic = ( CurTime() - self.m_fANPlusBossMusicLast >= MUSIC_RESTART_DELAY )
+	local musicEnded = ( CurTime() - ply.m_fANPlusBossMusicDurLast >= ply.m_fANPlusBossMusicDur )
+
+	if musicVolume > 0 then
+
+		if shouldRestartMusic then
+			ply.m_sndANPlusBossMusic:Play()			
+		end
+
+		if !ply:Alive() then
+			musicVolume = musicVolume * 0.2
+		end
+
+		if MUSIC_REPEAT && musicEnded then
+			ply.m_sndANPlusBossMusic:Stop()	
+			ply.m_sndANPlusBossMusic:Play()
+			ply.m_fANPlusBossMusicDurLast = CurTime()
+		end
+
+		self.m_fANPlusBossMusicLast = CurTime()
+
+	elseif shouldRestartMusic then
+
+		ply.m_sndANPlusBossMusic:Stop()
+		ply.m_sANPlusBossMusicCur = nil	
+		ply.m_sndANPlusBossMusic = nil
+
+		return
+	else
+		musicVolume = 0
+	end	
+
+	musicVolume = math.max( 0.01, musicVolume * math.Clamp( MUSIC_VOLUME * anplus_bm_volume:GetFloat(), 0, 1 ) )
+	
+	ply.m_sndANPlusBossMusic:Play()
+	ply.m_sndANPlusBossMusic:ChangePitch( math.Clamp( game.GetTimeScale() * 100, 50, 255 ), 0 ) -- Just for kicks.
+	ply.m_sndANPlusBossMusic:ChangeVolume( musicVolume, 0 ) 
+
+end	
+
 function ENT:ANPlusNPCThink()
 			
 	if ( self:IsANPlus() && !GetConVar("ai_disabled"):GetBool() ) || !self:IsNPC() && self:IsANPlus(true) then
@@ -513,6 +671,12 @@ function ENT:ANPlusNPCThink()
 		if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCThink'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCThink'](self)	
 		end
+
+		if (CLIENT) then
+			if self:ANPlusGetDataTab()['BossMusic'] then
+				self:ANPlusBossMusic()
+			end
+		end
 	
 	elseif !IsValid(self) || !self:ANPlusAlive() then	
 		return false	
@@ -529,21 +693,22 @@ local function ANPlusOnLoad(ply, ent, data)
 		if data['m_tSaveData'] then
 
 			for var, val in pairs( data['m_tSaveData'] ) do 
+
 				if val then	
 					local fixBool = val == "true" && true || val == "false" && false
 					val = val != "true" && val != "false" && val || fixBool	
 					ent[ var ] = val	
 
 					if data['m_tSaveDataUpdateFuncs'] && isfunction( data['m_tSaveDataUpdateFuncs'][ var ] ) then
-						print(var, val, data['m_tSaveDataUpdateFuncs'][ var ])
 						data['m_tSaveDataUpdateFuncs'][ var ](ent, val)
 					end
 					
 					data['m_tSaveData'][ var ] = val
 				end
+
 			end
 			
-			net.Start("anplus_savedata_net")
+			net.Start( "anplus_savedata_net" )
 			net.WriteEntity( ent )
 			net.WriteTable( data['m_tSaveData'] )
 			net.Broadcast()
@@ -555,7 +720,7 @@ local function ANPlusOnLoad(ply, ent, data)
 			ent:Spawn()
 			
 			ent:ANPlusIgnoreTillSet()
-			ent:ANPlusNPCApply(data['CurName'])
+			ent:ANPlusNPCApply( data['CurName'] )
 
 			if ent:ANPlusIsWiremodCompEnt() then
 				ent.IsWire = true

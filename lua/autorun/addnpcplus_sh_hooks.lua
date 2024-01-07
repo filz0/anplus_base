@@ -325,93 +325,8 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 		end
 		
 		if (SERVER) then
-			if ANPDefaultOutputs then
-				local hookTab = ent:IsNPC() && ANPDefaultOutputs['BaseNPC']
-				if hookTab then
-					for i = 1, #hookTab do
-						local hookData = hookTab[ i ]
-						if hookData then
-							ent:ANPlusCreateOutputHook( hookData[ 1 ], hookData[ 2 ] )
-						end
-					end
-				end
-			end
-			
-			if !ent:IsANPlus(true) then
-
-				for i = 1, #ANPlusDangerStuffGlobalNameOrClass do
-					local danger = ANPlusDangerStuffGlobalNameOrClass[ i ]
-					if danger && !ent:IsWeapon() && ( string.find( string.lower( ent:ANPlusGetName() ), danger ) || string.find( string.lower( ent:GetClass() ), danger ) ) && !table.HasValue( ANPlusDangerStuffGlobal, ent ) then
-						table.insert( ANPlusDangerStuffGlobal, ent )
-					end			
-				end
-
-				ent:ANPlusIgnoreTillSet()
-				ent:ANPlusNPCApply( ent:GetKeyValues()['parentname'] )		
-				ent.m_pMyPlayer = nil	
-				
-			end
-			
-			if ent:IsNPC() then
-				
-				ent:ANPlusCreateVar( "DefaultVariables", "Category", "[ Default Variables ]-----------------", nil ) 
-				
-				ent:ANPlusCreateVar( "kv_targetname", ent:GetInternalVariable( "m_iName" ), "Target Name", "The name that other entities use to refer to this entity.", nil, nil, nil, 				
-				function(ent, nVar) 
-					ent:SetSaveValue( "m_iName", nVar )
-				end )
-				
-				ent:ANPlusCreateVar( "kv_squadname", ent:GetInternalVariable( "m_SquadName" ), "Squad Name", "NPCs that are in the same squad (i.e., have matching squad names) will share information about enemies and will take turns attacking and covering each other.", nil, nil, nil, 				
-				function(ent, nVar) 
-					ent:SetSaveValue( "m_SquadName", nVar )
-				end )
-				
-				
-				local val = ent:GetInternalVariable( "m_bShouldPatrol" )
-				if val != nil then											
-					ent:ANPlusCreateVar( "kv_shouldpatrol", tobool(val), "Should Patrol", "Patrol whenever I'm idle or alert.", nil, nil, nil, 				
-					function(ent, nVar) 
-						timer.Simple( 0.5, function() if !IsValid(ent) then return end ent:SetSaveValue( "m_bShouldPatrol", nVar ) end )
-					end )
-				end
-				
-				ent:ANPlusCreateVar( "kv_ignoreunseenenemies", tobool( ent:GetInternalVariable( "m_bIgnoreUnseenEnemies" ) ), "Ignore Unseen Enemies", "Prefers visible enemies, regardless of distance or relationship priority.", nil, nil, nil, 				
-				function(ent, nVar) 
-					ent:SetSaveValue( "m_bIgnoreUnseenEnemies", nVar )
-				end )
-				
-				local sleepList = 
-							"\n Choices:" ..
-							"\n 0: None" ..
-							"\n 1: Waiting for threat" ..
-							"\n 2: Waiting for PVS" ..
-							"\n 3: Waiting for input, ignore PVS" ..
-							"\n 4: Auto PVS" ..
-							"\n 5: Auto PVS after PVS" 
-				
-				ent:ANPlusCreateVar( "kv_sleepstate", ent:GetInternalVariable( "m_SleepState" ), "Sleep State", "Holds the NPC in stasis until specified condition. See also Wake Radius and Wake Squad." .. sleepList, 0, 5, 0, 				
-				function(ent, nVar) 				
-					ent:SetSaveValue( "m_SleepState", nVar )
-				end )
-				
-				ent:ANPlusCreateVar( "kv_wakeradius", ent:GetInternalVariable( "m_flWakeRadius" ), "Wake Radius", "Auto-wake if player comes within this distance.", 0, 30000, 0, 				
-				function(ent, nVar) 
-					ent:SetSaveValue( "m_flWakeRadius", nVar )
-				end )
-				
-				ent:ANPlusCreateVar( "kv_wakesquad", tobool( ent:GetInternalVariable( "m_bWakeSquad" ) ), "Wake Squad", "Wake all of the NPCs squadmates if the NPC is woken.", nil, nil, nil, 				
-				function(ent, nVar) 
-					ent:SetSaveValue( "m_bWakeSquad", nVar )
-				end )
-				
-				ent:ANPlusCreateVar( "kv_fireinput", "", "Fire Input", "Fires an entity's input, conforming to the map IO event queue system. You can find inputs for most entities on the Valve Developer Wiki.", nil, nil, nil, 				
-				function(ent, nVar) 
-					if nVar != "" then
-						nVar = string.Split( nVar, " " )
-						ent:Fire( nVar[ 1 ], nVar[ 2 ] || ( !nVar[ 2 ] || nVar[ 2 ] == "nil" ) && nil, nVar[ 3 ] || 0 )
-					end
-				end )
-			end
+			ANPlusFilterInternal( ent, ent:GetKeyValues()['parentname'] )
+			ent.m_pMyPlayer = nil
 		end	
 	end )	
 
@@ -590,7 +505,12 @@ hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)
 					WireLib.Remove( ent )
 				end
 			end
-		--elseif (CLIENT) then		
+		
+		end
+		if (CLIENT) then
+			if ent:IsANPlus() && ent:ANPlusGetDataTab()['BossMusic'] then	
+				ent:ANPlusBossMusic( true )	
+			end
 		end
 		
 		if ent:IsANPlus(true) then

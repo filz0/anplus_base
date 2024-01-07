@@ -389,3 +389,28 @@ function ENT:ANPlusCustomConfigMenu()
 	
 	dFrame:ShowCloseButton( false )
 end
+
+function ANPlusGetAll()
+
+	local entsAround = ents.GetAll()
+	local entsSelected = {}
+	local count = 1
+
+	for i = 1, #entsAround do
+	
+		if !entsAround[ i ]:IsNPC() && !entsAround[ i ]:IsPlayer() then continue end
+		
+		local v = entsAround[ i ]
+		-- && v:GetKeyValues()['sleepstate'] == 0 && !IsValid(v:GetInternalVariable( "m_hCine" ))
+		if ( v:IsNPC() && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
+			
+			entsSelected[count] = v
+			count = count + 1
+
+		end
+		
+	end
+
+	return entsSelected
+	
+end

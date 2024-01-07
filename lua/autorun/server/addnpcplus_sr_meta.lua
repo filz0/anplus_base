@@ -6,6 +6,7 @@ local metaENT = FindMetaTable("Entity")
 local metaDMG = FindMetaTable("CTakeDamageInfo")
 
 local vector_zero = Vector( 0, 0, 0 )
+local anplus_follower_collisions = GetConVar( "anplus_follower_collisions" )
 
 function metaENT:ANPlusSetKillfeedName(name)
 	if !name || name == "" then name = nil end
@@ -1398,30 +1399,42 @@ local illegalACTs = {
 function metaENT:ANPlusFollowTarget(target, followDist, followRunDIst, followCombatDist, followCombatRunDist)
 	
 	local timerName = "ANP_NPC_FollowBeh" .. self:EntIndex()
+
 	if !IsValid(target) then 
 	
 		if self:IsANPlus() && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCFollow'] != nil then
 			self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.m_pFollowTarget, false)	
 		end
+
 		timer.Remove( timerName )
 		self.m_pFollowTarget = nil 
+		self:SetOwner()
+
 		return 
 	end	
 	
 	if ( ( target:IsNPC() || target:IsPlayer() ) && self:Disposition( target ) != D_LI ) then print(self, " doesn't like ", target, " therefore it won't follow it." ) return end
+	
 	local followDist = followDist || 200
 	local followCombatDist = followCombatDist || 400
+	
 	if self:GetClass() == "npc_citizen" then self:Fire( "RemoveFromPlayerSquad", "", 0.1 ) end
+	
 	self.m_pFollowTarget = target
-	self:SetTarget(target)
+	self:SetTarget( target )
+
 	if self:IsANPlus() && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCFollow'] != nil then
 		self:ANPlusGetDataTab()['Functions']['OnNPCFollow'](self, self.m_pFollowTarget, true)	
 	end
 	
 	timer.Create( timerName, 0.5, 0, function()
+
 		if !IsValid(self) || !IsValid(self.m_pFollowTarget) || !self.m_pFollowTarget:ANPlusAlive() || ( ( self.m_pFollowTarget:IsNPC() || self.m_pFollowTarget:IsPlayer() ) && self:Disposition( self.m_pFollowTarget ) != D_LI ) then 
+			
 			if IsValid(self) then			
+
 				if IsValid(self.m_pFollowTarget) then
+
 					if self.m_pFollowTarget:IsPlayer() && self:Disposition( self.m_pFollowTarget ) != D_LI then ANPlusMSGPlayer( self.m_pFollowTarget, self:ANPlusGetKillfeedName() .. " is no longer following you because it doens't like you anymore.", Color( 255, 200, 0 ), "ANP.UI.Error" ) end			
 					
 					if self:IsANPlus() && self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCFollow'] != nil then
@@ -1429,8 +1442,12 @@ function metaENT:ANPlusFollowTarget(target, followDist, followRunDIst, followCom
 					end	
 					
 				end
+
 				self.m_pFollowTarget = nil 
+				self:SetOwner()
+
 			end
+
 			timer.Remove( timerName )
 			return 
 		end
@@ -1441,25 +1458,43 @@ function metaENT:ANPlusFollowTarget(target, followDist, followRunDIst, followCom
 		local schChase = SCHED_TARGET_CHASE
 		local curSchChase = self:IsCurrentSchedule( schChase )
 		local curDist = math.max( posSelf:Distance( posTarget ) - ( self:OBBMaxs().x + self.m_pFollowTarget:OBBMaxs().x ), 0 )
-		
+		local collVar = anplus_follower_collisions:GetBool()
+
+		if !collVar then self:SetOwner( self.m_pFollowTarget ) else self:SetOwner() end
+
 		if !IsValid(self:GetEnemy()) then
 
 			if curDist > followDist then
+
 				self:NavSetGoalTarget( self.m_pFollowTarget, Vector( 0, 0, 0 ) )
+
 				timer.Simple( 0.5, function() 
+
 					if !IsValid(self) || !IsValid(self.m_pFollowTarget) then return end
+
 					if self.m_pFollowTarget:IsPlayer() then
+
 						if !self:HasCondition( 49 ) && ( self:GetNavType() != 2 && !self:IsGoalActive() ) then
+
 							if !self.m_pFollowTarget:Visible( self ) && !self:Visible( self.m_pFollowTarget ) then -- && ( self:HasCondition( 35 ) || !self:HasCondition( 49 ) )
+
 								local getNodeType = self:GetNavType() == 2 && #ANPlusAIGetAirNodes() > 0 && 3 || 2
 								local node, dist = ANPlusAIFindClosestNode( posTarget, getNodeType )
-								if node && !ANPlusAINodeOccupied( node['pos'] ) then
+
+								if node && !ANPlusAINodeOccupied( node['pos'] ) && dist <= 512 then
 									self:SetPos( node['pos'] + Vector( 0, 0, 10 ) )
+								elseif ( !node || dist > 512 ) && IsValid(self:GetOwner()) && self:GetOwner() == self.m_pFollowTarget then
+									self:SetPos( posTarget + Vector( 0, 0, 10 )  )
 								end
+
 							end
+
 						end
+						
 					end
+
 				end )
+
 			end	
 			if curDist < followDist && curSchChase then
 				self:ClearSchedule()
@@ -1542,7 +1577,7 @@ function metaENT:ANPlusCreateGoalFollow(target, formation)
 
 	local aName = !self:GetName() || self:GetName() == "" && self:GetClass() .. self:EntIndex() || self:GetName()
 	self:SetName( aName )
-	print(aName)
+	
 	followGoal:SetKeyValue( "actor", self:GetName() )
 	--followGoal:Fire( "UpdateActors", "", 1 )
 	followGoal:Fire( "Activate", "", 0.1 )
@@ -1666,7 +1701,8 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 		self:ClearSchedule()		
 		self:ClearCondition( 68 )
 		self:SetCondition( 67 )
-		self:SetCondition( 70 )
+		--self:SetCondition( 70 )
+		self:Fire( "StartScripting", "", 0 )
 		self:SetActivity( 0 )
 		
 		self.m_flDefCaps = self.m_flDefCaps || self:CapabilitiesGet()
@@ -1704,8 +1740,9 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 		if !gestCheck then
 		
 			self:ClearCondition( 67 )
-			self:ClearCondition( 70 )
+			--self:ClearCondition( 70 )
 			self:SetCondition( 68 )
+			self:Fire( "StopScripting", "", 0 )
 			self:CapabilitiesAdd( self.m_flDefCaps || 0 )
 			if movementVel && self.m_fIdealMoveType then 
 				self:SetMoveType( self.m_fIdealMoveType )
@@ -1868,10 +1905,11 @@ function metaENT:ANPlusDoDeathAnim(dmginfo, act, speed, movementVel, atHPLevel, 
 		
 		self:ANPlusPlayActivity( act, speed, movementVel, nil, nil, nil, function()
 			self.m_bNPCNoDamage = false
-			print("kill")
+
 			if isfunction( postCallback ) then
 				postCallback( self, lastDMGinfo )
 			end
+
 			--self:SetSchedule( SCHED_IDLE_STAND )
 			local newDMGinfo = DamageInfo()
 			newDMGinfo:SetAttacker( IsValid(lastDMGinfo.att) && lastDMGinfo.att || self )
@@ -1948,12 +1986,10 @@ end
 
 function metaENT:ANPlusOverrideMoveSpeed(speed, rate, respectGoal)
 	if speed != 1 && ( !respectGoal || ( respectGoal && self:IsGoalActive() && self:GetPathDistanceToGoal() > 10 * speed ) ) && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:ANPlusIsMoveSpeed( 1, 1 ) then			
-		self:SetMoveVelocity( self:GetGroundSpeedVelocity() * speed ) 
-		local seqName = self:GetSequenceName( self:GetSequence() )
-		local seqID, seqDur = self:LookupSequence( seqName )
-		local seqVel = self:GetSequenceVelocity( seqID, self:GetCycle() )
-		seqVel:Rotate( self:GetAngles() )
-		self:SetLocalVelocity( seqVel * speed )				
+		
+		local lastMovTime = self:GetInternalVariable( "m_flTimeLastMovement" )
+		self:SetSaveValue( "m_flTimeLastMovement", lastMovTime * speed )	
+				
 	end	
 	if rate != 1 then self:SetPlaybackRate( rate ) end
 end

@@ -46,12 +46,14 @@ end
 
 function SWEP:TranslateActivity( act )
 	
-	if ( self:ANPlusTranslateActivity( act ) ) then
+	if self:ANPlusTranslateActivity( act ) then
 		return self:ANPlusTranslateActivity( act )
 	end
 	
-	if ( self.ActivityTranslateAI[ act ] ) then
-		return self.ActivityTranslateAI[ act ]
+	local nAct = self.ActivityTranslateAI[ act ]
+
+	if nAct && self:GetOwner():ANPlusSequenceExists( nAct ) then
+		return nAct
 	end
 	return -1
 	

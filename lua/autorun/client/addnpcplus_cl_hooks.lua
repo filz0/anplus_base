@@ -57,15 +57,26 @@ end)
 
 local dev = GetConVar( "developer" )
 local barDist = GetConVar( "anplus_hpbar_dist" )
-local function CheckDaThing(ent)	
-	--if !IsValid(ent) then return false end
-	if !ent:IsANPlus() then return false end 	
-	if !ent:ANPlusGetDataTab()['HealthBar'] then return false end 
-	local barTab = ent:ANPlusGetDataTab()['HealthBar']
+
+local function CheckDaThing(ent)	-- 1 = always, 2 = when in combat, 3 = when alerted, 4 = when in combat and alerted, 5 = when in combat and only if the player is the enemy.
+	if !IsValid(ent) || !ent:ANPlusAlive() || !ent:IsANPlus() then return false end 	
+	
+	local tab = ent:ANPlusGetDataTab()['HealthBar']
+
+	if !tab then return false end 
+
+	local ply = LocalPlayer()	
 	local state = ent:GetNW2Float( "m_fANPlusNPCState" )
-	if ( barTab['Mode'] == 2 && state != 3 ) then return false end
-	if ( barTab['Mode'] == 3 && state != 2 ) then return false end
-	if ( barTab['Mode'] == 4 && state != 2 && state != 3 ) then return false end 
+	local enemy = ent:GetNW2Entity( "m_pEnemyShared" )
+	local mode = tab['Mode']
+
+	ent.m_bSeenPlayer = ent.m_bSeenPlayer || IsValid(enemy) && enemy == ply
+
+	if ( mode == 5 && !ent.m_bSeenPlayer ) then return false end
+	if ( mode == 2 && state != 3 ) then return false end	
+	if ( mode == 3 && state != 2 ) then return false end
+	if ( mode == 4 && state != 2 && state != 3 ) then return false end 
+
 	return true
 end
 
