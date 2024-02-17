@@ -427,10 +427,14 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 						
 						local sndRNG = v['Replacement'] && istable( v['Replacement'] ) && v['Replacement'][ math.random( 1, #v['Replacement'] ) ] || v['Replacement'] || data.SoundName
 						
-						local sndScript = sound.GetProperties( sndRNG ) || false						
-						local sndReplace = sndScript && ( istable( sndScript['sound'] ) && sndScript['sound'][ math.random( 1, #sndScript['sound'] ) ] || sndScript['sound'] ) || sndRNG
+						local sndScript = sound.GetProperties( sndRNG ) || false
 						
+						local sndSentence = ANPlusScriptedSentences[ sndRNG ] && sndRNG || false	
+							
+						local sndReplace = sndScript && ( istable( sndScript['sound'] ) && sndScript['sound'][ math.random( 1, #sndScript['sound'] ) ] || sndScript['sound'] ) || sndSentence || sndRNG
+							
 						sndReplace = !v['SoundCharacter'] && sndReplace || v['SoundCharacter'] == true && ( sndChars[ string.Left( data.SoundName, 1 ) ] && string.Left( data.SoundName, 1 ) .. sndReplace || sndReplace ) || isstring( v['SoundCharacter'] ) && v['SoundCharacter'] .. sndReplace 
+						
 						
 						local sndLVL = v['SoundLevel'] && istable( v['SoundLevel'] ) && math.random( v['SoundLevel'][ 1 ], ( v['SoundLevel'][ 2 ] || v['SoundLevel'][ 1 ] ) ) || v['SoundLevel'] || sndScript && sndScript['level'] || data.SoundLevel
 						local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || sndScript && sndScript['pitch']
@@ -448,11 +452,15 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 						data.Volume 			= sndVolume
 						data.Flags				= sndFlags
 						data.DSP 				= sndDSP
-
+						
 						if data.SentenceIndex && sndRNG != data.OriginalSoundName then
-							if sound.GetProperties( sndRNG ) || string.find( string.lower( sndRNG ), "/" ) then	
+							
+							if sndScript || string.find( string.lower( sndRNG ), "/" ) then	
 								ent:EmitSound( sndReplace, data.SoundLevel, data.Pitch, data.Volume, data.Channel, data.Flags, data.DSP )
-							else
+							elseif sndSentence then
+								
+								ent:ANPlusEmitSoundSentence( sndReplace )
+							else	
 								ent:PlaySentence( sndReplace, 0, data.Volume )
 							end
 							
@@ -508,7 +516,7 @@ hook.Add( "EntityRemoved", "ANPlusLoad_EntityRemoved", function(ent)
 		
 		end
 		if (CLIENT) then
-			if ent:IsANPlus() && ent:ANPlusGetDataTab()['BossMusic'] then	
+			if ( ent:IsANPlus() && ent:ANPlusGetDataTab()['BossMusic'] ) || ent.m_ANPlusBossMusic then	
 				ent:ANPlusBossMusic( true )	
 			end
 		end
@@ -548,6 +556,17 @@ hook.Add( "CalcView", "ANPlus_CalcView", function(ply, pos, angle, fov)
 		
 end )
 ]]--
+
+hook.Add( "InitPostEntity", "ANPlus_InitPostEntity", function() 
+
+	if (CLIENT) then
+		net.Start( "anplus_sharebranch" )
+		net.WriteString( BRANCH )
+		net.SendToServer() 
+	end
+	
+end )
+
 hook.Add( "CalcView", "ANPlus_CalcView", function(ply, pos, angle, fov)	
 	
 	if ply:GetViewEntity() == ply && ply.m_pANPControlledENT && IsValid(ply.m_pANPControlledENT) && ply.m_pANPControlledENT:ANPlusAlive() then

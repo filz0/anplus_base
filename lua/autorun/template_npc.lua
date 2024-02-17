@@ -142,7 +142,6 @@ local font 		= "anphl2defaultABC"
 local font2 	= "anphl2default123"
 
 ANPlus.AddHealthBarStyle( "HL2 Retail", function(ent) 
-	print("lol")
 	local ply = LocalPlayer()
 	local barTab = ent:ANPlusGetDataTab()['HealthBar']
 	
@@ -256,9 +255,9 @@ ANPlus.AddHealthBarStyle( "HL2 Beta", function(ent)
 	
 	if hpTime > CurTime() then
 		if hpBuff < 0 then
-			col = Color( 255, math.Clamp( (hpTime - CurTime()) * 255, 220, 255 ), math.Clamp( (hpTime - CurTime()) * 255, 0, 255 ), 170 )  
+			col = Color( 255, math.Clamp( ( hpTime - CurTime() ) * 255, 220, 255 ), math.Clamp( (hpTime - CurTime()) * 255, 0, 255 ), 170 )  
 		elseif hpBuff > 0 then
-			col = Color( math.Clamp( 255 - ( 255 * (hpTime - CurTime()) ), 0, 255 ), math.Clamp( 255 + ( 255 * (hpTime - CurTime()) ), 0, 220 ), 0, 170 )
+			col = Color( math.Clamp( 255 - ( 255 * ( hpTime - CurTime() ) ), 0, 255 ), math.Clamp( 255 + ( 255 * ( hpTime - CurTime() ) ), 0, 220 ), 0, 170 )
 		end
 	else
 		hpBuff = 0

@@ -168,7 +168,6 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 
 			self.ActivityTranslateAI[ACT_RUN_CROUCH]					= ACT_RUN_CROUCH_AIM
 			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM
-			print(V_A(ACT_RELOAD_PISTOL))
 			self.ActivityTranslateAI[ACT_RELOAD]						= V_A(ACT_RELOAD_PISTOL) || ACT_RELOAD_SMG1
 			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= V_A(ACT_RELOAD_PISTOL_LOW) || ACT_RELOAD_SMG1_LOW
 

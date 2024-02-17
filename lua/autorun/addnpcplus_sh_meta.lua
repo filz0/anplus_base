@@ -10,6 +10,15 @@ local metaPLAYER = FindMetaTable("Player")
 --
 
 --[[////////////////////////
+||||| Returns the current branch of your game, also server side.
+||||| The possible outputs are: unknown (None), dev, prerelease and x86-64
+]]--\\\\\\\\\\\\\\\\\\\\\\\\
+
+function ANPlusGMODBranch()
+	return CLIENT && BRANCH || SERVER && SV_BRANCH
+end
+
+--[[////////////////////////
 ||||| Clamps the given angle...
 ]]--\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -340,6 +349,14 @@ end
 function metaENT:ANPlusGetDataTab()
 	if self:GetTable() && self:GetTable()['ANPlusData'] then
 		return self:GetTable()['ANPlusData']
+	else
+		return nil
+	end
+end
+
+function metaENT:ANPlusGetSaveTab()
+	if self:GetTable() && self:GetTable()['m_tSaveData'] then
+		return self:GetTable()['m_tSaveData']
 	else
 		return nil
 	end
@@ -698,7 +715,7 @@ end
 function ANPlusEmitUISound(ply, snd, vol)	
 	if (SERVER) then
 		if !ply then return end	
-		ANPlusSoundDuration(snd)
+		--ANPlusSoundDuration(snd)
 		net.Start( "anplus_play_ui_snd" )
 		net.WriteString( snd || "" )
 		net.WriteFloat( vol || 100 )
@@ -1446,8 +1463,8 @@ function metaENT:ANPlusIsDoor()
 end
 
 function metaENT:SequenceGetFrames(seqID, anim)
-	local animID = self:GetSequenceInfo( seqID ).anims[ anim || 1 ]
-	return self:GetAnimInfo( animID ).numframes
+	local animID = anim && self:GetSequenceInfo( seqID ).anims[ anim ]
+	return animID && self:GetAnimInfo( animID ).numframes || -1
 end
 
 function metaENT:ANPlusSetColorFade(color, delta)
@@ -1513,6 +1530,7 @@ function ANPlusStringToAngle(str)
 end
 
 function ANPlusAddCaption(ply, text, dur, fromPly)	
+	if ( ANPlusGMODBranch() != "dev" && ANPlusGMODBranch() != "x86-64" ) then return end
 	if (SERVER) then
 		net.Start( "anplus_add_caption" )
 		net.WriteString( text || "" )

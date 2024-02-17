@@ -182,6 +182,8 @@ SWEP.Primary.NumShots				= 1
 SWEP.Primary.AmmoPerShot			= 1
 SWEP.Primary.ClipSize				= 30
 SWEP.Primary.DefaultClip			= 30
+SWEP.Primary.AmmoType				= "Pistol"
+SWEP.Primary.Ammo					= SWEP.Primary.AmmoType
 SWEP.Primary.InfiniteAmmo			= false
 SWEP.Primary.Delay					= 0.05
 SWEP.Primary.PreFireDelay			= 0
@@ -232,6 +234,8 @@ SWEP.Secondary.Damage				= 30
 SWEP.Secondary.Force				= 1
 SWEP.Secondary.EntitySpeed			= 3000
 SWEP.Secondary.NumShots				= 1
+SWEP.Secondary.AmmoType				= "Pistol"
+SWEP.Secondary.Ammo					= SWEP.Secondary.AmmoType
 SWEP.Secondary.Delay				= 5
 SWEP.Secondary.PreFireDelay			= 0.5
 SWEP.Secondary.PreFireReset			= 0.1
@@ -820,7 +824,7 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback, att) -
 		bullet.Spread 		= Vector( spread, spread, 0 )
 		bullet.Damage 		= self.Primary.Damage
 		bullet.Force 		= self.Primary.Force
-		bullet.AmmoType 	= self.Primary.AmmoType 
+		bullet.AmmoType 	= self.Primary.Ammo
 		bullet.Callback 	= bulletcallback || nil
 
 	self:FireBullets( bullet )
@@ -859,7 +863,7 @@ function SWEP:ANPlusWeaponFireBullet2(hShotChan, bulletcallback, callback, att) 
 		bullet.Spread 		= Vector( spread, spread, 0 )
 		bullet.Damage 		= self.Secondary.Damage
 		bullet.Force 		= self.Secondary.Force
-		bullet.AmmoType 	= self.Secondary.AmmoType 
+		bullet.AmmoType 	= self.Secondary.Ammo
 		bullet.Callback 	= bulletcallback || nil
 
 	self:FireBullets( bullet )
@@ -933,13 +937,15 @@ end
 function SWEP:ANPlusReload()
 end
 
-function SWEP:Reload()
+function SWEP:Reload(owner)
 
 	if self:Clip1() >= self:GetMaxClip1() || self.Primary.InfiniteAmmo || self.m_bClipReloaded then return end
-	
+
 	self:ANPlusResetFire()
 	self:GenerateBurst()
-	self:ANPlusReload()	
+	self:ANPlusReload()
+	owner:ClearCondition( COND.NO_PRIMARY_AMMO )
+	owner:ClearCondition( COND.LOW_PRIMARY_AMMO )
 
 	if self.Primary.PostFireSound && (SERVER) then self:StopSound( self.Primary.PostFireSound ) end
 	if self.Primary.ReloadSound && (SERVER) then self:EmitSound( self.Primary.ReloadSound ) end
@@ -961,14 +967,17 @@ function SWEP:ThinkServer()
 	
 	if IsValid(owner) then
 
-		local OwnerACT = owner:GetActivity()	
-		if self.LastOwnerACT != OwnerACT && self.BlackListACTs[ OwnerACT ] && !self.BlackListACTs[ self.LastOwnerACT ] then
-			self:Reload()
+		local enemy = owner:GetEnemy()
+
+		local oACT = owner:GetActivity()	
+		if oACT == ACT_RELOAD || owner:IsPlayingGesture( ACT_GESTURE_RELOAD ) then
+			self:Reload(owner)
 		end		
-        self.LastOwnerACT = OwnerACT	
 		
-		if self:Clip1() <= 0 && !self.Primary.InfiniteAmmo && !owner:IsCurrentSchedule(SCHED_RELOAD) && !owner:IsCurrentSchedule(SCHED_HIDE_AND_RELOAD) then  
-            owner:SetSchedule(SCHED_RELOAD)      
+		if self:Clip1() <= self:GetMaxClip1() * 0.3 && self:Clip1() > 0 && ( !IsValid(enemy) || IsValid(enemy) && !owner:Visible(enemy) ) then  
+			owner:SetCondition( COND.LOW_PRIMARY_AMMO )
+		elseif self:Clip1() <= 0 then 
+			owner:SetCondition( COND.NO_PRIMARY_AMMO )	
         end
 		
 		if IsValid(owner:GetEnemy()) && owner:Visible( owner:GetEnemy() ) then

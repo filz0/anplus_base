@@ -66,13 +66,13 @@ function ANPlusFilterInternal(ent, pn, transition)
 		end )
 		
 		local sleepList = 
-					"\n Choices:" ..
-					"\n 0: None" ..
-					"\n 1: Waiting for threat" ..
-					"\n 2: Waiting for PVS" ..
-					"\n 3: Waiting for input, ignore PVS" ..
-					"\n 4: Auto PVS" ..
-					"\n 5: Auto PVS after PVS" 
+		"\n Choices:" ..
+		"\n 0: None" ..
+		"\n 1: Waiting for threat" ..
+		"\n 2: Waiting for PVS" ..
+		"\n 3: Waiting for input, ignore PVS" ..
+		"\n 4: Auto PVS" ..
+		"\n 5: Auto PVS after PVS" 
 		
 		ent:ANPlusCreateVar( "kv_sleepstate", ent:GetInternalVariable( "m_SleepState" ), "Sleep State", "Holds the NPC in stasis until specified condition. See also Wake Radius and Wake Squad." .. sleepList, 0, 5, 0, 				
 		function(ent, nVar) 				
@@ -96,7 +96,26 @@ function ANPlusFilterInternal(ent, pn, transition)
 				ent:Fire( nVar[ 1 ], nVar[ 2 ] || ( !nVar[ 2 ] || nVar[ 2 ] == "nil" ) && nil, nVar[ 3 ] || 0 )
 			end
 		end )
+		--[[
+		ent:ANPlusCreateVar( "CombatMusic", "Category", "[ Combat Music ]-------------------", nil ) 
+		ent:ANPlusCreateVar( "m_ANPlusBossMusic", "none", "Music", "This track will be played when NPC will meet Mode requirements.", nil, nil, nil )
+		ent:ANPlusCreateVar( "m_ANPlusBossMusicRepeat", false, "Repeat", "Repeat the track (doesn't work with mp3 files).", nil, nil, nil )
 
+		local modes = -- 1 = always, 2 = when in combat, 3 = when alerted, 4 = when in combat and alerted, 5 = when seen the player atleast once.
+		"\n Modes:" ..
+		"\n 1: Play always" ..
+		"\n 2: Play when in combat" ..
+		"\n 3: Play when alerted" ..
+		"\n 4: Play when in combat or alerted" ..
+		"\n 5: Play when spotted a Player"
+
+		ent:ANPlusCreateVar( "m_ANPlusBossMusicMode", 5, "Mode", "Default music volume.", 1, 5, 0 )
+		ent:ANPlusCreateVar( "m_ANPlusBossMusicVolume", 0.5, "Volume", "Default music volume.", 0, 1, 3 )
+		ent:ANPlusCreateVar( "m_ANPlusBossMusicRange", 2048, "Range", "Range at which music will be played/heard.", 100, 32000 )
+		ent:ANPlusCreateVar( "m_ANPlusBossMusicFRange", 512, "Fade Range", "It starts at the edge and goes towards the NPC. Values between 0-1 work as multipliers.", 0, 32000 )
+		ent:ANPlusCreateVar( "m_ANPlusBossMusicRDelay", 10, "Reset Delay", "When the Player gets outside of the music's range and this amout of time passes, the music will reset.", 0, 120 )
+		ent:ANPlusCreateVar( "m_ANPlusBossMusicSDelay", 2, "Stop Delay", "When NPC gets killed/removed, it's music will fade and stop within this time window.", 0, 10 )
+		]]
 	end
 
 end

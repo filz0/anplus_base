@@ -2,7 +2,7 @@
 if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
-hook.Add("CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", function(npc, rag)
+hook.Add( "CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", function(npc, rag)
 	
 	if IsValid(npc) && IsValid(rag) && npc:IsNPC() then  
 	

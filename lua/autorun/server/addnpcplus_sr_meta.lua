@@ -1684,9 +1684,13 @@ function metaENT:ANPlusClassify()
 	return self.m_iClass != 0 && self.m_iClass || self:MyVJClass( 1 ) || self:IsPlayer() && CLASS_PLAYER || self:Classify()
 end
 
+local iCond = {
+	1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,69
+}
+
 function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, callback, postCallback)
-	if self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() || self:ANPlusPlayingDeathAnim() ) then return end
-	local actSeq = self:SelectWeightedSequence( act )
+	if !act || self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() || self:ANPlusPlayingDeathAnim() ) then return end
+	local actSeq = isstring( act ) && act || self:SelectWeightedSequence( act )
 	local actSeqName = self:GetSequenceName( actSeq )
 	local gestCheck = string.find( string.lower( actSeqName ), "gesture_" ) || string.find( string.lower( actSeqName ), "g_" ) || string.find( string.lower( actSeqName ), "gest" )
 	
@@ -1701,9 +1705,8 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 		self:ClearSchedule()		
 		self:ClearCondition( 68 )
 		self:SetCondition( 67 )
-		--self:SetCondition( 70 )
-		self:Fire( "StartScripting", "", 0 )
-		self:SetActivity( 0 )
+		self:SetCondition( 70 )
+		--self:SetIgnoreConditions( iCond, 67 )
 		
 		self.m_flDefCaps = self.m_flDefCaps || self:CapabilitiesGet()
 		self:CapabilitiesClear()
@@ -1712,10 +1715,10 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 			self:SetMoveType( 5 ) 
 		end
 		
-		self:ResetSequenceInfo()
-		self:SetActivity( act )
-		self:SetIdealActivity( 171 )
-		self:ResetIdealActivity( act )	
+		self:SetSequence( actSeq )
+		--self:SetActivity( 171 )
+		self:SetIdealActivity( ACT_DO_NOT_DISTURB )
+		--self:ResetIdealActivity( act )	
 		self:SetCycle( 0 )
 	end
 	
@@ -1740,9 +1743,12 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 		if !gestCheck then
 		
 			self:ClearCondition( 67 )
-			--self:ClearCondition( 70 )
+			self:ClearCondition( 70 )
 			self:SetCondition( 68 )
-			self:Fire( "StopScripting", "", 0 )
+			--self:SetActivity( 0 )
+			self:SetIdealActivity( 0 )
+			--self:RemoveIgnoreConditions()
+
 			self:CapabilitiesAdd( self.m_flDefCaps || 0 )
 			if movementVel && self.m_fIdealMoveType then 
 				self:SetMoveType( self.m_fIdealMoveType )
@@ -1759,8 +1765,9 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 	timer.Create( "ANP_ACT_THINK" .. self:EntIndex(), 0, 0, function() 
 		if !IsValid(self) || !self:ANPlusPlayingAnim() then return end
 		
-		self:MaintainActivity()
-		
+		--self:SetCondition( 70 )
+		self:SetIdealActivity( ACT_DO_NOT_DISTURB )
+
 		if !gestCheck then
 		
 			local gravFix = self.m_fIdealMoveType == 3 && !self:OnGround() && Vector( 0, 0, -500 ) || vector_zero

@@ -1,4 +1,4 @@
-------------------------------------------------------------------------------=#
+------------------------------------------------------------------------------=#anplus_fix_bones
 if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
 
@@ -21,6 +21,13 @@ util.AddNetworkString("anplus_propmenu")
 util.AddNetworkString("anplus_savedata_net")
 util.AddNetworkString("anplus_ply_spawnmenu") 
 util.AddNetworkString("anplus_add_caption") 
+
+util.AddNetworkString("anplus_sharebranch") -- Temp. 
+
+net.Receive("anplus_sharebranch", function(len, ply)	
+	local s = net.ReadString()
+	SV_BRANCH = s
+end)
 
 net.Receive("anplus_ply_spawnmenu", function(len, ply)	
 	local b = net.ReadBool()
@@ -239,7 +246,7 @@ hook.Add( "PlayerInitialSpawn", "ANPlusLoad_PlayerInitialSpawn", function(ply, t
 		
 		for _, ent in ipairs( ents.GetAll() ) do	
 
-			if IsValid(ent) && ent:GetClass() == "npc_combine_s" && ent:GetKeyValues() && ent:GetKeyValues()['parentname'] && ent:GetKeyValues()['parentname'] != "" then
+			if IsValid(ent) && ent:GetKeyValues() && ent:GetKeyValues()['parentname'] && ent:GetKeyValues()['parentname'] != "" then
 				
 				--local wep = ent:IsNPC() && ent:GetActiveWeapon()
 
@@ -261,6 +268,21 @@ hook.Add( "PlayerInitialSpawn", "ANPlusLoad_PlayerInitialSpawn", function(ply, t
 					ent:ANPlusFollowTarget( target, fTab[ 1 ], fTab[ 2 ], fTab[ 3 ], fTab[ 4 ] )
 					
 				end
+
+			end
+
+		end
+
+	else
+
+		for _, ent in ipairs( ents.GetAll() ) do	
+
+			if IsValid(ent) && ent:GetKeyValues() && ent:GetKeyValues()['parentname'] && ent:GetKeyValues()['parentname'] != "" then
+				
+				net.Start("anplus_net_entity")
+				net.WriteEntity( ent )
+				net.WriteString( ent:GetKeyValues()['parentname'] )
+				net.Send( ply )
 
 			end
 

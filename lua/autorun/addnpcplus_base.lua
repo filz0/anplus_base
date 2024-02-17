@@ -22,6 +22,8 @@ ANPlusRemoveFromSpawnList = {}
 ANPlusHealthBarStyles = { ['Disable All'] = true }
 ANPlusScriptedSentences = {}
 
+SV_BRANCH = ""
+
 ANPDefaultGMODWeapons = {
 ['weapon_pistol'] 		= true,
 ['weapon_357'] 			= true,
@@ -187,7 +189,7 @@ ANPlus = {
 		
 		list.Set( "NPCUsableWeapons", tab.class, tab )
 		
-		if (CLIENT) then
+		if (CLIENT) && killcon then
 
 			local isTexturePath = string.find( string.lower( killcon ), "hud/killicons/" )
 
@@ -318,7 +320,7 @@ function ANPMapLuaCreate()
 		ANP_LUA_RUN_ENT:Spawn()
 	end
 end
-
+ 
 hook.Add( "InitPostEntity", "ANP_LUA_RUN_ENT", ANPMapLuaCreate )
 hook.Add( "PostCleanupMap", "ANP_LUA_RUN_ENT", ANPMapLuaCreate ) 
 

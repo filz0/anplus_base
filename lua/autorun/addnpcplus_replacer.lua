@@ -141,8 +141,8 @@ ANPlusENTReplacerFix = {
 	--['VortigauntSlave'] = "models/vortigaunt_slave.mdl",
 }
 	
-hook.Add( "InitPostEntity", "ANPlus_InitPostEntity", function()
-	ANPlusReplacerNPCList = table.Copy( list.Get( "NPC" ) )
+hook.Add( "InitPostEntity", "ANPlusReplacer_InitPostEntity", function()
+	ANPlusReplacerNPCList = list.Get( "NPC" )
 
 	for _, v in pairs( ANPlusReplacerNPCList ) do 
 		if v then
@@ -319,7 +319,7 @@ if (CLIENT) then
 			modelG:SetText( mod )
 			skinG:SetValue( ski )			
 		end
-
+		
 		for _, v in pairs( npcList ) do 
 			if v then
 				dListNPCs:AddLine( v['Category'], v['Name'], v['Class'], v['Model'] || "No Model", v['Skin'] || 0 )

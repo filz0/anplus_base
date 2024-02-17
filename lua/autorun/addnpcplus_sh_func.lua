@@ -472,12 +472,12 @@ local function CheckDaThing(ent, stop)	-- 1 = always, 2 = when in combat, 3 = wh
 	
 	local tab = ent:ANPlusGetDataTab()['BossMusic']
 
-	if !tab then return false end 
+	if !tab && !ent.m_ANPlusBossMusicMode then return false end 
 
 	local ply = LocalPlayer()	
 	local state = ent:GetNW2Float( "m_fANPlusNPCState" )
 	local enemy = ent:GetNW2Entity( "m_pEnemyShared" )
-	local mode = tab['Mode']
+	local mode = ent.m_ANPlusBossMusicMode || tab['Mode']
 
 	ent.m_bSeenPlayer = ent.m_bSeenPlayer || IsValid(enemy) && enemy == ply
 
@@ -515,13 +515,13 @@ function ENT:ANPlusBossMusic(stop)
 
 	local bmTab = self:ANPlusGetDataTab()['BossMusic']
 
-	local MUSIC 				= bmTab['Music']
-	local MUSIC_REPEAT			= bmTab['Repeat']
-	local MUSIC_VOLUME 			= bmTab['Volume']
-	local MUSIC_MAX_DISTANCE 	= bmTab['Range']
-	local MUSIC_CUTOFF_DISTANCE = bmTab['FadeRange']
-	local MUSIC_RESTART_DELAY	= bmTab['ResetDelay']
-	local MUSIC_STOP_FADE_DELAY	= bmTab['StopDelay']
+	local MUSIC 				= self.m_ANPlusBossMusic || bmTab['Music']
+	local MUSIC_REPEAT			= self.m_ANPlusBossMusicRepeat || bmTab['Repeat']
+	local MUSIC_VOLUME 			= self.m_ANPlusBossMusicVolume || bmTab['Volume']
+	local MUSIC_MAX_DISTANCE 	= self.m_ANPlusBossMusicRange || bmTab['Range'] == "Auto" && self:GetNW2Float( "m_fANPlusLookDistance" ) || bmTab['Range']
+	local MUSIC_CUTOFF_DISTANCE = self.m_ANPlusBossMusicFRange || bmTab['FadeRange'] <= 1 && bmTab['FadeRange'] > 0 && MUSIC_MAX_DISTANCE * bmTab['FadeRange'] || bmTab['FadeRange']
+	local MUSIC_RESTART_DELAY	= self.m_ANPlusBossMusicRDelay || bmTab['ResetDelay']
+	local MUSIC_STOP_FADE_DELAY	= self.m_ANPlusBossMusicSDelay || bmTab['StopDelay']
 
 	local totalDistanceScore = 0
 	local nearEntities = ents.FindInSphere( ply:GetPos(), MUSIC_MAX_DISTANCE )
@@ -537,7 +537,7 @@ function ENT:ANPlusBossMusic(stop)
 		end
 	end
 	
-	if !ply.m_sndANPlusBossMusic then
+	if !ply.m_sndANPlusBossMusic && anplus_bm_volume:GetFloat() > 0 then
 
 		if CheckDaThing( self ) then			
 			ply.m_sANPlusBossMusicCur		= ply.m_sANPlusBossMusicCur || istable( MUSIC ) && MUSIC[ math.random( 1, #MUSIC ) ] || MUSIC
@@ -545,12 +545,13 @@ function ENT:ANPlusBossMusic(stop)
 			ply.m_sndANPlusBossMusic:Stop()
 			ply.m_fANPlusBossMusicDur 		= ANPlusSoundDuration( ply.m_sANPlusBossMusicCur )
 			ply.m_fANPlusBossMusicDurLast 	= CurTime()
+			timer.Remove( "ANP_PLAYER_BOSS_MUSIC_FADE" )
 		else
 
 			return
 		end
 	
-	elseif ply.m_sndANPlusBossMusic && SameMusic( ply.m_sANPlusBossMusicCur ) && !CheckDaThing( self, stop ) then
+	elseif ply.m_sndANPlusBossMusic && ( SameMusic( ply.m_sANPlusBossMusicCur ) && !CheckDaThing( self, stop ) || anplus_bm_volume:GetFloat() <= 0 ) then
 		
 		if MUSIC_STOP_FADE_DELAY > 0 then ply.m_sndANPlusBossMusic:FadeOut( MUSIC_STOP_FADE_DELAY ) end
 		
@@ -660,6 +661,8 @@ function ENT:ANPlusNPCThink()
 				--end
 			end
 
+			if self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['BossMusic'] && self:ANPlusGetDataTab()['BossMusic']['Range'] == "Auto" then self:SetNW2Float( "m_fANPlusLookDistance", self:GetMaxLookDistance() ) end
+
 		end
 		
 		if (SERVER) && self:ANPlusGetDataTab()['HealthBar'] then
@@ -673,7 +676,7 @@ function ENT:ANPlusNPCThink()
 		end
 
 		if (CLIENT) then
-			if self:ANPlusGetDataTab()['BossMusic'] then
+			if self:ANPlusGetDataTab()['BossMusic'] then			
 				self:ANPlusBossMusic()
 			end
 		end
