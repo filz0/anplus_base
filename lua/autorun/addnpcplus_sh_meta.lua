@@ -189,7 +189,7 @@ function metaENT:ANPlusResetBone()
 		self:ManipulateBonePosition( i, Vector( 0, 0, 0 ) )
 		self:ManipulateBoneAngles( i, Angle( 0, 0, 0 ) )
 		self:ManipulateBoneScale( i, Vector( 1, 1, 1 ) )
-		self:ManipulateBoneJiggle( i, self:GetManipulateBoneJiggle( i ) )	
+		self:ManipulateBoneJiggle( i, 0 )	
 		if (SERVER) then
 			net.Start("anplus_fix_bones")
 			net.WriteEntity( self )
@@ -545,7 +545,7 @@ function ANPlusAINodeOccupied(pos)
 	tr.endpos = pos
 	trace = util.TraceLine( tr )
 	if trace.Hit then return true end	
-	local v1 = pos - Vector( 20, 20 ,0 )
+	local v1 = pos - Vector( 20, 20, 0 )
 	local v2 = pos + Vector( 20, 20, 80 )
 		tr = {}
 		tr.start = v1
@@ -561,10 +561,12 @@ function ANPlusAINodeOccupied(pos)
 	return false	
 end
 
-function ANPlusAIFindNodesInSphere(pos, dist, iType)
+function ANPlusAIFindNodesInSphere(pos, distMin, distMax, iType)
 	local tbNodes = {}
 	for _, node in pairs( ANPlusAIGetNodes( iType ) ) do		
-		if ANPlusInRangeVector( node['pos'], pos, dist ) then table.insert( tbNodes, node ) end
+		--if ANPlusInRangeVector( node['pos'], pos, dist ) then table.insert( tbNodes, node ) end
+		local distSqr, dist = ANPlusGetRangeVector( node['pos'], pos ) 
+		if dist >= distMin && dist <= distMax then table.insert( tbNodes, node ) end
 	end
 	return tbNodes
 end
@@ -615,19 +617,22 @@ function ANPlusAIFindNodeAtRange(pos, iType, range, noOccupied)
 	return nodeFurthest, distFurthest
 end
 
-function ANPlusAIFindClosestVisibleNode(pos, iType) -- More expensive than FindClosestNode; Only use when neccessary
+function ANPlusAIFindClosestVisibleNode(pos, iType, distMin, distMax, nodePosOffset) -- More expensive than FindClosestNode; Only use when neccessary
 	local iType = iType || 2
-	local nodesClose = ANPlusAIFindNodesInSphere( pos, 100, iType )	-- Only checking nodes in a close proximity
+	local distMin = distMin || 100
+	local distMax = distMax || 200
+	local nodesClose = ANPlusAIFindNodesInSphere( pos, distMin, distMax, iType )	-- Only checking nodes in a close proximity
 	local nodeClosest
 	local distClosest = math.huge
-	local offset = Vector( 0, 0, 3 )
-	local pos = pos +offset
+	local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+	local pos = pos + nodePosOffset
 	for _, node in ipairs( nodesClose ) do
 		local dist = pos:Distance( node['pos'] )
+		if nodeClosest then break end
 		if ( dist < distClosest ) then
 			local tr = util.TraceLine({
 				start = pos,
-				endpos = node['pos'] + offset,
+				endpos = node['pos'] + nodePosOffset,
 				mask = MASK_SOLID_BRUSHONLY
 			})
 			if !tr.HitWorld then
@@ -636,9 +641,37 @@ function ANPlusAIFindClosestVisibleNode(pos, iType) -- More expensive than FindC
 			end
 		end
 	end
-	return nodeClosest || ANPlusAIFindClosestNode( pos, iType )
+	--return ( nodeClosest || ANPlusAIFindClosestNode( pos, iType ) ) && dist
+	return nodeClosest, dist
 end
 
+function ANPlusAIFindClosestNotVisibleNode(pos, iType, distMin, distMax, nodePosOffset) -- More expensive than FindClosestNode; Only use when neccessary
+	local iType = iType || 2
+	local distMin = distMin || 100
+	local distMax = distMax || 200
+	local nodesClose = ANPlusAIFindNodesInSphere( pos, distMin, distMax, iType )	-- Only checking nodes in a close proximity
+	local nodeClosest
+	local distClosest = math.huge
+	local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+	local pos = pos + nodePosOffset
+	for _, node in ipairs( nodesClose ) do
+		local dist = pos:Distance( node['pos'] )
+		if nodeClosest then break end
+		if ( dist < distClosest ) then
+			local tr = util.TraceLine({
+				start = pos,
+				endpos = node['pos'] + nodePosOffset,
+				mask = MASK_SOLID_BRUSHONLY
+			})
+			if tr.HitWorld then
+				dist = distClosest
+				nodeClosest = node
+			end
+		end
+	end
+	return nodeClosest, dist
+end
+---------------------GET RID OFF!
 function metaENT:ANPlusCheckSpace(spos, epos, filterTab, ignoreworld, mask, vecmin, vecmax, callback) 
 	local cbX, cbY = self:GetCollisionBounds()
 	local tr = util.TraceHull( {
@@ -706,6 +739,42 @@ function ANPlusIsEmptySpace(spos, epos, filterTab, vecmin, vecmax)
 		return false					
 	end	
 	return true	
+end
+---------------------GET RID OFF!
+
+function metaENT:ANPlusIsLookingAtPos( pos )
+	
+	local dirv = pos - ( self:GetPos() + Vector( 0, 0, 50 ) )	
+	local norm = dirv:GetNormalized()
+	
+	return ( !( self:GetAimVector():Dot( norm ) < 0.90 ) ) || ( !( self:GetAimVector():Dot( ( dirv + Vector( 70 ) ):GetNormalized() ) < 0.95 ) )
+	
+end
+
+function ANPIsAnyoneLookingAtPos( ent, entTab, pos )
+	
+	local seen = false
+	
+	for _, v in pairs( entTab ) do
+	
+		if v:IsNPC() || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
+			
+			if IsValid(ent) && v == ent then return false end
+			
+			seen = v:VisibleVec( pos )
+			
+			return seen
+		
+		end
+	
+	end
+	
+	return false
+	
+end
+
+function metaENT:ANPlusGetKillfeedName()
+	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['KillfeedName'] || self:ANPlusGetName()
 end
 
 function metaENT:ANPlusGetName()
@@ -1721,8 +1790,8 @@ function metaENT:ANPlusFakeModel(model, visualTab)
 			
 			if self:IsNPC() then
 				local addTab = { ['CurFakeModel'] = { ['Model'] = model, ['VisualTab'] = self.m_pFakeModel:ANPlusGetVisual() } }
-				table.Merge( self:ANPlusGetDataTab(), addTab )			
-				self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
+				--table.Merge( self:ANPlusGetDataTab(), addTab )			
+				self:ANPlusApplyDataTab( addTab )
 			end
 			
 		elseif model && IsValid(self.m_pFakeModel) then
@@ -1731,8 +1800,8 @@ function metaENT:ANPlusFakeModel(model, visualTab)
 			if visualTab then self.m_pFakeModel:ANPlusCopyVisualFrom( visualTab ) end
 			if self:IsNPC() then
 				local addTab = { ['CurFakeModel'] = { ['Model'] = model, ['VisualTab'] = self.m_pFakeModel:ANPlusGetVisual() } }
-				table.Merge( self:ANPlusGetDataTab(), addTab )			
-				self:ANPlusApplyDataTab( self:ANPlusGetDataTab() )
+				--table.Merge( self:ANPlusGetDataTab(), addTab )			
+				self:ANPlusApplyDataTab( addTab )
 			end
 		end
 		

@@ -36,7 +36,7 @@ function EFFECT:Init( data )
 	--local bullettype = math.Clamp( ( data:GetRadius() || 1 ), 1, 6 )
 	local bullettype = math.Round( data:GetRadius() ) || 1 
 	local angle, pos = self.Entity:GetBulletEjectPos( data:GetOrigin(), data:GetEntity(), data:GetAttachment(), data:GetColor() )
-	
+	if !angle || !pos then return end
 	local angmod = data:GetStart() || Vector ( 0, 0, 0 )
 	angle:RotateAroundAxis( angle:Forward(), angmod.x )
 	angle:RotateAroundAxis( angle:Right(), angmod.y )

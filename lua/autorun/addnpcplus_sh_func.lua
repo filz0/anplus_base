@@ -263,7 +263,8 @@ function ENT:ANPlusNPCApply(name, override, transition, preCallback, postCallbac
 				self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )							
 				
 				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
-				self:ANPlusApplyDataTab( data )					
+				self['ANPlusData'] = data
+				--self:ANPlusApplyDataTab( data )					
 		
 				if isfunction( postCallback ) then
 					postCallback( self )
@@ -449,8 +450,10 @@ function ENT:ANPlusNPCApply(name, override, transition, preCallback, postCallbac
 	end	
 end	 
 
-function ENT:ANPlusApplyDataTab( tab )	
-	self['ANPlusData'] = tab
+function ENT:ANPlusApplyDataTab(tab)	
+	if !self:ANPlusGetDataTab() then return end
+	table.Merge( self:ANPlusGetDataTab(), tab )
+	--[[
 	if (SERVER) then 
 		self:ANPlusStoreEntityModifier( tab )
 		--timer.Simple( 0.1, function()
@@ -463,6 +466,7 @@ function ENT:ANPlusApplyDataTab( tab )
 			net.Broadcast()
 		--end )
 	end
+	]]
 end
 
 local anplus_bm_volume = GetConVar( "anplus_bm_volume" )
@@ -481,6 +485,7 @@ local function CheckDaThing(ent, stop)	-- 1 = always, 2 = when in combat, 3 = wh
 
 	ent.m_bSeenPlayer = ent.m_bSeenPlayer || IsValid(enemy) && enemy == ply
 
+	if ( isfunction( mode ) ) then return mode( ent, state, enemy ) end
 	if ( mode == 5 && !ent.m_bSeenPlayer ) then return false end
 	if ( mode == 2 && state != 3 ) then return false end	
 	if ( mode == 3 && state != 2 ) then return false end
@@ -514,8 +519,11 @@ function ENT:ANPlusBossMusic(stop)
 	if !IsValid(ply) then return end
 
 	local bmTab = self:ANPlusGetDataTab()['BossMusic']
+	local state = self:GetNW2Float( "m_fANPlusNPCState" )
+	local enemy = self:GetNW2Entity( "m_pEnemyShared" )
+	local modeFunc = isfunction( bmTab['Mode'] ) && bmTab['Mode']( self, state, enemy )
 
-	local MUSIC 				= self.m_ANPlusBossMusic || bmTab['Music']
+	local MUSIC 				= self.m_ANPlusBossMusic || modeFunc || bmTab['Music']
 	local MUSIC_REPEAT			= self.m_ANPlusBossMusicRepeat || bmTab['Repeat']
 	local MUSIC_VOLUME 			= self.m_ANPlusBossMusicVolume || bmTab['Volume']
 	local MUSIC_MAX_DISTANCE 	= self.m_ANPlusBossMusicRange || bmTab['Range'] == "Auto" && self:GetNW2Float( "m_fANPlusLookDistance" ) || bmTab['Range']

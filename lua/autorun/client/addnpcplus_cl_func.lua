@@ -1,6 +1,7 @@
 ------------------------------------------------------------------------------=#
 if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
+AddCSLuaFile()
 
 local ENT = FindMetaTable("Entity")
 --[[

@@ -1,6 +1,7 @@
 ------------------------------------------------------------------------------=#
 if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
+AddCSLuaFile()
 
 local metaPanel = FindMetaTable("Panel")
 local metaPLAYER = FindMetaTable("Player")

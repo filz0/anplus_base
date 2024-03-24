@@ -364,11 +364,8 @@ function ENT:ANPlusNPCAnimSpeed()
 		
 		local speed = ( istable( aTab1 ) && aTab1[ 2 ] && aTab1[ 2 ] || 100 ) / 100
 		
-		if speed != 1 && self:IsGoalActive() && self:GetPathDistanceToGoal() > 10 * speed && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() then--&& self:GetMinMoveStopDist() > 10 then
-			
-			local lastMovTime = self:GetInternalVariable( "m_flTimeLastMovement" )
-			self:SetSaveValue( "m_flTimeLastMovement", lastMovTime * speed )
-				
+		if speed != 1 && self:IsGoalActive() && self:GetPathDistanceToGoal() > 10 * speed && ( ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 1 ) && self:OnGround() ) || ( self:GetMoveType() == 3 && self:ANPlusCapabilitiesHas( 4 ) ) || ( self:GetMoveType() == 6 ) ) && self:IsMoving() then--&& self:GetMinMoveStopDist() > 10 then			
+			self:SetSaveValue( "m_flTimeLastMovement", -0.1 * speed )				
 		end
 
 		local rate = ( istable( aTab1 ) && aTab1[ 1 ] || aTab1 ) / 100
@@ -437,19 +434,6 @@ function ENT:ANPlusNPCWeaponSwitch()
 	end
 
 end
-
---[[
-function ENT:ANPlusApplyDataTab( tab )	
-	if !self.ANPlusData then self.ANPlusData = {}; self.ANPlusData[''..self.ANPlusIDName..self:EntIndex()..''] = tab end
-	timer.Simple(0.1, function() -- God I hate networking....
-		if !IsValid(self) then return end
-		net.Start("anplus_data_tab")
-		net.WriteEntity( self )
-		net.WriteTable( self.ANPlusData[''..self.ANPlusIDName..self:EntIndex()..''] )
-		net.Broadcast()
-	end)
-end
-]]--
 
 function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for this glorius thing.
 	if self.m_tbAnimEvents then

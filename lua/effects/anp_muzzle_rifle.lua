@@ -14,6 +14,7 @@ function EFFECT:Init(data)
 	local Pos, Ang 	= self.Entity:GetBonePosition( self.BoneID )	
 	self.Position 	= attTab && attTab.Pos || Pos
 	self.Angle 		= attTab && attTab.Ang || Ang
+	if !self.Angle || self.Position then return end
 	self.Forward 	= self.Angle:Forward()
 	self.Right 		= self.Angle:Right()
 	self.Up 		= self.Angle:Up()

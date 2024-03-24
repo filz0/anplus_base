@@ -1,6 +1,7 @@
 ------------------------------------------------------------------------------=#
 if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 ------------------------------------------------------------------------------=#
+AddCSLuaFile()
 
 hook.Add( "CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", function(npc, rag)
 	

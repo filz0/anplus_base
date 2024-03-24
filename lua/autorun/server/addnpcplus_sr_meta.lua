@@ -21,46 +21,11 @@ function metaENT:ANPlusSetKillfeedName(name)
 	end
 end
 
-function metaENT:ANPlusGetKillfeedName()
-	return self:ANPlusGetDataTab() && self:ANPlusGetDataTab()['KillfeedName'] || self:ANPlusGetName()
-end
-
-function metaENT:ANPlusIsLookingAtPos( pos )
-	
-	local dirv = pos - ( self:GetPos() + Vector( 0, 0, 50 ) )	
-	local norm = dirv:GetNormalized()
-	
-	return ( !( self:GetAimVector():Dot( norm ) < 0.90 ) ) || ( !( self:GetAimVector():Dot( ( dirv + Vector( 70 ) ):GetNormalized() ) < 0.95 ) )
-	
-end
-
-function ANPIsAnyoneLookingAtPos( ent, entTab, pos )
-	
-	local seen = false
-	
-	for k,v in pairs( entTab ) do
-	
-		if v:IsNPC() || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
-			
-			if IsValid(ent) && v == ent then return false end
-			
-			seen = v:ANPlusIsLookingAtPos( pos )
-			
-			if seen then return true end
-		
-		end
-	
-	end
-	
-	return false
-	
-end
-
-function metaENT:ANPlusRandomTeleport( entTab, iType, poscorrection, callback )	
+function metaENT:ANPlusRandomTeleport( entTab, iType, posCorrection, callback )	
 	local v = ANPlusAIGetNodes( iType ) && ANPlusAIGetNodes( iType )[ math.random( 1, #ANPlusAIGetNodes( iType ) ) ] || false	
-	if v && v['type'] == iType && !ANPlusAINodeOccupied( v['pos'] ) && ( ( !entTab && v['pos'] != self:GetPos() ) || ( entTab && v['pos'] != self:GetPos() && !ANPIsAnyoneLookingAtPos( self, entTab, v['pos'] ) ) ) then
+	if IsValid(self) && v && v['type'] == iType && !ANPlusAINodeOccupied( v['pos'] ) && ( ( !entTab && v['pos'] != self:GetPos() ) || ( entTab && v['pos'] != self:GetPos() && !ANPIsAnyoneLookingAtPos( self, entTab, v['pos'] ) ) ) then
 
-		self:SetPos( v['pos'] + ( poscorrection || Vector( 0, 0, 0 ) ) )
+		self:SetPos( v['pos'] + ( posCorrection || Vector( 0, 0, 0 ) ) )
 			
 		if isfunction( callback ) then	
 			callback( self, v['pos'] )
@@ -228,6 +193,8 @@ end
 
 function metaENT:ANPlusParent(ent, att, pos, ang, dontDel)
 	
+	if !IsValid(self) || !IsValid(ent) then return end
+
 	local oldPI = self:GetSolid()
 	local oldMT = self:GetMoveType()
 	local oldS = self:GetSolid()
@@ -257,6 +224,8 @@ end
 
 function metaENT:ANPlusParentToBone(ent, bone, pos, ang, dontDel)
 	
+	if !IsValid(self) || !IsValid(ent) then return end
+
 	local boneid = ent:LookupBone( bone )
 
 	if !boneid then return end	
@@ -299,7 +268,7 @@ function metaENT:ANPlusBoneMerge(ent)
 	self:SetOwner( ent )
 	ent:DeleteOnRemove( self )
 	
-	ent:DeleteOnRemove( self )
+	--ent:DeleteOnRemove( self )
 end
 
 function metaENT:ANPlusSetToBonePosAndAng(ent, bone, pos, ang)
@@ -1690,16 +1659,17 @@ local iCond = {
 
 function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, callback, postCallback)
 	if !act || self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() || self:ANPlusPlayingDeathAnim() ) then return end
-	local actSeq = isstring( act ) && act || self:SelectWeightedSequence( act )
+	local actSeq = isstring( act ) && self:LookupSequence( act ) || self:SelectWeightedSequence( act )
 	local actSeqName = self:GetSequenceName( actSeq )
-	local gestCheck = string.find( string.lower( actSeqName ), "gesture_" ) || string.find( string.lower( actSeqName ), "g_" ) || string.find( string.lower( actSeqName ), "gest" )
-	
+	local gestCheck = string.find( actSeqName, "gesture_" ) || string.find( actSeqName, "g_" ) || string.find( actSeqName, "gest" )
+
 	local speed = speed || 1
 	local facespeed = facespeed || 0
 	
 	if gestCheck then
 		self:AddGesture( act, true )
 	else
+		self:SetCycle( 0 )
 		self:TaskComplete()
 		self:ClearGoal()
 		self:ClearSchedule()		
@@ -1715,11 +1685,8 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 			self:SetMoveType( 5 ) 
 		end
 		
-		self:SetSequence( actSeq )
-		--self:SetActivity( 171 )
+		self:ResetSequence( actSeq )
 		self:SetIdealActivity( ACT_DO_NOT_DISTURB )
-		--self:ResetIdealActivity( act )	
-		self:SetCycle( 0 )
 	end
 	
 	self.m_bANPlusPlayingActivity = true
@@ -1769,7 +1736,7 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 		self:SetIdealActivity( ACT_DO_NOT_DISTURB )
 
 		if !gestCheck then
-		
+
 			local gravFix = self.m_fIdealMoveType == 3 && !self:OnGround() && Vector( 0, 0, -500 ) || vector_zero
 			
 			if isbool( movementVel ) && movementVel == true then
@@ -1784,11 +1751,11 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 			elseif isvector( movementVel ) then
 				self:SetLocalVelocity( movementVel )
 			end
-			
+	
 		end
 		
 		self:SetPlaybackRate( speed ) 
-		if IsValid(faceEnt) && faceSpeed >= 0 then 
+		if IsValid(faceEnt) && faceSpeed && faceSpeed >= 0 then 
 			self:ANPlusFaceEntity( faceEnt, faceSpeed )
 		end
 	end)

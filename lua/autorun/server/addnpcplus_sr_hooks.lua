@@ -200,15 +200,15 @@ hook.Add( "OnNPCKilled", "ANPlusLoad_OnNPCKilled", function(npc, att, inf)
 				
 				end
 				
-				local addTab = { ['CurBones'] = CurBones }
+				local curBones = { ['CurBones'] = CurBones }
 				table.Merge( npc:ANPlusGetDataTab(), addTab )
 				  
 				if npc:ANPlusFakeModel() then
-					local addTab = { ['CurFakeModel'] = { ['Model'] = npc:ANPlusFakeModel() && npc:ANPlusFakeModel():GetModel() || "", ['VisualTab'] = npc:ANPlusGetVisual() } }			
-					table.Merge( npc:ANPlusGetDataTab(), addTab )
+					local fakeModel = { ['CurFakeModel'] = { ['Model'] = npc:ANPlusFakeModel() && npc:ANPlusFakeModel():GetModel() || "", ['VisualTab'] = npc:ANPlusGetVisual() } }			
+					table.Merge( curBones, fakeModel )
 				end
 				
-				npc:ANPlusApplyDataTab( npc:ANPlusGetDataTab() )
+				npc:ANPlusApplyDataTab( curBones )
 				
 				npc:SetModel( npc:ANPlusGetDataTab()['CurModel'] )
 				

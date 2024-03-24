@@ -436,8 +436,10 @@ hook.Add( "EntityEmitSound", "ANPlusLoad_EntityEmitSound", function(data)
 						sndReplace = !v['SoundCharacter'] && sndReplace || v['SoundCharacter'] == true && ( sndChars[ string.Left( data.SoundName, 1 ) ] && string.Left( data.SoundName, 1 ) .. sndReplace || sndReplace ) || isstring( v['SoundCharacter'] ) && v['SoundCharacter'] .. sndReplace 
 						
 						
-						local sndLVL = v['SoundLevel'] && istable( v['SoundLevel'] ) && math.random( v['SoundLevel'][ 1 ], ( v['SoundLevel'][ 2 ] || v['SoundLevel'][ 1 ] ) ) || v['SoundLevel'] || sndScript && sndScript['level'] || data.SoundLevel
-						local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || sndScript && sndScript['pitch']
+						local sndLVL = v['SoundLevel'] && istable( v['SoundLevel'] ) && math.random( v['SoundLevel'][ 1 ], ( v['SoundLevel'][ 2 ] || v['SoundLevel'][ 1 ] ) ) || v['SoundLevel'] || sndScript && sndScript['level'] && istable( sndScript['level'] ) && math.random( sndScript['level'][ 1 ], ( sndScript['level'][ 2 ] || sndScript['level'][ 1 ] ) ) || sndScript && sndScript['level'] || data.SoundLevel
+						
+						local sndPitch = ent.ANPlusOverPitch || v['Pitch'] && istable( v['Pitch'] ) && math.random( v['Pitch'][ 1 ], ( v['Pitch'][ 2 ] || v['Pitch'][ 1 ] ) ) || v['Pitch'] || sndScript && sndScript['pitch'] && istable( sndScript['pitch'] ) && math.random( sndScript['pitch'][ 1 ], ( sndScript['pitch'][ 2 ] || sndScript['pitch'][ 1 ] ) ) || sndScript && sndScript['pitch']
+						
 						sndPitch = sndPitch && ( sndPitch < 1 && data.Pitch * sndPitch || sndPitch ) || data.Pitch
 						local sndChannel = v['Channel'] || sndScript && sndScript['channel'] || data.Channel
 						local sndVolume = v['Volume'] && istable( v['Volume'] ) && math.random( v['Volume'][ 1 ], ( v['Volume'][ 2 ] || v['Volume'][ 1 ] ) ) || v['Volume'] || sndScript && sndScript['volume']
