@@ -167,8 +167,7 @@ function metaENT:ANPlusTranslateSequence(anim)
 	end	
 end
 
-function metaENT:ANPlusSequenceExists(anim)
-	if anim == nil || isbool(anim) then return false end	
+function metaENT:ANPlusSequenceExists(anim)	
 	if isnumber( anim ) then
 		if ( self:SelectWeightedSequence( anim ) == -1 || self:SelectWeightedSequence( anim ) == 0 ) && ( self:GetSequenceName( self:SelectWeightedSequence( anim ) ) == "Not Found!" || self:GetSequenceName( self:SelectWeightedSequence( anim ) ) == "No model!" ) then
 			return false
@@ -1845,4 +1844,12 @@ function metaENT:ANPlusGetRagdollEntity()
 	elseif (CLIENT) then
 		return self.m_pCRagdollEntity
 	end
+end
+
+function CreateGlobalValue(globalName, val)
+	_G[globalName] = val
+end
+
+function GetGlobalValue(globalName)
+	return _G[globalName]
 end

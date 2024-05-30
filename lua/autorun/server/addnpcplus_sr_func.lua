@@ -186,7 +186,7 @@ function ENT:ANPlusIgnoreTillSet()
 
 			if v:ANPlusGetDataTab()['Relations']['Default']['NPCToMe'][ 1 ] != "Default" then self:AddEntityRelationship( v, D_NU, 99 ) end
 			if v:ANPlusGetDataTab()['Relations']['Default']['MeToNPC'][ 1 ] != "Default" then v:AddEntityRelationship( self, D_NU, 99 ) end
-			v.m_tbANPlusRelationsMem = {}
+			v.m_tbANPlusRelationsMem[ self ] = false
 		 
 		end
 		
@@ -203,8 +203,11 @@ local RelationsTranslate = {
 
 function ENT:ANPlusNPCRelations()
 	
-	if !self:IsANPlus() || !self:ANPlusGetDataTab()['Relations'] || CurTime() - self.m_fANPlusCurMemoryLast < self.m_fANPlusCurMemoryDelay then return end
-	
+	if ( !self:IsANPlus()  || !self:IsPlayer() ) && CurTime() - self.m_fANPlusCurMemoryLast < self.m_fANPlusCurMemoryDelay then return end
+
+	local relationData = self:IsANPlus() && self:ANPlusGetDataTab()['Relations'] || self:IsPlayer() && self.m_tANPPlayerRelations
+	if !relationData then return end
+
 	local posEnemies = ANPlusGetAll()
 	local it = 1
 	
@@ -226,14 +229,15 @@ function ENT:ANPlusNPCRelations()
 		
 			if ent != self then 
 				
-				local dispTab = self:ANPlusGetDataTab()['Relations'][ ent:GetColor() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusGetName() ] || self:ANPlusGetDataTab()['Relations'][ ent:GetClass() ] || self:ANPlusGetDataTab()['Relations'][ ent:ANPlusClassify() ] || self:ANPlusGetDataTab()['Relations'][ "Default" ]
+				local dispTab = relationData[ ent:GetColor() ] || relationData[ ent:ANPlusGetName() ] || relationData[ ent:GetClass() ] || relationData[ ent:ANPlusClassify() ] || relationData[ "Default" ]
 				
 				if dispTab then
-	
-					local addTab = { [ ent ] = { ['NPCToMeOld'] = ent:IsNPC() && ent:Disposition( self ) || true } }
-					
+				
 					if !self.m_tbANPlusRelationsMem[ ent ] then
-
+						
+						local addTab = { [ ent ] = { ['NPCToMeOld'] = ent:IsNPC() && ent:Disposition( self ) || true } }
+						if self:IsANPlus() then addTab[ ent ]['MeToNPCOld'] = self:Disposition( ent ) end
+						
 						local meToNPC = dispTab['MeToNPC'] && dispTab['MeToNPC'][ 1 ] || "Default"
 						local meToNPC1 = dispTab['MeToNPC'] && RelationsTranslate[ dispTab['MeToNPC'][ 1 ] ]
 						local meToNPC2 = dispTab['MeToNPC'] && dispTab['MeToNPC'][ 2 ]
@@ -245,8 +249,11 @@ function ENT:ANPlusNPCRelations()
 						--print( ent, ent:ANPlusClassify(), ent:IsNPC() && ent:Disposition( self ), npcStr, meToNPC2, npcToMe2 )
 						
 						if ent:MyVJClass( 1 ) && self:MyVJClass( 1 ) && self:MyVJClass( 1 ) == ent:MyVJClass( 1 ) then
-							self:AddEntityRelationship( ent, D_LI, 99 )
-							addTab[ ent ]['MeToNPC'] = D_LI
+							
+							if self:IsANPlus() then
+								self:AddEntityRelationship( ent, D_LI, 99 )
+								addTab[ ent ]['MeToNPC'] = D_LI
+							end
 
 							if ent:IsNPC() then
 								ent:AddEntityRelationship( self, D_LI, 0 )
@@ -257,8 +264,11 @@ function ENT:ANPlusNPCRelations()
 							end
 
 						elseif ent:MyVJClass( 1 ) && self:MyVJClass( 1 ) && self:MyVJClass( 1 ) != ent:MyVJClass( 1 ) then
-							self:AddEntityRelationship( ent, D_HT, 99 )
-							addTab[ ent ]['MeToNPC'] = D_HT
+							
+							if self:IsANPlus() then
+								self:AddEntityRelationship( ent, D_HT, 99 )
+								addTab[ ent ]['MeToNPC'] = D_HT
+							end
 
 							if ent:IsNPC() then						
 								ent:AddEntityRelationship( self, D_HT, 0 )
@@ -269,8 +279,11 @@ function ENT:ANPlusNPCRelations()
 							end
 							
 						elseif ent:ANPlusClassify() == self:ANPlusClassify() || ent:ANPlusGetName() == self:ANPlusGetName() then
-							self:AddEntityRelationship( ent, D_LI, 0 )
-							addTab[ ent ]['MeToNPC'] = D_LI
+							
+							if self:IsANPlus() then
+								self:AddEntityRelationship( ent, D_LI, 0 )
+								addTab[ ent ]['MeToNPC'] = D_LI
+							end
 
 							if ent:IsNPC() then
 								ent:AddEntityRelationship( self, D_LI, 0 )
@@ -279,7 +292,7 @@ function ENT:ANPlusNPCRelations()
 
 						else
 							
-							if meToNPC != "Default" then
+							if self:IsANPlus() && meToNPC != "Default" then
 
 								self:AddEntityRelationship( ent, meToNPC1, meToNPC2 )
 								addTab[ ent ]['MeToNPC'] = meToNPC1
@@ -439,7 +452,7 @@ function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for 
 	if self.m_tbAnimEvents then
 		local seq = self:GetSequenceName( self:GetSequence() )
 		if ( self.m_tbAnimEvents[ seq ] ) then		
-	
+			
 			if ( self.m_seqLast != seq ) then self.m_seqLast = seq; self.m_frameLast = -1 end				
 			local frameNew = math.floor( self:GetCycle() * self.m_tbAnimationFrames[ seq ] )	-- Despite what the wiki says, GetCycle doesn't return the frame, but a float between 0 and 1
 			for frame = self.m_frameLast + 1, frameNew do	-- a loop, just in case the think function is too slow to catch all frame changes					

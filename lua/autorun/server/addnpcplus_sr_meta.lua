@@ -697,7 +697,6 @@ end
 
 function metaENT:ANPlusAddAnimationEvent(seq, frame, ev, animFrames) -- Sequence, target frame && animation event ID
 	if(!self.m_tbAnimationFrames[seq]) then return end
-	
 	if frame <= self.m_tbAnimationFrames[seq] then
 		ANPdev( function()
 			print( "LUA animation event created:", "[ SEQUENCE: " .. seq .. " FRAMES: " .. self.m_tbAnimationFrames[seq] .. " ] AT" .. " [ FRAME: " .. frame, "EVENT_ID: " .. ev .. " ]" )
@@ -788,6 +787,24 @@ end
 function metaENT:ANPlusCreateOutputHook(entOutput, eventName)
 	if !IsValid(ANP_LUA_RUN_ENT) then ANPMapLuaCreate() end
 	self:Fire( "AddOutput", entOutput .. " anp_lua_run:RunPassedCode:hook.Run( '" .. eventName .. "' ):0:-1" )
+end
+
+function metaENT:ANPlusCreateOutputFunction(entOutput, func)
+
+	if !self || !IsValid(self) then return end
+	if !IsValid(ANP_LUA_RUN_ENT) then ANPMapLuaCreate() end
+
+	local hookID = entOutput .. self:GetClass() .. self:EntIndex()
+
+	hook.Add(hookID, self, function() 
+
+		local activator, caller = ACTIVATOR, CALLER
+		func(self, activator, caller)
+
+	end)
+
+	self:Fire( "AddOutput", entOutput .. " anp_lua_run:RunPassedCode:hook.Run( '" .. hookID .. "' ):0:-1" )
+
 end
 
 function metaENT:ANPlusAddSaveData(key, val, func)
@@ -1650,7 +1667,7 @@ end
 
 function metaENT:ANPlusClassify()
 	if !self:IsNPC() && !self:IsPlayer() then return false end
-	return self.m_iClass != 0 && self.m_iClass || self:MyVJClass( 1 ) || self:IsPlayer() && CLASS_PLAYER || self:Classify()
+	return self.m_iClass != 0 && self.m_iClass || self:MyVJClass( 1 ) || self:IsPlayer() && ( self.m_iClass != 0 && self.m_iClass || CLASS_PLAYER ) || self:Classify()
 end
 
 local iCond = {

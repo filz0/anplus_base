@@ -52,6 +52,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM_RIFLE
 
 			self.ActivityTranslateAI[ACT_RELOAD]						= ACT_RELOAD_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RELOAD]				= V_A(ACT_GESTURE_RELOAD_RIFLE) || ACT_GESTURE_RELOAD_SMG1
 			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= ACT_RELOAD_SMG1_LOW		
 
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= ACT_IDLE_ANGRY_SMG1
@@ -111,6 +112,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM
 
 			self.ActivityTranslateAI[ACT_RELOAD]						= ACT_RELOAD_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RELOAD]				= ACT_GESTURE_RELOAD_SMG1
 			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= ACT_RELOAD_SMG1_LOW
 
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= ACT_IDLE_ANGRY_SMG1
@@ -168,7 +170,9 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 
 			self.ActivityTranslateAI[ACT_RUN_CROUCH]					= ACT_RUN_CROUCH_AIM
 			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM
+
 			self.ActivityTranslateAI[ACT_RELOAD]						= V_A(ACT_RELOAD_PISTOL) || ACT_RELOAD_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RELOAD]				= V_A(ACT_GESTURE_RELOAD_PISTOL) || ACT_GESTURE_RELOAD_SMG1
 			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= V_A(ACT_RELOAD_PISTOL_LOW) || ACT_RELOAD_SMG1_LOW
 
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= V_A(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY
@@ -228,6 +232,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM
 
 			self.ActivityTranslateAI[ACT_RELOAD]						= V_A(ACT_RELOAD_PISTOL) || ACT_RELOAD_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RELOAD]				= V_A(ACT_GESTURE_RELOAD_PISTOL) || ACT_GESTURE_RELOAD_SMG1
 			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= V_A(ACT_RELOAD_PISTOL_LOW) || ACT_RELOAD_SMG1_LOW
 
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= V_A(ACT_IDLE_ANGRY_PISTOL) || ACT_IDLE_ANGRY
@@ -287,6 +292,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM
 
 			self.ActivityTranslateAI[ACT_RELOAD]						= V_A(ACT_RELOAD_SHOTGUN) || ACT_RELOAD_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RELOAD]				= V_A(ACT_GESTURE_RELOAD_SHOTGUN) || ACT_GESTURE_RELOAD_SMG1
 			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= V_A(ACT_RELOAD_SHOTGUN_LOW) || ACT_RELOAD_SMG1_LOW
 
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= V_A(ACT_IDLE_ANGRY_SHOTGUN) || ACT_IDLE_ANGRY_SMG1
@@ -346,6 +352,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM
 
 			self.ActivityTranslateAI[ACT_RELOAD]						= ACT_RELOAD_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RELOAD]				= V_A(ACT_GESTURE_RELOAD_SHOTGUN) || ACT_GESTURE_RELOAD_SMG1
 			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= ACT_RELOAD_SMG1_LOW
 
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= ACT_IDLE_ANGRY_SMG1
@@ -405,6 +412,7 @@ function SWEP:SetupWeaponHoldTypeForAI( hType )
 			self.ActivityTranslateAI[ACT_RUN_CROUCH_AIM]				= ACT_RUN_CROUCH_AIM
 
 			self.ActivityTranslateAI[ACT_RELOAD]						= ACT_RELOAD_SMG1
+			self.ActivityTranslateAI[ACT_GESTURE_RELOAD]				= ACT_GESTURE_RELOAD_SMG1
 			self.ActivityTranslateAI[ACT_RELOAD_LOW]					= ACT_RELOAD_SMG1_LOW
 			
 			self.ActivityTranslateAI[ACT_RANGE_ATTACK1]					= V_A(ACT_IDLE_ANGRY_RPG) || ACT_IDLE_ANGRY_SMG1

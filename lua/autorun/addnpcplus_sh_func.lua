@@ -227,7 +227,7 @@ function ENT:ANPlusNPCApply(name, override, transition, preCallback, postCallbac
 						self.m_tbAnimationFrames = {}
 						for _, v in pairs( self:GetSequenceList() ) do
 							local seqID = self:LookupSequence( v )
-							local seqFrames = self:SequenceGetFrames( seqID )
+							local seqFrames = self:SequenceGetFrames( seqID, 1 )
 							self.m_tbAnimationFrames[v] = seqFrames
 						end
 						--
