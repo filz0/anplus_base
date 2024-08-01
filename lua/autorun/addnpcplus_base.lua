@@ -548,7 +548,7 @@ ANPlus = {
 			ANPlusLoadGlobalCount = ANPlusLoadGlobalCount + 1
 			
 			if (CLIENT) then				
-				print( "AddNPCPlus " .. ANPlusLoadGlobalCount .. " Loaded: " .. tab['Name'] )  				
+				print( "AddNPCPlus " .. ANPlusLoadGlobalCount .. " Loaded: " .. id )  				
 				--language.Add( id, id )
 				--language.Add( "#" .. id, id )
 			end		

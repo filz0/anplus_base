@@ -1382,7 +1382,7 @@ local illegalACTs = {
 	[36] = true,
 }
 
-function metaENT:ANPlusFollowTarget(target, followDist, followRunDIst, followCombatDist, followCombatRunDist)
+function metaENT:ANPlusFollowTarget(target, followDist, followRunDist, followCombatDist, followCombatRunDist)
 	
 	local timerName = "ANP_NPC_FollowBeh" .. self:EntIndex()
 
@@ -1486,13 +1486,13 @@ function metaENT:ANPlusFollowTarget(target, followDist, followRunDIst, followCom
 				self:ClearSchedule()
 				self:ClearGoal()
 				self:StopMoving()		
-			elseif curDist >= followDist && curDist < followRunDIst then
+			elseif curDist >= followDist && curDist < followRunDist then
 				if !curSchChase then	
 					self:SetLastPosition( posTarget )
 					self:SetSchedule( schChase )
 				end
 				if self:ANPlusSequenceExists( 6 ) then self:SetMovementActivity( 6 ) end
-			elseif curDist >= followRunDIst then
+			elseif curDist >= followRunDist then
 				if !curSchChase then	
 					self:SetLastPosition( posTarget )
 					self:SetSchedule( schChase )
@@ -1573,11 +1573,11 @@ function metaENT:ANPlusCreateGoalFollow(target, formation)
 	return followGoal, followGoal:GetInternalVariable( "m_hFollowGoal" )
 end
 
-function metaENT:ANPlusFollowPlayer(ply, followDist, followRunDIst, followCombatDist, followCombatRunDist)
+function metaENT:ANPlusFollowPlayer(ply, followDist, followRunDist, followCombatDist, followCombatRunDist)
 	if self:Disposition( ply ) != D_LI then
 		ANPlusMSGPlayer( ply, self:ANPlusGetName() .. " doesn't like you, therefore it won't follow you.", Color( 255, 50, 0 ), "ANP.UI.Error" )
 	elseif !IsValid(self:ANPlusGetFollowTarget()) || ( IsValid(self:ANPlusGetFollowTarget()) && !self:ANPlusGetFollowTarget():IsPlayer() ) || self:ANPlusGetFollowTarget() != ply then
-		self:ANPlusFollowTarget( ply, followDist, followRunDIst, followCombatDist, followCombatRunDist )
+		self:ANPlusFollowTarget( ply, followDist, followRunDist, followCombatDist, followCombatRunDist )
 		ANPlusMSGPlayer( ply, self:ANPlusGetKillfeedName() .. " is following you now.", Color( 50, 255, 0 ), "ANP.UI.Click" )
 	elseif IsValid(self:ANPlusGetFollowTarget()) && self:ANPlusGetFollowTarget() == ply then
 		self:ANPlusFollowTarget()

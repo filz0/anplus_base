@@ -157,7 +157,7 @@ function ANPlusGetAll()
 		
 		local v = entsAround[ i ]
 		-- && v:GetKeyValues()['sleepstate'] == 0 && !IsValid(v:GetInternalVariable( "m_hCine" ))
-		if ( v:IsNPC() && v:ANPlusClassify() != 0 && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
+		if ( v:IsNPC() && v:ANPlusClassify() != 0 && !v.IsZBaseNPC && v:GetClass() != "npc_grenade_frag" && v:GetClass() != "bullseye_strider_focus" && v:GetClass() != "npc_bullseye" && v:GetClass() != "generic_actor" && v:GetClass() != "npc_enemyfinder" && v:GetClass() != "hornet" && v:ANPlusAlive() ) || ( v:IsPlayer() && !GetConVar("ai_ignoreplayers"):GetBool() ) then
 			
 			entsSelected[count] = v
 			count = count + 1
@@ -203,6 +203,7 @@ local RelationsTranslate = {
 
 function ENT:ANPlusNPCRelations()
 	
+	if !self.m_fANPlusCurMemoryLast || !self.m_fANPlusCurMemoryDelay then return end
 	if ( !self:IsANPlus()  || !self:IsPlayer() ) && CurTime() - self.m_fANPlusCurMemoryLast < self.m_fANPlusCurMemoryDelay then return end
 
 	local relationData = self:IsANPlus() && self:ANPlusGetDataTab()['Relations'] || self:IsPlayer() && self.m_tANPPlayerRelations
