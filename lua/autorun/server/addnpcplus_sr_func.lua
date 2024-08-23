@@ -450,8 +450,10 @@ function ENT:ANPlusNPCWeaponSwitch()
 end
 
 function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for this glorius thing.
+	
 	if self.m_tbAnimEvents then
-		local seq = self:GetSequenceName( self:GetSequence() )
+
+		local seq = self:GetSequenceName( self:GetSequence() ) 
 		if ( self.m_tbAnimEvents[ seq ] ) then		
 			
 			if ( self.m_seqLast != seq ) then self.m_seqLast = seq; self.m_frameLast = -1 end				
@@ -464,8 +466,30 @@ function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for 
 				end
 			end
 			self.m_frameLast = frameNew
+
 		end
+
+		local gest, layer = self:ANPlusGetGestureSequence()
+
+		if !gest then return end
+
+		gest = self:GetSequenceName( gest ) 
+		if ( self.m_tbAnimEvents[ gest ] ) then		
+			
+			if ( self.m_gestSeqLast != gest ) then self.m_gestSeqLast = gest; self.m_gestFrameLast = -1 end				
+			local gestFrameNew = math.floor( self:GetLayerCycle( layer ) * self.m_tbAnimationFrames[ gest ] )	-- Despite what the wiki says, GetCycle doesn't return the frame, but a float between 0 and 1
+			for gFrame = self.m_gestFrameLast + 1, gestFrameNew do	-- a loop, just in case the think function is too slow to catch all frame changes					
+				if ( self.m_tbAnimEvents[ gest ][ gFrame ] ) then								
+					for _, ev in ipairs( self.m_tbAnimEvents[ gest ][ gFrame ] ) do
+						self:ANPlusHandleAnimationEvent( gest, ev )
+					end
+				end
+			end
+			self.m_gestFrameLast = gestFrameNew
+		end
+
 	end
+
 end
 --[[
 function ENT:ANPlusAnimationEventInternal() -- Credit to almighty Silverlan for this glorius thing.

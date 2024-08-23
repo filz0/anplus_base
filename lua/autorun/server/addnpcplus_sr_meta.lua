@@ -695,7 +695,7 @@ function metaENT:ANPlusIsMoveSpeed( hORlORe, speed )
 	return false
 end
 
-function metaENT:ANPlusAddAnimationEvent(seq, frame, ev, animFrames) -- Sequence, target frame && animation event ID
+function metaENT:ANPlusAddAnimationEvent(seq, frame, ev) -- Sequence, target frame && animation event ID
 	if(!self.m_tbAnimationFrames[seq]) then return end
 	if frame <= self.m_tbAnimationFrames[seq] then
 		ANPdev( function()
@@ -1684,7 +1684,11 @@ function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed,
 	local facespeed = facespeed || 0
 	
 	if gestCheck then
-		self:AddGesture( act, true )
+		self:SetLayerCycle( 0, 0 )
+		self:RestartGesture( act, true, true )
+		--self:AddGestureSequence( actSeq, true )
+		--self:SetLayerCycle( 0, 0 )
+		self:SetLayerWeight( 0, 10 )
 	else
 		self:SetCycle( 0 )
 		self:TaskComplete()
@@ -2024,6 +2028,32 @@ function metaENT:ANPlusGetEnemies()
 
 	return entsSelected
 	
+end
+
+function metaENT:ANPlusGetGestureSequence()	-- Seq and Layer
+	local gest
+	local lay
+	for i = 0, 5 do
+		if self:GetLayerSequence( i ) > 0 then
+			gest = self:GetLayerSequence( i )
+			lay = i
+			break
+		end
+	end
+	return gest, lay || false
+end
+
+function metaENT:ANPlusGetGestureActivity()	-- ACT and Layer
+	local gest
+	local lay
+	for i = 0, 5 do
+		if self:GetLayerSequence( i ) > 0 then
+			gest = self:GetLayerSequence( i )
+			lay = i
+			break
+		end
+	end
+	return gest && self:GetSequenceActivity( gest ), lay || false
 end
 
 function metaENT:ANPlusGetIdealSequence()
