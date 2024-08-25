@@ -155,11 +155,6 @@ function metaPanel:ANPlus_CreateCollapsibleCategory(x, y, w, h, expanded, label,
 		panel:SizeToContents()
 	end
 	if tooltp then panel:SetTooltip( tooltp ) end
-	if r then
-		function panel:Paint(w, h)
-			draw.RoundedBox( r, 0, 0, w, h, color )
-		end
-	end
 	
 	return panel
 end
