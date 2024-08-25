@@ -914,7 +914,9 @@ if (CLIENT) then
 
 	local PANEL = {}
 	local GenericIcon = "vgui/anplus_log.png"
-	local GenericCatIcon = "vgui/anp_ico_hd.png"
+	local GenericNPCIcon = "vgui/anp_npc_ico.png"
+	local GenericENTIcon = "vgui/anp_ent_ico.png"
+	local GenericVEHIcon = "vgui/anp_veh_ico.png"
 
 	Derma_Hook( PANEL, "Paint", "Paint", "Tree" )
 	PANEL.m_bBackground = true -- Hack for above
@@ -1006,74 +1008,209 @@ if (CLIENT) then
 
 	hook.Add( "ANPlusSpawnMenuPopulate", "ANPlus_SpawnMenuPopulate", function( pnlContent, tree, node )
 		
-		local tbl = {}
-		for class, npcdata in pairs( ANPlusLoadGlobal ) do
+		local NPCTab = {}
+		local ENTTab = {}
+		local VEHTab = {}
+		for class, entData in pairs( ANPlusLoadGlobal ) do
 
-			if isstring( npcdata['Category'] ) && ( npcdata['Spawnable'] == nil || npcdata['Spawnable'] == true ) then
+			if isstring( entData['Category'] ) then
 				
-				local split = string.Split( npcdata.Category, " | " )
-				local s1, s2 = split[ 1 ], split[ 2 ]
-				tbl[ s1 ] = tbl[ s1 ] || {}
-	
-				if s2 then
-					tbl[ s1 ][ s2 ] = tbl[ s1 ][ s2 ] || {}
-					tbl[ s1 ][ s2 ][ class ] = npcdata
-				else
-					tbl[s1][class] = npcdata
+				if ( entData['Spawnable'] == nil || entData['Spawnable'] == true ) then
+					
+					if entData['EntityType'] == "NPC" then
+
+						local categories = string.Split( entData['Category'], " | " )
+						local category1, category2 = categories[ 1 ], categories[ 2 ]
+						NPCTab[category1] = NPCTab[category1] || {}
+			
+						if category2 then
+							NPCTab[category1][category2] = NPCTab[category1][category2] || {}
+							NPCTab[category1][category2][class] = entData
+						else
+							NPCTab[category1][class] = entData
+						end
+
+					end
+
+					if entData['EntityType'] == "SpawnableEntities" then
+
+						local categories = string.Split( entData['Category'], " | " )
+						local category1, category2 = categories[ 1 ], categories[ 2 ]
+						ENTTab[category1] = ENTTab[category1] || {}
+			
+						if category2 then
+							ENTTab[category1][category2] = ENTTab[category1][category2] || {}
+							ENTTab[category1][category2][class] = entData
+						else
+							ENTTab[category1][class] = entData
+						end
+
+					end
+
+					if entData['EntityType'] == "SpawnableEntities" then
+
+						local categories = string.Split( entData['Category'], " | " )
+						local category1, category2 = categories[ 1 ], categories[ 2 ]
+						VEHTab[category1] = VEHTab[category1] || {}
+			
+						if category2 then
+							VEHTab[category1][category2] = VEHTab[category1][category2] || {}
+							VEHTab[category1][category2][class] = entData
+						else
+							VEHTab[category1][class] = entData
+						end
+
+					end
+
 				end
 
 			end
 
 		end
 
-		local allNode = tree:AddNode( "ANPlus Base", GenericCatIcon )
+		local allNodeNPCs = tree:AddNode( "[ NPCs ]", GenericNPCIcon )	
+		local allNodeCacheNPCs = {}
 
-		local allNodeCache = {}
-		for divisionName, division in SortedPairs( tbl ) do
+		for categoryName, entData in SortedPairs( NPCTab ) do
 
 			local allCatIconsSame = true
 			local lastIconPath
-			for categoryName, category in SortedPairs( division ) do
+			for dataID, data in SortedPairs( entData ) do
 
-				local catIcon = ANPlusCategoryIcons[divisionName .. " | " .. categoryName]
+				local catIcon = ANPlusCategoryIcons[categoryName .. " | " .. dataID]
 				if isstring( lastIconPath ) && catIcon != lastIconPath then
 					allCatIconsSame = false
 				end
 				lastIconPath = catIcon
 			end
 	
-			local divisionIcon = allCatIconsSame && lastIconPath || GenericCatIcon
-			local divisionNodes = {}
+			local dataIcon = allCatIconsSame && lastIconPath || GenericNPCIcon
+			local dataNodes = {}
 				
-			local node = allNode:AddNode( divisionName, divisionIcon )
+			local node = allNodeNPCs:AddNode( categoryName, dataIcon )
 
-			for categoryName, category in SortedPairs( division ) do
-				
-				--GiveIconsToNode( pnlContent, tree, node, division )
-				--table.Merge( allNodeCache, division )		
+			for dataID, data in SortedPairs( entData ) do	
 
-				if ANPlusLoadGlobal[categoryName] then
+				if ANPlusLoadGlobal[dataID] then
 					
-					GiveIconsToNode( pnlContent, tree, node, division )
-					table.Merge( allNodeCache, division )
+					GiveIconsToNode( pnlContent, tree, node, entData )
+					table.Merge( allNodeCacheNPCs, entData )
 				else
 	
-					local catNode = node:AddNode(categoryName, ANPlusCategoryIcons[divisionName .. " | " .. categoryName] || GenericCatIcon )
-					GiveIconsToNode( pnlContent, tree, catNode, category )
-					table.Merge( divisionNodes, category )
+					local catNode = node:AddNode( dataID, ANPlusCategoryIcons[categoryName .. " | " .. dataID] || GenericNPCIcon )
+					GiveIconsToNode( pnlContent, tree, catNode, data )
+					table.Merge( dataNodes, data )
 	
 				end
 				
 			end
 
-			if !table.IsEmpty( divisionNodes ) then
-				GiveIconsToNode( pnlContent, tree, node, divisionNodes )
-				table.Merge( allNodeCache, divisionNodes )
+			if !table.IsEmpty( dataNodes ) then
+				GiveIconsToNode( pnlContent, tree, node, dataNodes )
+				table.Merge( allNodeCacheNPCs, dataNodes )
 			end
 	
 		end
-		if !table.IsEmpty( allNodeCache ) then
-			GiveIconsToNode( pnlContent, tree, allNode, allNodeCache )
+		if !table.IsEmpty( allNodeCacheNPCs ) then
+			GiveIconsToNode( pnlContent, tree, allNodeNPCs, allNodeCacheNPCs )
+		end
+
+
+
+		local allNodeENTs = tree:AddNode( "[ Entities ]", GenericENTIcon )	
+		local allNodeCacheENTs = {}
+
+		for categoryName, entData in SortedPairs( ENTTab ) do
+
+			local allCatIconsSame = true
+			local lastIconPath
+			for dataID, data in SortedPairs( entData ) do
+
+				local catIcon = ANPlusCategoryIcons[categoryName .. " | " .. dataID]
+				if isstring( lastIconPath ) && catIcon != lastIconPath then
+					allCatIconsSame = false
+				end
+				lastIconPath = catIcon
+			end
+	
+			local dataIcon = allCatIconsSame && lastIconPath || GenericENTIcon
+			local dataNodes = {}
+				
+			local node = allNodeENTs:AddNode( categoryName, dataIcon )
+
+			for dataID, data in SortedPairs( entData ) do	
+
+				if ANPlusLoadGlobal[dataID] then
+					
+					GiveIconsToNode( pnlContent, tree, node, entData )
+					table.Merge( allNodeCacheENTs, entData )
+				else
+	
+					local catNode = node:AddNode( dataID, ANPlusCategoryIcons[categoryName .. " | " .. dataID] || GenericENTIcon )
+					GiveIconsToNode( pnlContent, tree, catNode, data )
+					table.Merge( dataNodes, data )
+	
+				end
+				
+			end
+
+			if !table.IsEmpty( dataNodes ) then
+				GiveIconsToNode( pnlContent, tree, node, dataNodes )
+				table.Merge( allNodeCacheENTs, dataNodes )
+			end
+	
+		end
+		if !table.IsEmpty( allNodeCacheENTs ) then
+			GiveIconsToNode( pnlContent, tree, allNodeENTs, allNodeCacheENTs )
+		end
+		
+
+
+		local allNodeVEHs = tree:AddNode( "[ Vehicles ]", GenericVEHIcon )	
+		local allNodeCacheVEHs = {}
+
+		for categoryName, entData in SortedPairs( VEHTab ) do
+
+			local allCatIconsSame = true
+			local lastIconPath
+			for dataID, data in SortedPairs( entData ) do
+
+				local catIcon = ANPlusCategoryIcons[categoryName .. " | " .. dataID]
+				if isstring( lastIconPath ) && catIcon != lastIconPath then
+					allCatIconsSame = false
+				end
+				lastIconPath = catIcon
+			end
+	
+			local dataIcon = allCatIconsSame && lastIconPath || GenericVEHIcon
+			local dataNodes = {}
+				
+			local node = allNodeVEHs:AddNode( categoryName, dataIcon )
+
+			for dataID, data in SortedPairs( entData ) do	
+
+				if ANPlusLoadGlobal[dataID] then
+					
+					GiveIconsToNode( pnlContent, tree, node, entData )
+					table.Merge( allNodeCacheVEHs, entData )
+				else
+	
+					local catNode = node:AddNode( dataID, ANPlusCategoryIcons[categoryName .. " | " .. dataID] || GenericVEHIcon )
+					GiveIconsToNode( pnlContent, tree, catNode, data )
+					table.Merge( dataNodes, data )
+	
+				end
+				
+			end
+
+			if !table.IsEmpty( dataNodes ) then
+				GiveIconsToNode( pnlContent, tree, node, dataNodes )
+				table.Merge( allNodeCacheVEHs, dataNodes )
+			end
+	
+		end
+		if !table.IsEmpty( allNodeCacheENTs ) then
+			GiveIconsToNode( pnlContent, tree, allNodeVEHs, allNodeCacheVEHs )
 		end
 	
 	end)
