@@ -5,7 +5,6 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 local ENT = FindMetaTable("Entity")
 local ZERO_VEC = Vector( 0, 0, 0 )
 
-
 function ANPlusFilterInternal(ent, pn, transition)
 
 	if ANPDefaultOutputs then

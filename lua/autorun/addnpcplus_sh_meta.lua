@@ -206,7 +206,7 @@ end
 function metaENT:ANPlusEditBone(tab)	
 	if !tab then return end	
 	self:ANPlusResetBone()	
-	timer.Simple(0, function()
+	timer.Simple( 0, function()
 		if !IsValid(self) then return end
 		for bone, params in pairs(tab) do
 		
@@ -220,7 +220,7 @@ function metaENT:ANPlusEditBone(tab)
 			end		
 		end		
 		if (SERVER) then
-			net.Start("anplus_fix_bones")
+			net.Start( "anplus_fix_bones" )
 			net.WriteEntity( self )
 			net.Broadcast()	
 		else	

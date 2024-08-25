@@ -173,7 +173,7 @@ if (SERVER) then
 ------------------------------------------------------------------------------=#	
 	local function LoadData()		
 		if file.Exists( dir_presets, "DATA" ) then 
-			ANPlusENTReplacerData = von.deserialize( file.Read( dir_presets, "DATA" ) ) or {}
+			ANPlusENTReplacerData = von.deserialize( file.Read( dir_presets, "DATA" ) ) || {}
 		end
 	end
 ------------------------------------------------------------------------------=#	

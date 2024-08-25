@@ -21,6 +21,7 @@ ANPlusToolMenuGlobal = {}
 ANPlusRemoveFromSpawnList = {}
 ANPlusHealthBarStyles = { ['Disable All'] = true }
 ANPlusScriptedSentences = {}
+ANPlusCategoryIcons = ANPlusCategoryIcons || {}
 
 if (SERVER) then
 	ANPlusPlayerRelations = {
@@ -536,13 +537,17 @@ ANPlus = {
 	AddNPC = function( tab, listType )
 
 		if ANPlusLoadGlobal then
-			local listType = listType || "NPC"
+
 			local id = tostring( tab['Name'] ) 	
 			
 			local base = tab['Base'] && ANPlusLoadGlobal[ tab['Base'] ]
 			if base then tab = table.Merge( table.Copy( base ), tab ) end
 
 			local addTab = { [ id ] = tab } 		
+
+			local listType = listType || "NPC"
+			tab['EntityType'] = listType
+
 			table.Merge( ANPlusLoadGlobal, addTab )	
 
 			ANPlusLoadGlobalCount = ANPlusLoadGlobalCount + 1
@@ -601,7 +606,10 @@ ANPlus = {
 			local addTab = { parentname = id } -- This should help with all these NPC spawner tools :/
 			table.Merge( tab['KeyValues'], addTab )		
 			
-			if tab['Spawnable'] != nil && tab['Spawnable'] == false then return end		
+			if tab['Spawnable'] != nil && tab['Spawnable'] == false then return end
+			
+			local category = tab['Category'] && string.Split( tab['Category'], " | " )
+			category = istable( category ) && #category >= 2 && category[ 1 ] || tab['Category']
 			
 			if listType == "NPC" then
 				list.Set( listType, id, {
@@ -609,7 +617,7 @@ ANPlus = {
 					Class 		 	= tab['Class'], 
 					Model 		 	= tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ] || false, 
 					Health 		 	= tab['Health'], 
-					Category 	 	= tab['Category'], 
+					Category 	 	= category, 
 					KeyValues 	 	= tab['KeyValues'] || {}, 
 					Weapons 	 	= tab['DefaultWeapons'] || false, 
 					SpawnFlags 	 	= tab['SpawnFlags'],			
@@ -629,7 +637,7 @@ ANPlus = {
 					Class 		 	= tab['Class'], 
 					Model 		 	= tab['Models'] && tab['Models'][ 1 ] && tab['Models'][ 1 ][ 1 ] || false, 
 					Health 		 	= tab['Health'], 
-					Category 	 	= tab['Category'], 
+					Category 	 	= category, 
 					KeyValues 	 	= tab['KeyValues'] || {}, 
 					SpawnFlags 	 	= tab['SpawnFlags'],			
 					AdminOnly 	 	= tab['AdminOnly'] || false,			
@@ -648,7 +656,7 @@ ANPlus = {
 					PrintName 	 	= tab['Name'], 
 					ClassName 	 	= tab['Class'], 					 
 					Health 		 	= tab['Health'], 
-					Category 	 	= tab['Category'], 
+					Category 	 	= category, 
 					KeyValues 	 	= tab['KeyValues'] || {},  
 					SpawnFlags 	 	= tab['SpawnFlags'],			
 					AdminOnly 	 	= tab['AdminOnly'] || false,			
@@ -766,6 +774,11 @@ ANPlus = {
 		Add_NPC_Class( className )
 		table.Merge( ANPlusPlayerRelations, relationTab )
 	end,
+
+	AddCategoryIcon = function(category, path)
+		if SERVER then return end
+		ANPlusCategoryIcons[category] = path
+	end
 	
 } 
 
@@ -898,13 +911,193 @@ if (CLIENT) then
 			if toolData then spawnmenu.AddToolMenuOption( "ANPlus", toolData['Category'], ANPlusIDCreate( toolData['Category'] ) .. "_menu", toolData['Name'], nil, nil, toolData['Panel'], toolData['Table'] || nil ) end
 		end		
 	end)
+
+	local PANEL = {}
+	local GenericIcon = "vgui/anplus_log.png"
+	local GenericCatIcon = "vgui/anp_ico_hd.png"
+
+	Derma_Hook( PANEL, "Paint", "Paint", "Tree" )
+	PANEL.m_bBackground = true -- Hack for above
 	
+	spawnmenu.AddContentType( "anplus_npcs", function( container, obj )
+		if ( !obj.material ) then return end
+		if ( !obj.nicename ) then return end
+		if ( !obj.spawnname ) then return end
+		--if ( !obj.weapon ) then return end
+	
+	
+		local icon = vgui.Create( "ContentIcon", container )
+		icon:SetContentType( "anplus_npcs" )
+		icon:SetSpawnName( obj.spawnname )
+		icon:SetName( obj.nicename )
+		icon:SetMaterial( obj.material )
+		icon:SetAdminOnly( obj.admin )
+		icon:SetColor( Color( 205, 92, 92, 255 ) )
+		icon.DoClick = function()
+			if ANPlusLoadGlobal[obj.spawnname]['EntityType'] == "NPC" then
+				local override = GetConVar("gmod_npcweapon"):GetString()
+				RunConsoleCommand( "gmod_spawnnpc", obj.spawnname, obj.weapon && ( override == "" && table.Random(obj.weapon) || override ) || "none" )
+			elseif ANPlusLoadGlobal[obj.spawnname]['EntityType'] == "SpawnableEntities" then
+				RunConsoleCommand( "gm_spawnsent", obj.spawnname )
+			elseif ANPlusLoadGlobal[obj.spawnname]['EntityType'] == "Vehicles" then
+				RunConsoleCommand( "gm_spawnvehicle", obj.spawnname )
+			end
+			surface.PlaySound( "buttons/button16.wav" )
+		end
+	
+	
+		icon.OpenMenu = function( self )
+			local menu = DermaMenu()
+			
+			menu:AddOption( "#spawnmenu.menu.copy", function() SetClipboardText( self:GetSpawnName() ) end ):SetIcon( "icon16/page_copy.png" )
+			if ( isfunction( self.OpenMenuExtra ) ) then
+				self:OpenMenuExtra( menu )
+			end
+		
+			menu:AddOption( "#spawnmenu.menu.spawn_with_toolgun", function()
+				RunConsoleCommand( "gmod_tool", "creator" ) RunConsoleCommand( "creator_type", "2" )
+				RunConsoleCommand( "creator_name", obj.spawnname ) RunConsoleCommand( "creator_arg", weapon )
+			end ):SetIcon( "icon16/brick_add.png" )
+		
+			menu:Open()
+		end
+	
+	
+		if ( IsValid( container ) ) then
+			container:Add( icon )
+		end
+	
+	
+		return icon
+	end)
+
+	local function GiveIconsToNode( pnlContent, tree, node, npcdata )
+		node.DoPopulate = function( self ) -- When we click on the node - populate it using this function
+			-- If we've already populated it - forget it.
+			if ( self.PropPanel ) then return end
+	
+			-- Create the container panel
+			self.PropPanel = vgui.Create( "ContentContainer", pnlContent )
+			self.PropPanel:SetVisible( false )
+			self.PropPanel:SetTriggerSpawnlistChange( false )
+	
+			for name, ent in SortedPairsByMemberValue( npcdata, "Name" ) do
+				local mat = GenericIcon
+	
+				if file.Exists( "materials/entities/" .. name .. ".png", "GAME" ) then
+					mat = "entities/" .. name .. ".png"
+				end
+	
+				local icon = spawnmenu.CreateContentIcon( "anplus_npcs", self.PropPanel, {
+					nicename	= ent['Name'],
+					spawnname	= name,
+					material	= mat,
+					weapon		= ent['DefaultWeapons'],
+					admin		= ent['AdminOnly']
+				} )
+			end
+		end 
+	
+		node.DoClick = function( self )
+			self:DoPopulate()
+			pnlContent:SwitchPanel( self.PropPanel )
+		end
+	end
+
+	hook.Add( "ANPlusSpawnMenuPopulate", "ANPlus_SpawnMenuPopulate", function( pnlContent, tree, node )
+		
+		local tbl = {}
+		for class, npcdata in pairs( ANPlusLoadGlobal ) do
+
+			if isstring( npcdata['Category'] ) && ( npcdata['Spawnable'] == nil || npcdata['Spawnable'] == true ) then
+				
+				local split = string.Split( npcdata.Category, " | " )
+				local s1, s2 = split[ 1 ], split[ 2 ]
+				tbl[ s1 ] = tbl[ s1 ] || {}
+	
+				if s2 then
+					tbl[ s1 ][ s2 ] = tbl[ s1 ][ s2 ] || {}
+					tbl[ s1 ][ s2 ][ class ] = npcdata
+				else
+					tbl[s1][class] = npcdata
+				end
+
+			end
+
+		end
+
+		local allNode = tree:AddNode( "ANPlus Base", GenericCatIcon )
+
+		local allNodeCache = {}
+		for divisionName, division in SortedPairs( tbl ) do
+
+			local allCatIconsSame = true
+			local lastIconPath
+			for categoryName, category in SortedPairs( division ) do
+
+				local catIcon = ANPlusCategoryIcons[divisionName .. " | " .. categoryName]
+				if isstring( lastIconPath ) && catIcon != lastIconPath then
+					allCatIconsSame = false
+				end
+				lastIconPath = catIcon
+			end
+	
+			local divisionIcon = allCatIconsSame && lastIconPath || GenericCatIcon
+			local divisionNodes = {}
+				
+			local node = allNode:AddNode( divisionName, divisionIcon )
+
+			for categoryName, category in SortedPairs( division ) do
+				
+				--GiveIconsToNode( pnlContent, tree, node, division )
+				--table.Merge( allNodeCache, division )		
+
+				if ANPlusLoadGlobal[categoryName] then
+					
+					GiveIconsToNode( pnlContent, tree, node, division )
+					table.Merge( allNodeCache, division )
+				else
+	
+					local catNode = node:AddNode(categoryName, ANPlusCategoryIcons[divisionName .. " | " .. categoryName] || GenericCatIcon )
+					GiveIconsToNode( pnlContent, tree, catNode, category )
+					table.Merge( divisionNodes, category )
+	
+				end
+				
+			end
+
+			if !table.IsEmpty( divisionNodes ) then
+				GiveIconsToNode( pnlContent, tree, node, divisionNodes )
+				table.Merge( allNodeCache, divisionNodes )
+			end
+	
+		end
+		if !table.IsEmpty( allNodeCache ) then
+			GiveIconsToNode( pnlContent, tree, allNode, allNodeCache )
+		end
+	
+	end)
+
+	vgui.Register( "ANPlus_SpawnMenu", PANEL, "DDrawer" )
+	spawnmenu.AddCreationTab( "ANPlus", function(...)
+		
+		local pnlContent = vgui.Create( "SpawnmenuContentPanel" )
+		pnlContent:CallPopulateHook( "ANPlusSpawnMenuPopulate" )
+
+
+		local sidebar = pnlContent.ContentNavBar
+		sidebar.Options = vgui.Create( "ANPlus_SpawnMenu", sidebar )
+
+		return pnlContent
+
+	end, "vgui/anp_ico.png", 25 )
+
 end
 
 properties.Add( "anplus_editmenu", {
 	MenuLabel = "ANP Edit Menu", -- Name to display on the context menu
 	Order = 60000, -- The order to display this property relative to other properties
-	MenuIcon = "vgui/anp_ico.png", -- The icon to display next to the property
+	MenuIcon = "vgui/anp_ico_hd.png", -- The icon to display next to the property
 
 	Filter = function( self, ent, ply ) -- A function that determines whether an entity is valid for this property
 		if ( !IsValid( ent ) ) then return false end

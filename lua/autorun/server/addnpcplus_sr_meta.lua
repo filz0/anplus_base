@@ -932,7 +932,7 @@ local full360 = {
 true for 360
 ]]--
 
-function metaENT:ANPlusDealMeleeDamage(dist, dmg, dmgt, viewpunch, force, full360, sndhit, sndmiss, callback)
+function metaENT:ANPlusDealMeleeDamage(dist, dmg, dmgt, viewpunch, force, full360, sndhit, sndmiss, callbackHit, callbackMiss)
 
 	--local pos = self:ANPlusGetMeleePos( self )
 	local pos = self:GetPos() + self:OBBCenter()
@@ -955,18 +955,18 @@ function metaENT:ANPlusDealMeleeDamage(dist, dmg, dmgt, viewpunch, force, full36
 			if validAng then
 			
 				bHit = true
-				local posDmg = ent:NearestPoint(center)
+				local posDmg = ent:NearestPoint( center )
 				local dmginfo = DamageInfo()
 				dmginfo:SetDamageType( dmgt )
 				dmginfo:SetDamage( dmg )
 				dmginfo:SetAttacker( self )
-				dmginfo:SetInflictor( IsValid(self:GetActiveWeapon()) && self:GetActiveWeapon() || self )
+				dmginfo:SetInflictor( IsValid( self:GetActiveWeapon()) && self:GetActiveWeapon() || self )
 				dmginfo:SetDamagePosition( posDmg )
 				
 				if force then dmginfo:SetDamageForce( force ) end
 				
-				if isfunction( callback ) then
-					callback( ent, dmginfo )
+				if isfunction( callbackHit ) then
+					callbackHit( ent, dmginfo )
 				end
 				
 				ent:TakeDamageInfo( dmginfo )
@@ -977,10 +977,18 @@ function metaENT:ANPlusDealMeleeDamage(dist, dmg, dmgt, viewpunch, force, full36
 					
 				elseif ent:GetClass() == "npc_turret_floor" && ( ent:GetNPCState() != 7 || ent:GetNPCState() != 5 ) then
 				
-					ent:GetPhysicsObject():ApplyForceCenter(self:GetForward() * 10000 ) 
+					ent:GetPhysicsObject():ApplyForceCenter( self:GetForward() * 10000 ) 
 					
 				end
+
 			end
+
+		else
+
+			if isfunction( callbackMiss ) then
+				callbackMiss()
+			end
+
 		end
 	end
 	if bHit && sndhit then
@@ -1677,9 +1685,10 @@ local iCond = {
 function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, callback, postCallback)
 	if !act || self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() || self:ANPlusPlayingDeathAnim() ) then return end
 	local actSeq = isstring( act ) && self:LookupSequence( act ) || self:SelectWeightedSequence( act )
+	local actName = tostring( util.GetActivityNameByID( act ) )
 	local actSeqName = self:GetSequenceName( actSeq )
-	local gestCheck = string.find( actSeqName, "gesture_" ) || string.find( actSeqName, "g_" ) || string.find( actSeqName, "gest" )
-
+	local gestCheck = string.find( actSeqName, "gesture_" ) || string.find( actSeqName, "g_" ) || string.find( actSeqName, "gest" ) || string.find( string.lower( actName ), "gesture_" ) || string.find( string.lower( actName ), "g_" ) || string.find( string.lower( actName ), "gest" )
+	
 	local speed = speed || 1
 	local facespeed = facespeed || 0
 	
@@ -2034,7 +2043,7 @@ function metaENT:ANPlusGetGestureSequence()	-- Seq and Layer
 	local gest
 	local lay
 	for i = 0, 5 do
-		if self:GetLayerSequence( i ) > 0 then
+		if self:GetLayerSequence( i ) && self:GetLayerSequence( i ) > 0 then
 			gest = self:GetLayerSequence( i )
 			lay = i
 			break
@@ -2047,7 +2056,7 @@ function metaENT:ANPlusGetGestureActivity()	-- ACT and Layer
 	local gest
 	local lay
 	for i = 0, 5 do
-		if self:GetLayerSequence( i ) > 0 then
+		if self:GetLayerSequence( i ) && self:GetLayerSequence( i ) > 0 then
 			gest = self:GetLayerSequence( i )
 			lay = i
 			break
