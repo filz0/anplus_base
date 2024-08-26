@@ -5,6 +5,19 @@ if ( !file.Exists( "autorun/addnpcplus_base.lua" , "LUA" ) ) then return end
 local ENT = FindMetaTable("Entity")
 local ZERO_VEC = Vector( 0, 0, 0 )
 
+ANP_LUA_RUN_ENT = nil
+
+function ANPMapLuaCreate()
+	ANP_LUA_RUN_ENT = ents.Create( "lua_run" )
+	if IsValid(ANP_LUA_RUN_ENT) then
+		ANP_LUA_RUN_ENT:SetName( "anp_lua_run" )
+		ANP_LUA_RUN_ENT:Spawn()
+	end
+end
+
+hook.Add( "InitPostEntity", "ANP_LUA_RUN_ENT", ANPMapLuaCreate )
+hook.Add( "PostCleanupMap", "ANP_LUA_RUN_ENT", ANPMapLuaCreate ) 
+
 function ANPlusFilterInternal(ent, pn, transition)
 
 	if ANPDefaultOutputs then
