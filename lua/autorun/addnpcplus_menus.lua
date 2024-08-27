@@ -83,7 +83,11 @@ if (CLIENT) then
 	local SM_GenericNPCIcon = "vgui/anp_npc_ico.png"
 	local SM_GenericENTIcon = "vgui/anp_ent_ico.png"
 	local SM_GenericVEHIcon = "vgui/anp_veh_ico.png"
-	local SM_HeaderTable = {}
+	local SM_HeaderTable = {
+        ['NPC'] = {},
+        ['SpawnableEntities'] = {},
+        ['Vehicles'] = {},
+    }
 
 	Derma_Hook( PANEL, "Paint", "Paint", "Tree" )
 	PANEL.m_bBackground = true -- Hack for above
@@ -96,8 +100,6 @@ if (CLIENT) then
         if ( !obj.type ) then return end
 
 		local label
-
-        SM_HeaderTable[ obj.type ] = SM_HeaderTable[ obj.type ] || {}
 
 		if !SM_HeaderTable[ obj.type ][ obj.category ] then
 
@@ -165,7 +167,7 @@ if (CLIENT) then
 			--local generalHeader = vgui.Create( "ContentHeader", self.PropPanel )
 			--generalHeader:SetText( "Test Lmao" )
 	
-			for name, ent in SortedPairsByMemberValue( npcdata, "Name" ) do
+			for name, ent in SortedPairsByMemberValue( npcdata, "Category" ) do
 				local mat = SM_GenericIcon
 	
 				if file.Exists( "materials/entities/" .. name .. ".png", "GAME" ) then
@@ -279,7 +281,7 @@ if (CLIENT) then
 
 			for dataID, data in SortedPairs( entData ) do	
 
-				if ANPlusLoadGlobal[dataID] then
+				if ANPlusLoadGlobal[ dataID ] then
 					
 					GiveIconsToNode( pnlContent, tree, node, entData )
 					table.Merge( allNodeCacheNPCs, entData )
@@ -328,7 +330,7 @@ if (CLIENT) then
 
 			for dataID, data in SortedPairs( entData ) do	
 
-				if ANPlusLoadGlobal[dataID] then
+				if ANPlusLoadGlobal[ dataID ] then
 					
 					GiveIconsToNode( pnlContent, tree, node, entData )
 					table.Merge( allNodeCacheENTs, entData )
@@ -377,7 +379,7 @@ if (CLIENT) then
 
 			for dataID, data in SortedPairs( entData ) do	
 
-				if ANPlusLoadGlobal[dataID] then
+				if ANPlusLoadGlobal[ dataID ] then
 					
 					GiveIconsToNode( pnlContent, tree, node, entData )
 					table.Merge( allNodeCacheVEHs, entData )
