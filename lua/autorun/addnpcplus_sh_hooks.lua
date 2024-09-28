@@ -663,7 +663,20 @@ hook.Add( "SetupMove", "ANPlusLoad_SetupMove", function(ply, mvd, cmd)
 		--ent:SetPoseParameter( "aim_yaw", 0 )
 		--ent:SetKeyValue( "sleepstate", 3 )
 		if mvd:KeyDown( IN_ATTACK ) then
-
+			
+			if IsValid(ent:GetActiveWeapon()) then
+				if !ent:IsCurrentSchedule( 43 ) then
+					
+					ent:SetSchedule( 43 )
+				end
+			else
+				
+				if !ent:IsCurrentSchedule( 41 ) then
+					--ent:ClearCondition( COND.TOO_FAR_TO_ATTACK )
+					ent:SetCondition( COND.CAN_MELEE_ATTACK1 )
+					ent:SetSchedule( 41 )
+				end
+			end
 		end	
 		
 		if mvd:KeyDown( IN_RELOAD ) && !ent:IsCurrentSchedule( SCHED_RELOAD ) then
@@ -675,11 +688,12 @@ hook.Add( "SetupMove", "ANPlusLoad_SetupMove", function(ply, mvd, cmd)
 			ent:MoveJumpStart( mvVelo + ent:GetUp() * 300 )
 		end
 		
-		if mvd:KeyDown( IN_DUCK ) && ent:OnGround() then
+		if mvd:KeyDown( IN_DUCK ) && ent:OnGround() && ent:GetActivity() != 46 then
 			ent:SetSaveValue( "m_bIsCrouching", true )
 			ent:SetSaveValue( "m_bForceCrouch", true )
 			ent:SetSaveValue( "m_bCrouchDesired", true )
-		else
+			--ent:SetActivity( 46 )
+		elseif !mvd:KeyDown( IN_DUCK ) || !ent:OnGround() || ent:GetActivity() == 46 then
 			ent:SetSaveValue( "m_bIsCrouching", false )
 			ent:SetSaveValue( "m_bForceCrouch", false )
 			ent:SetSaveValue( "m_bCrouchDesired", false )
@@ -687,146 +701,103 @@ hook.Add( "SetupMove", "ANPlusLoad_SetupMove", function(ply, mvd, cmd)
 		
 		if ent:OnGround() then
 			if mvd:KeyDown( IN_SPEED ) then
-				--if ent:GetCurrentSchedule() != SCHED_FORCED_GO_RUN then
-					if mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_MOVELEFT ) then						
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() * -30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO_RUN )
-						
-					elseif mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_BACK ) then
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetRight() * dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetRight() * -30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO_RUN )
 
-					elseif mvd:KeyDown( IN_MOVERIGHT ) && mvd:KeyDown( IN_FORWARD ) then				
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * dist + ent:GetRight() * dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() + ent:GetRight() * -30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO_RUN )
-						
-					elseif mvd:KeyDown( IN_MOVELEFT ) && !mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_BACK )  then			
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetRight() * -dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetRight() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO_RUN )
-						
-					elseif mvd:KeyDown( IN_MOVELEFT ) && mvd:KeyDown( IN_FORWARD ) then
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * dist + ent:GetRight() * -dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() + ent:GetRight() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO_RUN )
-						
-					elseif mvd:KeyDown( IN_BACK ) && !mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_MOVELEFT ) then	
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * -dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO_RUN )
-						
-					elseif mvd:KeyDown( IN_MOVERIGHT ) && mvd:KeyDown( IN_BACK ) then
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * -dist + ent:GetRight() * dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() + ent:GetRight() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO_RUN )
-						
-					elseif mvd:KeyDown( IN_MOVELEFT ) && mvd:KeyDown( IN_BACK ) then						
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * -dist + ent:GetRight() * -dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() + ent:GetRight() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO_RUN )
-						
-					elseif ent:IsMoving() then
-						ent:StopMoving()
-					end
-				--end
-			else
-				--if ent:GetCurrentSchedule() != SCHED_FORCED_GO then
-					if mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_MOVELEFT ) then						
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() * -30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO )
-						ent:SetCondition(21)
-					elseif mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_BACK ) then
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetRight() * dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetRight() * -30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO )
+				local spos = ent:GetPos() + ent:OBBCenter() 
+				local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
+				local trH
 
-					elseif mvd:KeyDown( IN_MOVERIGHT ) && mvd:KeyDown( IN_FORWARD ) then				
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * dist + ent:GetRight() * dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() + ent:GetRight() * -30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO )
-						
-					elseif mvd:KeyDown( IN_MOVELEFT ) && !mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_BACK )  then			
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetRight() * -dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetRight() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO )
-						
-					elseif mvd:KeyDown( IN_MOVELEFT ) && mvd:KeyDown( IN_FORWARD ) then
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * dist + ent:GetRight() * -dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() + ent:GetRight() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO )
-						
-					elseif mvd:KeyDown( IN_BACK ) && !mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_MOVELEFT ) then	
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * -dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO )
-						
-					elseif mvd:KeyDown( IN_MOVERIGHT ) && mvd:KeyDown( IN_BACK ) then
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * -dist + ent:GetRight() * dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() + ent:GetRight() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO )
-						
-					elseif mvd:KeyDown( IN_MOVELEFT ) && mvd:KeyDown( IN_BACK ) then						
-						local spos = ent:GetPos() + ent:OBBCenter() 
-						local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
-						local tr = QTrace( spos, spos + ent:GetForward() * -dist + ent:GetRight() * -dist, filter )
-						local pos = tr.Hit && tr.HitPos + ent:GetForward() + ent:GetRight() * 30 || tr.HitPos
-						ent:SetLastPosition( pos )
-						ent:SetSchedule( SCHED_FORCED_GO )
-						
-					elseif ent:IsMoving() then
-						ent:StopMoving()
-					end			
+				if mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_MOVELEFT ) then						
+					
+					trH = QTrace( spos, spos + ent:GetForward() * dist, filter )						
+					
+				elseif mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_BACK ) then
+
+					trH = QTrace( spos, spos + ent:GetRight() * dist, filter )
+
+				elseif mvd:KeyDown( IN_MOVERIGHT ) && mvd:KeyDown( IN_FORWARD ) then				
+
+					trH = QTrace( spos, spos + ent:GetForward() * dist + ent:GetRight() * dist, filter )
+					
+				elseif mvd:KeyDown( IN_MOVELEFT ) && !mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_BACK )  then			
+
+					trH = QTrace( spos, spos + ent:GetRight() * -dist, filter )
+					
+				elseif mvd:KeyDown( IN_MOVELEFT ) && mvd:KeyDown( IN_FORWARD ) then
+
+					trH = QTrace( spos, spos + ent:GetForward() * dist + ent:GetRight() * -dist, filter )
+					
+				elseif mvd:KeyDown( IN_BACK ) && !mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_MOVELEFT ) then	
+
+					trH = QTrace( spos, spos + ent:GetForward() * -dist, filter )
+					
+				elseif mvd:KeyDown( IN_MOVERIGHT ) && mvd:KeyDown( IN_BACK ) then
+
+					trH = QTrace( spos, spos + ent:GetForward() * -dist + ent:GetRight() * dist, filter )
+					
+				elseif mvd:KeyDown( IN_MOVELEFT ) && mvd:KeyDown( IN_BACK ) then						
+
+					trH = QTrace( spos, spos + ent:GetForward() * -dist + ent:GetRight() * -dist, filter )
+					
+				elseif ent:IsMoving() then
+					ent:StopMoving()
 				end
-			--end
+
+				if trH then
+					local trV = QTrace( trH.HitPos, trH.HitPos - ent:GetUp() * dist, filter )
+					local pos = trV.HitPos
+					ent:SetLastPosition( pos )
+					ent:SetSchedule( SCHED_FORCED_GO_RUN )
+				end
+
+			else
+
+				local spos = ent:GetPos() + ent:OBBCenter() 
+				local filter = { ply, ply:GetActiveWeapon(), ent, ent:GetActiveWeapon() }
+				local trH
+
+				if mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_MOVELEFT ) then						
+					
+					trH = QTrace( spos, spos + ent:GetForward() * dist, filter )						
+					
+				elseif mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_BACK ) then
+
+					trH = QTrace( spos, spos + ent:GetRight() * dist, filter )
+
+				elseif mvd:KeyDown( IN_MOVERIGHT ) && mvd:KeyDown( IN_FORWARD ) then				
+
+					trH = QTrace( spos, spos + ent:GetForward() * dist + ent:GetRight() * dist, filter )
+					
+				elseif mvd:KeyDown( IN_MOVELEFT ) && !mvd:KeyDown( IN_FORWARD ) && !mvd:KeyDown( IN_BACK )  then			
+
+					trH = QTrace( spos, spos + ent:GetRight() * -dist, filter )
+					
+				elseif mvd:KeyDown( IN_MOVELEFT ) && mvd:KeyDown( IN_FORWARD ) then
+
+					trH = QTrace( spos, spos + ent:GetForward() * dist + ent:GetRight() * -dist, filter )
+					
+				elseif mvd:KeyDown( IN_BACK ) && !mvd:KeyDown( IN_MOVERIGHT ) && !mvd:KeyDown( IN_MOVELEFT ) then	
+
+					trH = QTrace( spos, spos + ent:GetForward() * -dist, filter )
+					
+				elseif mvd:KeyDown( IN_MOVERIGHT ) && mvd:KeyDown( IN_BACK ) then
+
+					trH = QTrace( spos, spos + ent:GetForward() * -dist + ent:GetRight() * dist, filter )
+					
+				elseif mvd:KeyDown( IN_MOVELEFT ) && mvd:KeyDown( IN_BACK ) then						
+
+					trH = QTrace( spos, spos + ent:GetForward() * -dist + ent:GetRight() * -dist, filter )
+					
+				elseif ent:IsMoving() then
+					ent:StopMoving()
+				end
+
+				if trH then
+					local trV = QTrace( trH.HitPos, trH.HitPos - ent:GetUp() * dist, filter )
+					local pos = trV.HitPos
+					ent:SetLastPosition( pos )
+					ent:SetSchedule( SCHED_FORCED_GO )
+				end			
+			end
 		end		
 		
 		-- STOP --

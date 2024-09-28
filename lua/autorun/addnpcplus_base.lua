@@ -22,7 +22,7 @@ ANPlusToolMenuGlobal = {}
 ANPlusRemoveFromSpawnList = {}
 ANPlusHealthBarStyles = { ['Disable All'] = true }
 ANPlusScriptedSentences = {}
-ANPlusCategoryIcons = ANPlusCategoryIcons || {}
+ANPlusCategoryCustom = ANPlusCategoryCustom || {}
 
 if (SERVER) then
 	ANPlusPlayerRelations = {
@@ -776,9 +776,9 @@ ANPlus = {
 		table.Merge( ANPlusPlayerRelations, relationTab )
 	end,
 
-	AddCategoryIcon = function(category, path)
+	AddCategoryCustomize = function(category, icon, bgimg)
 		if SERVER then return end
-		ANPlusCategoryIcons[category] = path
+		ANPlusCategoryCustom[category] = { ['Icon'] = icon, ['BGImage'] = bgimg }
 	end
 	
 } 
@@ -820,49 +820,7 @@ function ANPlusIDCreate(name)
 end
 
 --[[
-properties.Add( "anplus_controller", {
-	MenuLabel = "ANP Controller", -- Name to display on the context menu
-	Order = 60001, -- The order to display this property relative to other properties
-	MenuIcon = "vgui/anp_ico.png", -- The icon to display next to the property
 
-	Filter = function( self, ent, ply ) -- A function that determines whether an entity is valid for this property
-		if ( !IsValid( ent ) ) then return false end
-		if ( ent:IsPlayer() ) then return false end
-		--if ( !ent:IsANPlus( true ) ) then return false end
-		--if ( !ent['m_tSaveDataMenu'] || table.Count( ent['m_tSaveDataMenu'] ) == 0 ) then return false end
-		if ( !GetConVar( "developer" ):GetBool() ) then return false end
-		if ( !gamemode.Call( "CanProperty", ply, "anplus_editmenu", ent ) ) then return false end
-		
-		return true
-	end,
-	Action = function( self, ent ) -- The action to perform upon using the property ( Clientside )
-		local ply = LocalPlayer()
-		self:MsgStart()
-			net.WriteEntity( ent )
-		self:MsgEnd()
-		
-		ply:DrawViewModel( false )
-		ply.m_pANPControlledENT = ent
-
-	end,
-	Receive = function( self, length, ply ) -- The action to perform upon using the property ( Serverside )
-		local ent = net.ReadEntity()
-
-		if ( !properties.CanBeTargeted( ent, ply ) ) then return end
-		if ( !self:Filter( ent, ply ) ) then return end
-		ply:ANPlusControlled( ent )		
-		ply:Spectate(OBS_MODE_CHASE)
-		ply:SpectateEntity( ent )
-		ply:SetNoTarget( true )
-		ply:DrawShadow( false )
-		ply:SetNoDraw( true )
-		ply:SetMoveType( MOVETYPE_OBSERVER )
-		ply:DrawViewModel( false )
-		ply:DrawWorldModel( false )
-		ply:StripWeapons()
-		--ent:SetMaxLookDistance( 1 )
-	end 
-} )
 ]]--
 
 

@@ -75,8 +75,9 @@ net.Receive("anplus_client_particle_start", function()
 	local entAttachment = net.ReadFloat()
 	local offset = net.ReadVector()
 	local stop = net.ReadBool()
+
 	if IsValid(ent) then
-		ent:ANPlusClientParticleSystem(stop, effect, partAttachment, entAttachment, offset)
+		ent:ANPlusClientParticleSystem( stop, effect, partAttachment, entAttachment, offset )
 	end
 end)
 
@@ -88,10 +89,8 @@ net.Receive("anplus_paint_decal", function()
 	local col = net.ReadColor()
 	local w = net.ReadFloat()
 	local h = net.ReadFloat()
-	if IsValid(ent) then
-		local mat = string.find( decal, "decals/" ) && Material( decal ) || Material( util.DecalMaterial( decal ) )
-		util.DecalEx( mat, ent, sP, eP:GetNormalized(), col, w, h )
-	end
+	local mat = string.find( decal, "decals/" ) && Material( decal ) || Material( util.DecalMaterial( decal ) )
+	util.DecalEx( mat, ent, sP, eP, col, w, h )
 end)
 
 net.Receive("anplus_play_ui_snd", function()		

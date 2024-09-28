@@ -832,9 +832,10 @@ ANPlus.AddNPC( {
 	}, 
 ----------------------------------------------------------------- This table can be used to specify how our NPC should react to other NPCs and vice versa. ['MeToNPC'] sets how our NPC should react to the other NPC. ['NPCToMe'] sets how other NPC should react to ours. The first value sets the relation and the second one sets its strength. If you plan to use this table, make sure that ['Default'] is present inside as it will tell NPCs that are not present in here what to do. You can use NPC classes (npc_citizen) or ANP IDs/Names.
 	['Relations'] = { 
-	
-		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } }, -- "Hate" / "Like" / "Fear" / "Neutral"   
-		[1] = { ['MeToNPC'] = { "Hate", 0 } },
+		
+		['MyClass'] = 35,
+		['MyVJClass'] = "HateMe",											-- My new NPC CLASS,
+		['Default'] = { ['MeToNPC'] = { "Hate", 0 }, ['NPCToMe'] = { "Hate", 0 } },	-- Default relations to NPCs/CLASSes not mention below.
  
 	},  	
 ----------------------------------------------------------------- Increase the speed of certain actions/activities of your NPC or replace them.	Do NOT use movement activities here!
@@ -863,7 +864,7 @@ ANPlus.AddNPC( {
 			local dmgPos = dmginfo:GetDamagePosition()
 			self:SetNWFloat( "ANP_TestDummyDamage", dmg )
 			debugoverlay.Cross( dmgPos, 1, 1, Color( 255, 50, 50 ), true )
-			dmginfo:SetDamage( 0 )
+			return true
 		end,		
 		------------------------------------------------------------ OnNPCScaleDamage - This function runs whenever NPC gets damaged. Can also be used to detect which body part was hit.
 		['OnNPCScaleDamage'] = function(self, hitgroup, dmginfo)	

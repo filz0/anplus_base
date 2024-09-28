@@ -10,8 +10,17 @@ if (CLIENT) then
 	function ANPlusGetFixedScreenH()
 		return ScrH() / scrHeight
 	end
+
+	function ANPlusMiddleScreenW()
+		return ScrW() / 2
+	end
+
+	function ANPlusMiddleScreenH()
+		return ScrH() / 2
+	end
 	
 	local function ANPlusMenuDefault_Settings(panel)
+
 		panel:ClearControls()	
 		
 		local image = panel:ANPlus_CreateImage( 0, 20, 250 * ANPlusGetFixedScreenW(), 250 * ANPlusGetFixedScreenH(), "vgui/anplus_log.png", false, true, false )		
@@ -51,6 +60,7 @@ if (CLIENT) then
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "SWEP Flashlight Fade Distance", "anplus_swep_flight_fade_distance", 512, 10240, 0 ), "Distance at which SWEP's flashlight will fade." )
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "SWEP Laser Fade Distance Start", "anplus_swep_laser_fade_distance_start", 512, 10240, 0 ), "Distance at which SWEP's laser will start fading." )
 		panel:ANPlus_SecureMenuItem( panel:NumSlider( "SWEP Laser Fade Distance", "anplus_swep_laser_fade_distance", 512, 10240, 0 ), "Distance at which SWEP's laser will fade." )
+
 	end
 	
 	local function ANPlusMenuDefault_Functions(panel)
@@ -83,6 +93,7 @@ if (CLIENT) then
 	local SM_GenericNPCIcon = "vgui/anp_npc_ico.png"
 	local SM_GenericENTIcon = "vgui/anp_ent_ico.png"
 	local SM_GenericVEHIcon = "vgui/anp_veh_ico.png"
+	local SM_BGImage 
 	local SM_HeaderTable = {
         ['NPC'] = {},
         ['SpawnableEntities'] = {},
@@ -92,7 +103,7 @@ if (CLIENT) then
 	Derma_Hook( PANEL, "Paint", "Paint", "Tree" )
 	PANEL.m_bBackground = true -- Hack for above
 	
-	spawnmenu.AddContentType( "anplus_npcs", function( container, obj )
+	spawnmenu.AddContentType( "anplus_npcs", function( panel, obj )
 		if ( !obj.material ) then return end
 		if ( !obj.nicename ) then return end
 		if ( !obj.spawnname ) then return end
@@ -103,13 +114,13 @@ if (CLIENT) then
 
 		if !SM_HeaderTable[ obj.type ][ obj.category ] then
 
-			label = vgui.Create( "ContentHeader", container )
+			label = vgui.Create( "ContentHeader", panel )
 			label:SetText( obj.category )	
 			SM_HeaderTable[ obj.type ][ obj.category ] = true
 			
 		end
 	
-		local icon = vgui.Create( "ContentIcon", container )
+		local icon = vgui.Create( "ContentIcon", panel )
 		icon:SetContentType( "anplus_npcs" )
 		icon:SetSpawnName( obj.spawnname )
 		icon:SetName( obj.nicename )
@@ -145,27 +156,41 @@ if (CLIENT) then
 			menu:Open()
 		end	
 	
-		if ( IsValid( container ) ) then
-			if label then container:Add( label ) end
-			container:Add( icon )
+		if ( IsValid( panel ) ) then
+			if label then panel:Add( label ) end
+			panel:Add( icon )
 		end
 	
 	
 		return icon
 	end)
 
-	local function GiveIconsToNode( pnlContent, tree, node, npcdata )
+	local function GiveIconsToNode( panel, tree, node, npcdata )
 		node.DoPopulate = function( self ) -- When we click on the node - populate it using this function
 			-- If we've already populated it - forget it.
 			if ( self.PropPanel ) then return end
-	
-			-- Create the container panel
-			self.PropPanel = vgui.Create( "ContentContainer", pnlContent )
+			if ( SM_BGImage ) then SM_BGImage:Remove() end
+			
+			SM_BGImage = panel:ANPlus_CreateImage( 0, 0, 1024, 1024, SM_GenericIcon, false, true, false )
+			SM_BGImage:SetZPos( -999 )
+			--SM_BGImage:Dock( RIGHT )		
+			--local w1, h1 = panel.ContentNavBar:GetSize()	
+			local w2, h2 = panel:GetSize()
+			SM_BGImage:SetSize( w2, h2 )	
+			local x1, y1 = SM_BGImage:GetPos()
+			SM_BGImage:SetPos( x1, y1 + 15 )			
+			SM_BGImage:SetAlpha( 150 )
+			
+
+			-- Create the panel panel
+			self.PropPanel = vgui.Create( "ContentContainer", panel )
 			self.PropPanel:SetVisible( false )
 			self.PropPanel:SetTriggerSpawnlistChange( false )
 
 			--local generalHeader = vgui.Create( "ContentHeader", self.PropPanel )
 			--generalHeader:SetText( "Test Lmao" )
+
+			local custmBGImg = "none"
 	
 			for name, ent in SortedPairsByMemberValue( npcdata, "Category" ) do
 				local mat = SM_GenericIcon
@@ -175,6 +200,7 @@ if (CLIENT) then
 				end
 
                 local nicecategory = ent['Category'] && string.Split( ent['Category'], " | " )
+				custmBGImg = ANPlusCategoryCustom[ ent['Category'] ] && ANPlusCategoryCustom[ ent['Category'] ]['BGImage'] || custmBGImg
 	
 				local icon = spawnmenu.CreateContentIcon( "anplus_npcs", self.PropPanel, {
 					nicename	= ent['Name'],
@@ -187,15 +213,17 @@ if (CLIENT) then
 				} )
 			end
 
+			SM_BGImage:SetImage( custmBGImg, SM_GenericIcon )
+
 		end 
 	
 		node.DoClick = function( self )
 			self:DoPopulate()
-			pnlContent:SwitchPanel( self.PropPanel )
+			panel:SwitchPanel( self.PropPanel )
 		end
 	end
 
-	hook.Add( "ANPlusSpawnMenuPopulate", "ANPlus_SpawnMenuPopulate", function( pnlContent, tree, node )
+	hook.Add( "ANPlusSpawnMenuPopulate", "ANPlus_SpawnMenuPopulate", function( panel, tree, node )
 		
 		local NPCTab = {}
 		local ENTTab = {}
@@ -267,7 +295,7 @@ if (CLIENT) then
 			local lastIconPath
 			for dataID, data in SortedPairs( entData ) do
 
-				local catIcon = ANPlusCategoryIcons[ categoryName .. " | " .. dataID ]
+				local catIcon = ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon']
 				if isstring( lastIconPath ) && catIcon != lastIconPath then
 					allCatIconsSame = false
 				end
@@ -283,12 +311,12 @@ if (CLIENT) then
 
 				if ANPlusLoadGlobal[ dataID ] then
 					
-					GiveIconsToNode( pnlContent, tree, node, entData )
+					GiveIconsToNode( panel, tree, node, entData )
 					table.Merge( allNodeCacheNPCs, entData )
 				else
 	
-					local catNode = node:AddNode( dataID, ANPlusCategoryIcons[ categoryName .. " | " .. dataID ] || SM_GenericNPCIcon )
-					GiveIconsToNode( pnlContent, tree, catNode, data )
+					local catNode = node:AddNode( dataID, ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon'] || SM_GenericNPCIcon )
+					GiveIconsToNode( panel, tree, catNode, data )
 					table.Merge( dataNodes, data )
 	
 				end
@@ -296,13 +324,13 @@ if (CLIENT) then
 			end
 
 			if !table.IsEmpty( dataNodes ) then
-				GiveIconsToNode( pnlContent, tree, node, dataNodes )
+				GiveIconsToNode( panel, tree, node, dataNodes )
 				table.Merge( allNodeCacheNPCs, dataNodes )
 			end
 	
 		end
 		if !table.IsEmpty( allNodeCacheNPCs ) then
-			GiveIconsToNode( pnlContent, tree, allNodeNPCs, allNodeCacheNPCs )
+			GiveIconsToNode( panel, tree, allNodeNPCs, allNodeCacheNPCs )
 		end
 
 
@@ -316,7 +344,7 @@ if (CLIENT) then
 			local lastIconPath
 			for dataID, data in SortedPairs( entData ) do
 
-				local catIcon = ANPlusCategoryIcons[ categoryName .. " | " .. dataID ]
+				local catIcon = ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon']
 				if isstring( lastIconPath ) && catIcon != lastIconPath then
 					allCatIconsSame = false
 				end
@@ -332,12 +360,12 @@ if (CLIENT) then
 
 				if ANPlusLoadGlobal[ dataID ] then
 					
-					GiveIconsToNode( pnlContent, tree, node, entData )
+					GiveIconsToNode( panel, tree, node, entData )
 					table.Merge( allNodeCacheENTs, entData )
 				else
 	
-					local catNode = node:AddNode( dataID, ANPlusCategoryIcons[ categoryName .. " | " .. dataID ] || SM_GenericENTIcon )
-					GiveIconsToNode( pnlContent, tree, catNode, data )
+					local catNode = node:AddNode( dataID, ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon'] || SM_GenericENTIcon )
+					GiveIconsToNode( panel, tree, catNode, data )
 					table.Merge( dataNodes, data )
 	
 				end
@@ -345,13 +373,13 @@ if (CLIENT) then
 			end
 
 			if !table.IsEmpty( dataNodes ) then
-				GiveIconsToNode( pnlContent, tree, node, dataNodes )
+				GiveIconsToNode( panel, tree, node, dataNodes )
 				table.Merge( allNodeCacheENTs, dataNodes )
 			end
 	
 		end
 		if !table.IsEmpty( allNodeCacheENTs ) then
-			GiveIconsToNode( pnlContent, tree, allNodeENTs, allNodeCacheENTs )
+			GiveIconsToNode( panel, tree, allNodeENTs, allNodeCacheENTs )
 		end
 		
 
@@ -365,7 +393,7 @@ if (CLIENT) then
 			local lastIconPath
 			for dataID, data in SortedPairs( entData ) do
 
-				local catIcon = ANPlusCategoryIcons[ categoryName .. " | " .. dataID ]
+				local catIcon = ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon']
 				if isstring( lastIconPath ) && catIcon != lastIconPath then
 					allCatIconsSame = false
 				end
@@ -381,12 +409,12 @@ if (CLIENT) then
 
 				if ANPlusLoadGlobal[ dataID ] then
 					
-					GiveIconsToNode( pnlContent, tree, node, entData )
+					GiveIconsToNode( panel, tree, node, entData )
 					table.Merge( allNodeCacheVEHs, entData )
 				else
 	
-					local catNode = node:AddNode( dataID, ANPlusCategoryIcons[ categoryName .. " | " .. dataID ] || SM_GenericVEHIcon )
-					GiveIconsToNode( pnlContent, tree, catNode, data )
+					local catNode = node:AddNode( dataID, ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon'] || SM_GenericVEHIcon )
+					GiveIconsToNode( panel, tree, catNode, data )
 					table.Merge( dataNodes, data )
 	
 				end
@@ -394,13 +422,13 @@ if (CLIENT) then
 			end
 
 			if !table.IsEmpty( dataNodes ) then
-				GiveIconsToNode( pnlContent, tree, node, dataNodes )
+				GiveIconsToNode( panel, tree, node, dataNodes )
 				table.Merge( allNodeCacheVEHs, dataNodes )
 			end
 	
 		end
 		if !table.IsEmpty( allNodeCacheENTs ) then
-			GiveIconsToNode( pnlContent, tree, allNodeVEHs, allNodeCacheVEHs )
+			GiveIconsToNode( panel, tree, allNodeVEHs, allNodeCacheVEHs )
 		end
 	
 	end)
@@ -408,14 +436,13 @@ if (CLIENT) then
 	vgui.Register( "ANPlus_SpawnMenu", PANEL, "DDrawer" )
 	spawnmenu.AddCreationTab( "ANPlus", function(...)
 		
-		local pnlContent = vgui.Create( "SpawnmenuContentPanel" )
-		pnlContent:CallPopulateHook( "ANPlusSpawnMenuPopulate" )
+		local panel = vgui.Create( "SpawnmenuContentPanel" )
+		panel:CallPopulateHook( "ANPlusSpawnMenuPopulate" )
 
-
-		local sidebar = pnlContent.ContentNavBar
+		local sidebar = panel.ContentNavBar
 		sidebar.Options = vgui.Create( "ANPlus_SpawnMenu", sidebar )
 
-		return pnlContent
+		return panel
 
 	end, "vgui/anp_ico.png", 25 )
 
@@ -455,5 +482,50 @@ properties.Add( "anplus_editmenu", {
 		--ent:ANPlusCreateVar( "mCategory", "Category", "----[Default Variables]----", "Percentage damage resistance given by the Overseer's buff." )
 		--ent:ANPlusGetDataTab()['Functions']['OnNPCPropertyMenu'](ent) -- SERVER
 		
+	end 
+} )
+
+properties.Add( "anplus_controller", {
+	MenuLabel = "ANP Controller", -- Name to display on the context menu
+	Order = 60001, -- The order to display this property relative to other properties
+	MenuIcon = "vgui/anp_ico.png", -- The icon to display next to the property
+
+	Filter = function( self, ent, ply ) -- A function that determines whether an entity is valid for this property
+		if ( !IsValid( ent ) ) then return false end
+		if ( ent:IsPlayer() ) then return false end
+		--if ( !ent:IsANPlus( true ) ) then return false end
+		--if ( !ent['m_tSaveDataMenu'] || table.Count( ent['m_tSaveDataMenu'] ) == 0 ) then return false end
+		if ( !GetConVar( "developer" ):GetBool() ) then return false end
+		if ( !gamemode.Call( "CanProperty", ply, "anplus_editmenu", ent ) ) then return false end
+		
+		return true
+	end,
+	Action = function( self, ent ) -- The action to perform upon using the property ( Clientside )
+		local ply = LocalPlayer()
+		self:MsgStart()
+			net.WriteEntity( ent )
+		self:MsgEnd()
+		
+		ply:DrawViewModel( false )
+		ply.m_pANPControlledENT = ent
+
+	end,
+	Receive = function( self, length, ply ) -- The action to perform upon using the property ( Serverside )
+		local ent = net.ReadEntity()
+
+		if ( !properties.CanBeTargeted( ent, ply ) ) then return end
+		if ( !self:Filter( ent, ply ) ) then return end
+		ply:ANPlusControlled( ent )		
+		ply:Spectate(OBS_MODE_CHASE)
+		ply:SpectateEntity( ent )
+		ply:SetNoTarget( true )
+		ply:DrawShadow( false )
+		ply:SetNoDraw( true )
+		ply:SetMoveType( MOVETYPE_OBSERVER )
+		ply:DrawViewModel( false )
+		ply:DrawWorldModel( false )
+		ply:StripWeapons()
+		ent:SetMaxLookDistance( 1 )
+		--ent:SetMaxLookDistance( 1 )
 	end 
 } )

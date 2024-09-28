@@ -45,7 +45,7 @@ function SWEP:SetWeaponHoldType( t )
 end
 
 function SWEP:TranslateActivity( act )
-	
+
 	if self:ANPlusTranslateActivity( act ) then
 		return self:ANPlusTranslateActivity( act )
 	end

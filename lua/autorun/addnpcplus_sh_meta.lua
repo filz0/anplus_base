@@ -818,7 +818,7 @@ end
 
 function metaENT:ANPlusClientParticleSystem(stop, effect, partAttachment, entAttachment, offset)
 	if (SERVER) then
-		net.Start("anplus_client_particle_start")
+		net.Start( "anplus_client_particle_start" )
 		net.WriteEntity( self )
 		net.WriteString( effect )
 		net.WriteFloat( partAttachment )
@@ -1018,6 +1018,11 @@ function metaENT:ANPlusCopyVisualFrom(entORtab)
 		self:SetSkin( entORtab:GetSkin() )
 		self:SetColor( entORtab:GetColor() )
 		self:SetMaterial( entORtab:GetMaterial() )
+		self:SetSequence( entORtab:GetSequence() )
+		self:SetPlaybackRate( entORtab:GetPlaybackRate() )
+		self:SetCycle( entORtab:GetCycle() )
+		local min, max = entORtab:GetCollisionBounds()
+		self:SetCollisionBounds( min, max )
 		
 		for i = 1, #entORtab:GetBodyGroups() do				
 			self:SetBodygroup( i, entORtab:GetBodygroup( i ) )
@@ -1026,6 +1031,12 @@ function metaENT:ANPlusCopyVisualFrom(entORtab)
 		for i = 1, #entORtab:GetMaterials() do	
 			self:SetSubMaterial( i - 1, entORtab:GetSubMaterial( i - 1 ) )
 		end
+
+		for i = 0, entORtab:GetNumPoseParameters() do
+			local posP = entORtab:GetPoseParameterName( i )
+			local gPosP = entORtab:GetPoseParameter( posP )
+			self:SetPoseParameter( posP, gPosP )
+		end
 		
 	elseif istable(entORtab) then
 	
@@ -1033,6 +1044,10 @@ function metaENT:ANPlusCopyVisualFrom(entORtab)
 		self:SetSkin( entORtab['Skin'] )
 		self:SetColor( entORtab['Color'] )
 		self:SetMaterial( entORtab['Material'] )
+		self:SetSequence( entORtab['Sequence'] )
+		self:SetPlaybackRate( entORtab['PlayBRate'] )
+		self:SetCycle( entORtab['Cycle'] )
+		self:SetCollisionBounds( entORtab['CollBounds'][ 1 ], entORtab['CollBounds'][ 2 ] )
 		
 		for i = 1, #entORtab['BodyGroups'] do				
 			self:SetBodygroup( i, entORtab['BodyGroups'][ i ] )
@@ -1040,6 +1055,11 @@ function metaENT:ANPlusCopyVisualFrom(entORtab)
 		
 		for i = 1, #entORtab['Materials'] do	
 			self:SetSubMaterial( i - 1, entORtab['Materials'][ i ] )
+		end
+
+		for i = 0, #entORtab['PosePars'] do
+			local posP = entORtab['PosePars'][ i ]
+			self:SetPoseParameter( posP[ 1 ], posP[ 2 ] )
 		end
 		
 	end	
@@ -1053,17 +1073,35 @@ function metaENT:ANPlusGetVisual()
 	['Skin'] = self:GetSkin(),
 	['Color'] = self:GetColor(),
 	['Material'] = self:GetMaterial(),
+	['Sequence'] = self:GetSequence(),
+	['PlayBRate'] = self:GetPlaybackRate(),
+	['Cycle'] = self:GetCycle(),
+	['CollBounds']	= {},
 	['BodyGroups'] = {},
 	['Materials'] = {},
-	}		
+	['PosePars'] = {}
+	}	
+
+	local min, max = self:GetCollisionBounds()
+	visualTab['CollBounds'] = { min, max }
+
 	for i = 1, #self:GetBodyGroups() do						
 		local addTab = { [ i ] = self:GetBodygroup( i ) }
 		table.Merge( visualTab['BodyGroups'], addTab )		
 	end
+
 	for i = 1, #self:GetMaterials() do	
 		local addTab = { [ i ] = self:GetSubMaterial( i - 1 ) }
 		table.Merge( visualTab['Materials'], addTab )		
 	end
+
+	for i = 0, self:GetNumPoseParameters() do
+		local posP = self:GetPoseParameterName( i )
+		local gPosP = self:GetPoseParameter( posP )
+		local addTab = { [ i ] = { posP, gPosP } }
+		table.Merge( visualTab['PosePars'], addTab )
+	end
+
 	return visualTab
 end
 
@@ -1852,4 +1890,37 @@ end
 
 function GetGlobalValue(globalName)
 	return _G[globalName]
+end
+
+local TriggerEntities = {
+	['trigger_autosave'] = true,
+	['trigger_changelevel'] = true,
+	['trigger_gravity'] = true,
+	['trigger_hurt'] = true,
+	['trigger_impact'] = true,
+	['trigger_look'] = true,
+	['trigger_multiple'] = true,
+	['trigger_once'] = true,
+	['trigger_physics_trap'] = true,
+	['trigger_playermovement'] = true,
+	['trigger_proximity'] = true,
+	['trigger_push'] = true,
+	['trigger_remove'] = true,
+	['trigger_rpgfire'] = true,
+	['trigger_soundscape'] = true,
+	['trigger_teleport'] = true,
+	['trigger_transition'] = true,
+	['trigger_vphysics_motion'] = true,
+	['trigger_waterydeath'] = true,
+	['trigger_weapon_dissolve'] = true,
+	['trigger_weapon_strip'] = true,
+	['trigger_wind'] = true,	
+}
+
+function metaENT:ANPlusIsTrigger()
+	if self.m_bIsTrigger || TriggerEntities[ self:GetClass() ] || string.find( self:GetClass(), "^trigger_" ) then
+		self.m_bIsTrigger = true
+		return true
+	end
+	return false
 end

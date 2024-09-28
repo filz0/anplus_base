@@ -268,10 +268,3 @@ COND.WEAPON_HAS_LOS				= 41
 COND.WEAPON_PLAYER_IN_SPREAD	= 43	
 COND.WEAPON_PLAYER_NEAR_TARGET	= 44	
 COND.WEAPON_SIGHT_OCCLUDED		= 45	
-
-
-
-
-if SERVER then 
-for _, v in pairs( ents.FindByClass('item_healthcharger') ) do if IsValid(v) && v:GetName('healthcharger_test') then v:EmitSound("SuitRecharge.Start") v:SetSaveValue('m_iJuice',GetConVar('sk_healthcharger'):GetFloat()) v:SetSaveValue('m_flJuice',GetConVar('sk_healthcharger'):GetFloat()) v:SetSequence(3) v:SetSaveValue('m_nState',0) v:SetCycle(0) end end
-end

@@ -23,7 +23,6 @@ ENT.MoveType 				= MOVETYPE_VPHYSICS
 ENT.MoveCollideType 		= MOVECOLLIDE_FLY_BOUNCE
 ENT.CollisionGroupType 		= COLLISION_GROUP_PROJECTILE
 ENT.SolidType 				= SOLID_VPHYSICS
-ENT.PhysObjUse				= 1 -- 1 = PhysObject 2 = Entity
 
 ENT.RunCollideOnDeath		= false
 ENT.UsePhysCollide			= true
@@ -87,6 +86,10 @@ if (SERVER) then
 		
 		self:ANPlusOnInitialize()
 
+		local mins, maxs = self:GetCollisionBounds()
+		self.m_vecCollBMins = mins
+		self.m_vecCollBMaxs = maxs
+
 		--phys:SetBuoyancyRatio( number buoyancy )
 		self.ai_sound = ents.Create( "ai_sound" )
 		self.ai_sound:SetPos( self:GetPos() )
@@ -112,7 +115,7 @@ if (SERVER) then
 			end
 		end )
 		 
-		local phys = self.PhysObjUse == 1 && self:GetPhysicsObject() || self.PhysObjUse == 2 && self
+		local phys = self:GetMoveType() != 4 && self:GetPhysicsObject() || self
 		if self.EjectForce && IsValid(phys) then			
 			phys:SetVelocity( self:GetForward() * self.EjectForce )
 		end
@@ -143,17 +146,27 @@ if (SERVER) then
 		end
 	end
 
+	function ENT:TouchCheck(ent, filter, mask) -- Make the projecticle use tracer detection instead of trigger so it will do stuff when it will actually touch an entity and not just it's collision bounds or any of that noise.
+		
+		local tr = util.TraceHull( {
+			start = self:GetPos(),
+			endpos = self:GetPos(),
+			filter = filter,
+			mins = self.m_vecCollBMins * 1.1,
+			maxs = self.m_vecCollBMaxs * 1.1,
+			mask = mask
+		} )
+		
+		return !ent:IsWorld() && tr.Hit || ent:IsWorld(), tr.Entity
+	end
+
 	function ENT:Think()
 		if self.Dead then return end
 		
-		local phys = self.PhysObjUse == 1 && self:GetPhysicsObject() || self.PhysObjUse == 2 && self
-
+		local phys = self:GetMoveType() != 4 && self:GetPhysicsObject() || self
+		
 		if self.Thrust then
 				
-			if self.Speed && self.Speed > 0 && phys:IsValid() then		
-				self.CurSpeed = self.Decelerate && math.Approach( self.CurSpeed, 0, self.SpeedDeceleration ) || math.Approach( self.CurSpeed, self.Speed, self.SpeedAcceleration )
-				phys:AddVelocity( self:GetForward() * self.CurSpeed )								
-			end	
 			if IsValid(self.Target) && self.Target:ANPlusAlive() then				
 				self.CurTurnSpeed = math.Approach( self.CurTurnSpeed, self.TurnSpeed, self.TurnAcceleration )
 				local x = math.ApproachAngle( self:GetAngles().x, self:Point(self.Target).x, self.CurTurnSpeed )
@@ -163,6 +176,15 @@ if (SERVER) then
 				--local angleLerp = LerpAngle( FrameTime() * self.CurTurnSpeed, self:GetAngles(), self:Point(self.Target) )	
 				self:SetAngles( angleApproach )	
 			end
+
+			if self.Speed && self.Speed > 0 && phys:IsValid() then		
+				self.CurSpeed = self.Decelerate && math.Approach( self.CurSpeed, 0, self.SpeedDeceleration ) || math.Approach( self.CurSpeed, self.Speed, self.SpeedAcceleration )
+				if phys == self then
+					phys:SetVelocity( self:GetForward() * self.CurSpeed )
+				else
+					phys:AddVelocity( self:GetForward() * self.CurSpeed )
+				end								
+			end			
 			
 		end
 		

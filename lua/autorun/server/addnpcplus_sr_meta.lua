@@ -349,9 +349,9 @@ function ANPlusCreateSprite(model, color, scale, sfs, kvs)
 	return ent
 end
 
-function ANPlusCreateParticle(particle, startDelay, killDelay, entParent, attachment)
+function ANPlusCreateParticle(effect, startDelay, killDelay, entParent, attachment)
 	local ent = ents.Create( "sent_anp_particlebase" )
-	ent.Particle = particle
+	ent.Particle = effect
 	ent.StartDelay = startDelay || 0
 	ent.KillDelay = killDelay || 0
 	ent.Parent = entParent
@@ -361,14 +361,39 @@ function ANPlusCreateParticle(particle, startDelay, killDelay, entParent, attach
 	return ent
 end
 
-function ANPlusCreateParticleSystem(particle, startDelay, killDelay)
+function ANPlusCreateParticleSystem(name, effect, startActive, isWeather, parent)
 	local ent = ents.Create( "info_particle_system" )
-	ent:SetKeyValue( "effect_name", particle )
-	ent:Fire( "Start", "", startDelay || 0 )
-	if killDelay then ent:Fire( "Kill", "", killDelay ) end
+	ent:SetKeyValue( "targetname", name || "" )
+	ent:SetKeyValue( "effect_name", effect )
+	ent:SetKeyValue( "start_active", tostring( startActive ) || "0" )
+	ent:SetKeyValue( "flag_as_weather", tostring( isWeather ) || "0" )
+	if IsValid(parent) then 
+		if !parent:GetName() || parent:GetName() == "" then parent:SetName( parent:GetClass() .. parent:EntIndex() ) end
+		local name = parent:GetName()
+		ent:SetKeyValue( "cpoint1", name ) 
+		if parent:GetName() == parent:GetClass() .. parent:EntIndex() then parent:SetName( "" ) end
+	end
+	--ent:Fire( "Start", "", startDelay || 0 )
+	--if killDelay then ent:Fire( "Kill", "", killDelay ) end
 	ent:Spawn()
 	ent:Activate()
 	return ent
+end
+
+function metaENT:ANPlusParticleSystemStart(val)
+	self:Fire( "Start", "", val || 0 )
+end
+
+function metaENT:ANPlusParticleSystemStop(val)
+	self:Fire( "Stop", "", val || 0 )
+end
+
+function metaENT:ANPlusParticleSystemDestroy(val)
+	self:Fire( "DestroyImmediately", "", val || 0 )
+end
+
+function metaENT:ANPlusParticleSystemEndCap(val)
+	self:Fire( "StopPlayEndCap", "", val || 0 )
 end
 
 function ANPlusCreateSpotlight(color, width, length, sfs, kvs)
@@ -1236,18 +1261,26 @@ end
 
 function metaENT:ANPlusPlayScriptedSequence(delay)	
 	local delay = delay || 0
-	local ss = IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
+	local ss = self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
 	if ss then ss:Fire( "BeginSequence", "", delay ) end		
 end
 
 function metaENT:ANPlusCancelScriptedSequence(delay)	
 	local delay = delay || 0
-	local ss = IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
+	local ss = self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
 	if ss then self:GetInternalVariable( "m_hCine" ):Fire( "CancelSequence", "", delay ) end		
 end
 
 function metaENT:ANPlusGetScriptedSequence()	
-	return IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || false
+	return self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || false
+end
+
+function metaENT:ANPlusIsScripting()
+	if self:GetInternalVariable( "m_hCine" ) == "scripted_sequence" || self:GetInternalVariable("m_hGoalEnt") == "scripted_sequence" || self:GetInternalVariable("m_vecCommandGoal") == "scripted_sequence" || self:GetInternalVariable("m_bInAScript") == true then	
+		return true		
+	else	
+		return false			
+	end	
 end
 
 /*

@@ -20,7 +20,7 @@ function ENT:ANPlusNPCApply(name, override, transition, preCallback, postCallbac
 					end
 				end
 			end
-		end
+		end 
 
 		if name && isstring( name ) then	
 			

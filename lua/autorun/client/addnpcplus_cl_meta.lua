@@ -159,7 +159,7 @@ function metaPanel:ANPlus_CreateCollapsibleCategory(x, y, w, h, expanded, label,
 	return panel
 end
 
-function metaPanel:ANPlus_CreateImage(x, y, w, h, image, color, keepAspect, tooltp)
+function metaPanel:ANPlus_CreateImage(x, y, w, h, image, color, keepAspect, tooltp, spareImage)
 	local panel = vgui.Create( "DImage", self ) 
 	if x && y then panel:SetPos( x, y ) end
 	if isnumber( w ) && isnumber( h ) then
@@ -167,7 +167,7 @@ function metaPanel:ANPlus_CreateImage(x, y, w, h, image, color, keepAspect, tool
 	elseif isbool( w ) && isbool( h ) && w == true && h == true then 
 		panel:SizeToContents()
 	end
-	panel:SetImage( image, "vgui/anp_ico.png" )
+	panel:SetImage( image, spareImage || "vgui/anp_ico.png" )
 	panel:SetImageColor( color || Color( 255, 255, 255, 255 ) )
 	panel:SetKeepAspect( keepAspect || true )
 	if tooltp then panel:SetTooltip( tooltp ) end
