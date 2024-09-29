@@ -776,9 +776,9 @@ ANPlus = {
 		table.Merge( ANPlusPlayerRelations, relationTab )
 	end,
 
-	AddCategoryCustomize = function(category, icon, bgimg)
+	AddCategoryCustomize = function(category, icon, bgImg, w, h, color)
 		if SERVER then return end
-		ANPlusCategoryCustom[category] = { ['Icon'] = icon, ['BGImage'] = bgimg }
+		ANPlusCategoryCustom[ category ] = { ['Icon'] = icon, ['BGImage'] = bgImg, ['BGAddSize'] = { w || 0, h || 0 }, ['BGColor'] = color || Color( 255, 255, 255, 150 ) }
 	end
 	
 } 
@@ -790,7 +790,7 @@ timer.ANPlusDelayed = function( id, delay, time, repeats, callback ) -- This is 
 			timer.Create( id, time, repeats, callback )		
 		end)	
 	end
-end
+end  
 
 ANPlus.AddConVar( "anplus_ff_disabled", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Allow friendly fire.", 0, 1 )
 ANPlus.AddConVar( "anplus_force_swep_anims", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Force fixed swep animations.", 0, 1 )

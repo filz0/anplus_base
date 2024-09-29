@@ -136,7 +136,7 @@ if (CLIENT) then
 			elseif obj.type == "Vehicles" then
 				RunConsoleCommand( "gm_spawnvehicle", obj.spawnname )
 			end
-			surface.PlaySound( "buttons/button16.wav" )
+			surface.PlaySound( "ANP.UI.Click" )
 		end
 	
 	
@@ -165,33 +165,51 @@ if (CLIENT) then
 		return icon
 	end)
 
+	local forceDefault = {
+		['[ NPCs ]'] = true,
+		['[ Entities ]'] = true,
+		['[ Vehicles ]'] = true,
+	}
+
 	local function GiveIconsToNode( panel, tree, node, npcdata )
 		node.DoPopulate = function( self ) -- When we click on the node - populate it using this function
-			-- If we've already populated it - forget it.
-			if ( self.PropPanel ) then return end
+			-- If we've already populated it - forget it. NO?
+			if ( self.PropPanel ) then self.PropPanel:Remove() end
 			if ( SM_BGImage ) then SM_BGImage:Remove() end
+
+			local nodeN = node.Label:GetText()
+			function tree:ChildExpanded( bool )
+
+				if bool == true || bool == false then
+					surface.PlaySound( bool && "ANP.UI.List.Open" || "ANP.UI.List.Close" )
+				end
+
+				self:InvalidateLayout()
+			end
+
+			function tree:OnNodeSelected( node )
+				surface.PlaySound( "ANP.UI.Click" )
+			end
 			
+			-- Clean the header table
+			SM_HeaderTable = { ['NPC'] = {}, ['SpawnableEntities'] = {}, ['Vehicles'] = {} }
+
+			-- Create the category background
 			SM_BGImage = panel:ANPlus_CreateImage( 0, 0, 1024, 1024, SM_GenericIcon, false, true, false )
 			SM_BGImage:SetZPos( -999 )
-			--SM_BGImage:Dock( RIGHT )		
-			--local w1, h1 = panel.ContentNavBar:GetSize()	
+			SM_BGImage:SetKeepAspect( false )
+
 			local w2, h2 = panel:GetSize()
 			SM_BGImage:SetSize( w2, h2 )	
-			local x1, y1 = SM_BGImage:GetPos()
-			SM_BGImage:SetPos( x1, y1 + 15 )			
-			SM_BGImage:SetAlpha( 150 )
-			
 
-			-- Create the panel panel
+			-- Create the icon panel
 			self.PropPanel = vgui.Create( "ContentContainer", panel )
 			self.PropPanel:SetVisible( false )
 			self.PropPanel:SetTriggerSpawnlistChange( false )
-
-			--local generalHeader = vgui.Create( "ContentHeader", self.PropPanel )
-			--generalHeader:SetText( "Test Lmao" )
-
 			local custmBGImg = "none"
-	
+			local custmBGSize = { 0, 0 }
+			local custmBGColor = Color( 255, 255, 255, 100 )
+			
 			for name, ent in SortedPairsByMemberValue( npcdata, "Category" ) do
 				local mat = SM_GenericIcon
 	
@@ -199,9 +217,19 @@ if (CLIENT) then
 					mat = "entities/" .. name .. ".png"
 				end
 
-                local nicecategory = ent['Category'] && string.Split( ent['Category'], " | " )
-				custmBGImg = ANPlusCategoryCustom[ ent['Category'] ] && ANPlusCategoryCustom[ ent['Category'] ]['BGImage'] || custmBGImg
-	
+                local niceCategory = ent['Category'] && string.Split( ent['Category'], " | " )
+				niceCategory = istable(niceCategory) && niceCategory[ 1 ] || ent['Category']
+
+				if !forceDefault[nodeN] then
+					
+					local custCat = ANPlusCategoryCustom[ nodeN ] || ANPlusCategoryCustom[ ent['Category'] ]
+					if custCat then
+						custmBGImg = custCat['BGImage']
+						custmBGSize = custCat['BGAddSize']
+						custmBGColor = custCat['BGColor']
+					end
+				end
+
 				local icon = spawnmenu.CreateContentIcon( "anplus_npcs", self.PropPanel, {
 					nicename	= ent['Name'],
 					spawnname	= name,
@@ -209,11 +237,47 @@ if (CLIENT) then
 					weapon		= ent['DefaultWeapons'],
 					admin		= ent['AdminOnly'],
                     type        = ent['EntityType'],
-					category	= istable(nicecategory) && nicecategory[ 1 ] || ent['Category']
+					category	= niceCategory
 				} )
 			end
 
 			SM_BGImage:SetImage( custmBGImg, SM_GenericIcon )
+			SM_BGImage:SetImageColor( custmBGColor )
+			
+			local x, y = SM_BGImage:GetPos()						
+			function SM_BGImage:PaintAt( x, y, dw, dh )
+
+				dw, dh = dw || self:GetWide(), dh || self:GetTall()
+				self:LoadMaterial()
+				
+				if ( !self.m_Material ) then return true end
+
+				local Texture = self.m_Material:GetTexture( "$basetexture" )
+			
+				surface.SetMaterial( self.m_Material )
+				surface.SetDrawColor( self.m_Color.r, self.m_Color.g, self.m_Color.b, self.m_Color.a ) 
+				--[[
+				if ( Texture ) then
+					local color = Vector( r / 255, g / 255, b / 255 )
+					local alpha = a / 255
+					self.m_Material:SetVector( "$color", color )
+					self.m_Material:SetInt( "$translucent", 1 )
+					self.m_Material:SetInt( "$alphatest", 1 )
+					self.m_Material:SetInt( "$allowalphatocoverage", 1 )
+					self.m_Material:SetInt( "$alpha", 1 )
+				end
+				]]
+				
+				surface.DrawTexturedRect( x, y, dw, dh )
+				return true
+			end
+
+			function SM_BGImage:Paint(w, h) -- Update the size of the BG		
+				
+				local w1, h1 = tree:GetSize()
+				self:PaintAt( x + w1, y, ( w2 + custmBGSize[ 1 ] ) - w1, h2 + custmBGSize[ 2 ] )
+				
+			end
 
 		end 
 	
@@ -228,6 +292,7 @@ if (CLIENT) then
 		local NPCTab = {}
 		local ENTTab = {}
 		local VEHTab = {}
+
 		for class, entData in pairs( ANPlusLoadGlobal ) do
 
 			if isstring( entData['Category'] ) then
@@ -295,11 +360,12 @@ if (CLIENT) then
 			local lastIconPath
 			for dataID, data in SortedPairs( entData ) do
 
-				local catIcon = ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon']
+				local catIcon = ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon'] || ANPlusCategoryCustom[ categoryName ] && ANPlusCategoryCustom[ categoryName ]['Icon']
 				if isstring( lastIconPath ) && catIcon != lastIconPath then
 					allCatIconsSame = false
 				end
 				lastIconPath = catIcon
+
 			end
 	
 			local dataIcon = allCatIconsSame && lastIconPath || SM_GenericNPCIcon
@@ -315,7 +381,7 @@ if (CLIENT) then
 					table.Merge( allNodeCacheNPCs, entData )
 				else
 	
-					local catNode = node:AddNode( dataID, ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon'] || SM_GenericNPCIcon )
+					local catNode = node:AddNode( dataID, dataIcon )
 					GiveIconsToNode( panel, tree, catNode, data )
 					table.Merge( dataNodes, data )
 	
@@ -344,11 +410,12 @@ if (CLIENT) then
 			local lastIconPath
 			for dataID, data in SortedPairs( entData ) do
 
-				local catIcon = ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon']
+				local catIcon = ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon'] || ANPlusCategoryCustom[ categoryName ] && ANPlusCategoryCustom[ categoryName ]['Icon']
 				if isstring( lastIconPath ) && catIcon != lastIconPath then
 					allCatIconsSame = false
 				end
 				lastIconPath = catIcon
+
 			end
 	
 			local dataIcon = allCatIconsSame && lastIconPath || SM_GenericENTIcon
@@ -364,7 +431,7 @@ if (CLIENT) then
 					table.Merge( allNodeCacheENTs, entData )
 				else
 	
-					local catNode = node:AddNode( dataID, ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon'] || SM_GenericENTIcon )
+					local catNode = node:AddNode( dataID, dataIcon )
 					GiveIconsToNode( panel, tree, catNode, data )
 					table.Merge( dataNodes, data )
 	
@@ -393,11 +460,12 @@ if (CLIENT) then
 			local lastIconPath
 			for dataID, data in SortedPairs( entData ) do
 
-				local catIcon = ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon']
+				local catIcon = ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon'] || ANPlusCategoryCustom[ categoryName ] && ANPlusCategoryCustom[ categoryName ]['Icon']
 				if isstring( lastIconPath ) && catIcon != lastIconPath then
 					allCatIconsSame = false
 				end
 				lastIconPath = catIcon
+
 			end
 	
 			local dataIcon = allCatIconsSame && lastIconPath || SM_GenericVEHIcon
@@ -413,7 +481,7 @@ if (CLIENT) then
 					table.Merge( allNodeCacheVEHs, entData )
 				else
 	
-					local catNode = node:AddNode( dataID, ANPlusCategoryCustom[ categoryName .. " | " .. dataID ] && ANPlusCategoryCustom[ categoryName .. " | " .. dataID ]['Icon'] || SM_GenericVEHIcon )
+					local catNode = node:AddNode( dataID, dataIcon )
 					GiveIconsToNode( panel, tree, catNode, data )
 					table.Merge( dataNodes, data )
 	
