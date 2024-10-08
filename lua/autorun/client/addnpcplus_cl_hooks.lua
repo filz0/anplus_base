@@ -15,7 +15,7 @@ local zombieParts = {
 local function ragGibSetup(ent, gib)
 
 	if ent:ANPlusGetModelData() && ent:ANPlusGetModelData()['GibReplacement'] then
-
+		
 		local gibData = ent:ANPlusGetModelData()['GibReplacement']
 		gibData = gibData[ gib:GetModel() ]
 		
@@ -74,9 +74,9 @@ hook.Add( "CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", funct
 				end
 			end
 
-			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
+			ragGibSetup( npc, rag )
 
-				ragGibSetup( npc, rag )
+			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
 
 				npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](npc, rag)	
 			
@@ -87,32 +87,31 @@ hook.Add( "CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", funct
 		if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus() then
 
 			local raggibOwner = npc:GetOwner()
+			local gibtable = ents.FindByClass( "raggib" )
 
-			if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
+			ragGibSetup( raggibOwner, rag )
+
+			for _, raggib in pairs( gibtable ) do
 				
-				ragGibSetup( raggibOwner, rag )
+				if IsValid(raggib) && IsValid(raggib.m_pCRagdollEntity) && npc.m_fCreationTime == raggib.m_fCreationTime || 0 then
 
-				raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, rag, npc)
-				
-				--if zombieParts[ npc:GetModel() ] then		--classic legs spawned on zombie gib death	
+					if raggib == npc then return end
 
-					local gibtable = ents.FindByClass( "raggib" )
+					ragGibSetup( raggibOwner, raggib.m_pCRagdollEntity )
 
-					for _, raggib in pairs( gibtable ) do
+					if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
 
-						if IsValid(raggib) && IsValid(raggib.m_pCRagdollEntity) && npc.m_fCreationTime == raggib.m_fCreationTime || 0 then
-
-							if raggib == npc then return end
-
-							ragGibSetup( raggibOwner, raggib.m_pCRagdollEntity )
-
-							raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, raggib.m_pCRagdollEntity, raggib)
-
-						end
+						raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, raggib.m_pCRagdollEntity, raggib)
 
 					end
 					
-				--end
+				end
+
+			end
+			
+			if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
+
+				raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, rag, npc)
 			
 			end
 

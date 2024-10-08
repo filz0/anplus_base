@@ -189,10 +189,10 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 				end
 			
 			end
+
+			ragGibSetup( npc, rag )
 			
 			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then	
-
-				ragGibSetup( npc, rag )
 
 				npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](npc, rag)
 
@@ -203,32 +203,31 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 		if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus() then
 
 			local raggibOwner = npc:GetOwner()
+			local gibtable = ents.FindByClass( "raggib" )
+
+			ragGibSetup( raggibOwner, rag )
+
+			for _, raggib in pairs( gibtable ) do
+
+				if IsValid(raggib) && IsValid(raggib.m_pCRagdollEntity) && npc.m_fCreationTime == raggib.m_fCreationTime || 0 then
+
+					if raggib == npc then return end
+
+					ragGibSetup( raggibOwner, raggib.m_pCRagdollEntity )
+
+					if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
+
+						raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, raggib.m_pCRagdollEntity, raggib)
+
+					end
+
+				end
+
+			end
 
 			if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
 
-				ragGibSetup( raggibOwner, rag )
-				
 				raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, rag, npc)
-				
-				--if zombieParts[ npc:GetModel() ] then		--classic legs spawned on zombie gib death	
-
-					local gibtable = ents.FindByClass( "raggib" )
-
-					for _, raggib in pairs( gibtable ) do
-
-						if IsValid(raggib) && IsValid(raggib.m_pCRagdollEntity) && npc.m_fCreationTime == raggib.m_fCreationTime || 0 then
-
-							if raggib == npc then return end
-
-							ragGibSetup( raggibOwner, raggib.m_pCRagdollEntity )
-
-							raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, raggib.m_pCRagdollEntity, raggib)
-
-						end
-
-					end
-					
-				--end
 			
 			end
 
