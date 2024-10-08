@@ -35,14 +35,25 @@ function EFFECT:Init(data)
 	self.BulletOffsetAng	= self.DataTab && self.DataTab['BulletOffsetAng'] || Angle( 0, 0, 0 )
 	self.BulletParticle		= self.DataTab && self.DataTab['BulletParticle'] || nil
 	self.BulletSpeedMul		= self.DataTab && self.DataTab['BulletSpeedMul'] || 1	
-	
+	--[[
+	local defaultBlend = { 
+		['ColorSrcMult'] 		= BLEND_SRC_COLOR, 
+		['ColorDstMult'] 		= BLEND_ONE_MINUS_SRC_COLOR, 
+		['ColorBlendFunc']		= BLENDFUNC_ADD, 
+		['AlphaSrcMult']		= BLEND_ONE, 
+		['AlphaDstMult']		= BLEND_ZERO, 
+		['AlphaBlendFunc']		= BLENDFUNC_ADD,
+	}
+	]]
 	self.TracerMat			= self.DataTab && self.DataTab['TracerMat'] && Material( self.DataTab['TracerMat'] ) || ( self.DataTab && self.DataTab['TracerMat'] == nil || !self.DataTab ) && Material( "effects/spark" ) || false
+	--self.TracerBlend		= self.DataTab && ( self.DataTab['TracerBlend'] || self.DataTab['TracerBlend'] == nil && defaultBlend ) 
 	self.TracerS			= self.DataTab && self.DataTab['TracerScale'] || 4
 	self.TracerLength		= self.DataTab && self.DataTab['TracerLength'] || 100
 	self.TracerCol			= self.DataTab && self.DataTab['TracerColor'] || Color( 255, 255, 255, 255 )
 	self.TracerSND			= self.DataTab && self.DataTab['TracerSND'] || "ANP.WEAPON.Tracer.Flyby"
 	
 	self.TrailMat			= self.DataTab && self.DataTab['TrailMat'] && Material( self.DataTab['TrailMat'] ) || ( self.DataTab && self.DataTab['TrailMat'] == nil || !self.DataTab ) && Material( "effects/anp/tracer_trail" ) || false
+	--self.TrailBlend			= self.DataTab && ( self.DataTab['TrailBlend'] || self.DataTab['TrailBlend'] == nil && defaultBlend )
 	self.TrailS				= self.DataTab && self.DataTab['TrailScale'] || 1	
 	self.TrailDelay			= self.DataTab && self.DataTab['TrailDelay'] || 0	
 	self.TrailCol			= self.DataTab && self.DataTab['TrailColor'] || Color( 10, 10, 10, 255 )
@@ -128,14 +139,21 @@ function EFFECT:RenderFixed()
 		end
 		
 		if self.TracerMat then
-			render.SetMaterial( self.TracerMat )
-			render.UpdateRefractTexture()
-			self.TracerMat:SetVector( "$color2", Vector( self.TracerCol.r / 255, self.TracerCol.g / 255, self.TracerCol.b / 255 ) )
-			render.DrawBeam( startPos, endPos, self.TracerS, 0, 1 )
+
+			local color = self.TracerCol
+			local tb = self.TracerBlend
+
+			--if tb then render.OverrideBlend( true, tb['ColorSrcMult'], tb['ColorDstMult'], tb['ColorBlendFunc'], tb['AlphaSrcMult'], tb['AlphaDstMult'], tb['AlphaBlendFunc'] ) end
+			render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+				render.SetMaterial( self.TracerMat )
+				render.DrawBeam( startPos, endPos, self.TracerS, 0, 1, color )
+			render.OverrideAlphaWriteEnable( false )
+			--if tb then render.OverrideBlend( false ) end
+
 		end
 		
 		if self.DataTab && self.DataTab['FunctionRender'] != nil then
-			self.DataTab['FunctionRender'](self, self.Dir, startPos, endPos, self.StartPos, self.EndPos)
+			self.DataTab['FunctionRender']( self, self.Dir, startPos, endPos, self.StartPos, self.EndPos )
 		end
 --##--------------------------------------------------------------------------------------------------------------------## Nearmiss / Flyby bullet sounds.
 		local dist, pos = util.DistanceToLine( self.StartPos, self.EndPos, viewPos )
@@ -155,11 +173,18 @@ function EFFECT:RenderFixed()
 --##--------------------------------------------------------------------------------------------------------------------## Nearmiss / Flyby bullet sounds.		
 	end	
 
-	
 	if self.TrailMat then
+
 		local color = Color( self.TrailCol.r, self.TrailCol.g, self.TrailCol.b, self.TrailCol.a * fDelta )
-		render.SetMaterial( self.TrailMat )	
-		render.DrawBeam( startPosTr, endPosTr, self.TrailS + ( self.TrailS * 2 * fDelta2 ), 0, 1, color )
+		--local tb = self.TrailBlend
+
+		--if tb then render.OverrideBlend( true, tb['ColorSrcMult'], tb['ColorDstMult'], tb['ColorBlendFunc'], tb['AlphaSrcMult'], tb['AlphaDstMult'], tb['AlphaBlendFunc'] ) end
+		render.OverrideAlphaWriteEnable( true, false )
+			render.SetMaterial( self.TrailMat )	
+			render.DrawBeam( startPosTr, endPosTr, self.TrailS + ( self.TrailS * 2 * fDelta2 ), 0, 1, color )
+		render.OverrideAlphaWriteEnable( false )
+		--if tb then render.OverrideBlend( false ) end
+
 	end
 	
 end

@@ -58,19 +58,14 @@ function ENT:ANPlusNPCApply(name, override, transition, preCallback, postCallbac
 						self = newSelf
 					end
 					
-					net.Start("anplus_net_entity")
+					net.Start( "anplus_net_entity" )
 					net.WriteEntity( self )
 					net.WriteString( name )
 					net.Broadcast()
-				
-					--self:SetKeyValue( "parentname" , "" ) -- We don't need it anymore
-					
+
 				end
 				
-				--local baseTab = dataTab['Base'] && ANPlusLoadGlobal[ dataTab['Base'] ]
-				--local base = baseTab && table.Copy( baseTab )
 				local data = table.Copy( dataTab )
-				--data = base && table.Merge( base, data ) || data
 				
 				local colBoundsMin, colBoundsMax = self:GetCollisionBounds()
 				local hull = (SERVER) && self:IsNPC() && self:GetHullType()	|| "Not NPC"	
@@ -81,8 +76,6 @@ function ENT:ANPlusNPCApply(name, override, transition, preCallback, postCallbac
 					ANPdevMsg( "SolidType: " .. self:GetSolid() .. " CollisionGroup: " .. self:GetCollisionGroup() .. " MoveCollide: " .. self:GetMoveCollide() .. " MoveType: " .. self:GetMoveType(), 1 )
 				end
 				--ANPdevMsg( "Surrounding Bounds: Min[" .. tostring(min2) .. "] Max[" .. tostring(max2), 1 )
-
-				--data = {}
 				
 				local addTab = { ['CurName'] = data['Name'] }
 				table.Merge( data, addTab )	
@@ -249,18 +242,20 @@ function ENT:ANPlusNPCApply(name, override, transition, preCallback, postCallbac
 							local fireTab = data['InputsAndOutputs'][ i ]
 							self:Fire( fireTab[ 1 ] || "", fireTab[ 2 ] || nil, fireTab[ 3 ] || 0, fireTab[ 4 ] || NULL, fireTab[ 5 ] || NULL )	
 						end		
-					end						
+					end	
+					
+					for _, v in pairs( data['KeyValues'] ) do
+					
+						local filter = _ == "squadname" && self:GetKeyValues()['squadname'] && self:GetKeyValues()['squadname'] != "" && "" || _
+	
+						self:SetKeyValue( tostring( _ ), v )							
+					end
+					
+					self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )	
+
 				end
 
-				self.m_fANPlusBossMusicLast = 0
-				
-				for _, v in pairs( data['KeyValues'] ) do
-					if _ != "targetname" then -- We don't have to do that anymore.
-						self:SetKeyValue( tostring( _ ), v )		
-					end
-				end
-				
-				self:SetKeyValue( "spawnflags", data['SpawnFlags'] || self:GetSpawnFlags() )							
+				self.m_fANPlusBossMusicLast = 0					
 				
 				self.ANPlusOverPitch = self.ANPlusOverPitch || sndTab && sndTab['OverPitch'] && math.random( sndTab['OverPitch'][ 1 ], sndTab['OverPitch'][ 2 ] ) || nil				
 				self['ANPlusData'] = data

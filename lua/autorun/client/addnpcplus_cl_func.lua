@@ -81,6 +81,16 @@ net.Receive("anplus_client_particle_start", function()
 	end
 end)
 
+net.Receive("anplus_client_particle_start_no_ent", function()
+
+	local effect = net.ReadString()
+	local pos = net.ReadVector()
+	local ang = net.ReadAngle()
+
+	ANPlusClientParticleSystem( effect, pos, ang )
+
+end)
+
 net.Receive("anplus_paint_decal", function()
 	local ent = net.ReadEntity()
 	local decal = net.ReadString()

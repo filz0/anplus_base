@@ -835,6 +835,7 @@ end
 function metaENT:ANPlusAddSaveData(key, val, func)
 	if key then
 		val = isbool(val) && tostring(val) || val -- False valuse do not save, idk either...
+		self[ key ] = val
 		duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveData'] = { [ key ] = val } } )
 		if isfunction(func) then
 			duplicator.StoreEntityModifier( self, "anp_duplicator_data", { ['m_tSaveDataUpdateFuncs'] = { [ key ] = func } } )
@@ -920,7 +921,10 @@ function metaENT:ANPlusUpdateWeaponProficency( wep, dataTab )
 	if IsValid(self) && IsValid(wep) && dataTab then
 		local wepTab = dataTab[ wep:GetClass() ] || dataTab[ wep:GetHoldType() != "" && wep:GetHoldType() ] || dataTab['Default']
 		if wepTab then
-			if wepTab['Proficiency'] then self:SetCurrentWeaponProficiency( wepTab['Proficiency'] ) end
+			if wepTab['Proficiency'] then 
+				local proficiency = istable(wepTab['Proficiency']) && math.random( 0, #wepTab['Proficiency'] ) || wepTab['Proficiency']
+				self:SetCurrentWeaponProficiency( proficiency ) 
+			end
 			if wep:GetInternalVariable( "m_fMaxRange1" ) && wepTab['PrimaryMaxRange'] then wep:SetSaveValue( "m_fMaxRange1", wepTab['PrimaryMaxRange'] ) end
 			if wep:GetInternalVariable( "m_fMaxRange2" ) && wepTab['SecondaryMaxRange'] then wep:SetSaveValue( "m_fMaxRange2", wepTab['SecondaryMaxRange'] ) end
 			if wep:GetInternalVariable( "m_fMinRange1" ) && wepTab['PrimaryMinRange'] then wep:SetSaveValue( "m_fMinRange1", wepTab['PrimaryMinRange'] ) end
@@ -1261,22 +1265,22 @@ end
 
 function metaENT:ANPlusPlayScriptedSequence(delay)	
 	local delay = delay || 0
-	local ss = self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
+	local ss = IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
 	if ss then ss:Fire( "BeginSequence", "", delay ) end		
 end
 
 function metaENT:ANPlusCancelScriptedSequence(delay)	
 	local delay = delay || 0
-	local ss = self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
+	local ss = IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || nil
 	if ss then self:GetInternalVariable( "m_hCine" ):Fire( "CancelSequence", "", delay ) end		
 end
 
 function metaENT:ANPlusGetScriptedSequence()	
-	return self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || false
+	return IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) || IsValid(self.m_pScriptedSequence) && self.m_pScriptedSequence || false
 end
 
 function metaENT:ANPlusIsScripting()
-	if self:GetInternalVariable( "m_hCine" ) == "scripted_sequence" || self:GetInternalVariable("m_hGoalEnt") == "scripted_sequence" || self:GetInternalVariable("m_vecCommandGoal") == "scripted_sequence" || self:GetInternalVariable("m_bInAScript") == true then	
+	if IsValid(self:GetInternalVariable( "m_hCine" )) && self:GetInternalVariable( "m_hCine" ) == "scripted_sequence" || IsValid(self:GetInternalVariable("m_hGoalEnt")) && self:GetInternalVariable("m_hGoalEnt") == "scripted_sequence" || self:GetInternalVariable("m_vecCommandGoal") == "scripted_sequence" || self:GetInternalVariable("m_bInAScript") == true then	
 		return true		
 	else	
 		return false			
@@ -1718,7 +1722,7 @@ local iCond = {
 function metaENT:ANPlusPlayActivity(act, speed, movementVel, faceEnt, faceSpeed, callback, postCallback)
 	if !act || self:IsNPC() && ( self:GetNPCState() == 6 || self:GetNPCState() == 7 || !self:ANPlusAlive() || self:ANPlusPlayingDeathAnim() ) then return end
 	local actSeq = isstring( act ) && self:LookupSequence( act ) || self:SelectWeightedSequence( act )
-	local actName = tostring( util.GetActivityNameByID( act ) )
+	local actName = isnumber( act ) && tostring( util.GetActivityNameByID( act ) ) || ACT_INVALID
 	local actSeqName = self:GetSequenceName( actSeq )
 	local gestCheck = string.find( actSeqName, "gesture_" ) || string.find( actSeqName, "g_" ) || string.find( actSeqName, "gest" ) || string.find( string.lower( actName ), "gesture_" ) || string.find( string.lower( actName ), "g_" ) || string.find( string.lower( actName ), "gest" )
 	

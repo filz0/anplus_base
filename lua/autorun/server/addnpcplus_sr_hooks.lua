@@ -8,6 +8,7 @@ util.AddNetworkString("anplus_fix_bones")
 util.AddNetworkString("anplus_controller")
 util.AddNetworkString("anplus_holo_eff")
 util.AddNetworkString("anplus_client_particle_start")
+util.AddNetworkString("anplus_client_particle_start_no_ent")
 util.AddNetworkString("anplus_client_particle_stop")
 util.AddNetworkString("anplus_play_ui_snd")
 util.AddNetworkString("anplus_chatmsg_ply")
@@ -124,11 +125,43 @@ hook.Add( "PlayerDeath", "ANPlusLoad_PlayerDeath", function(ply, inf, att)
 	end
 end)
 
+local function ragGibSetup(ent, gib)
+
+	if ent:ANPlusGetModelData() && ent:ANPlusGetModelData()['GibReplacement'] then
+
+		local gibData = ent:ANPlusGetModelData()['GibReplacement']
+		gibData = gibData[ gib:GetModel() ]
+		
+		if gibData then
+
+			local model = gibData[ 1 ]
+			local materials = gibData[ 2 ]
+
+			if model then 
+				gib:SetModel( model ) 
+				gib:Spawn() 
+			end
+
+			if istable(materials) then
+				for i = 1, #materials do
+					gib:SetSubMaterial( i - 1, materials[ i ] )				
+				end
+			elseif materials then				
+				gib:SetMaterial( materials )
+			end
+
+		end
+
+	end
+
+end
+
 hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc, rag)
 	
-	if IsValid(npc) && npc:IsNPC() && IsValid(rag) then
+	if IsValid(npc) && IsValid(rag) then
 		
 		npc.m_pSRagdollEntity = rag
+		npc.m_fCreationTime = CurTime()
 
 		if npc:IsANPlus() then
 		
@@ -157,20 +190,48 @@ hook.Add( "CreateEntityRagdoll", "ANPlusLoad_CreateEntityRagdoll", function(npc,
 			
 			end
 			
-			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then				
-				npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](npc, rag)			
+			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then	
+
+				ragGibSetup( npc, rag )
+
+				npc:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](npc, rag)
+
 			end
 			
 		end
 		
 		if IsValid(npc) && IsValid(npc:GetOwner()) && npc:GetOwner():IsANPlus() then
-		
+
 			local raggibOwner = npc:GetOwner()
-		
-			if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then			
-				raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, rag)		
+
+			if raggibOwner:ANPlusGetDataTab()['Functions'] && raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'] != nil then
+
+				ragGibSetup( raggibOwner, rag )
+				
+				raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, rag, npc)
+				
+				--if zombieParts[ npc:GetModel() ] then		--classic legs spawned on zombie gib death	
+
+					local gibtable = ents.FindByClass( "raggib" )
+
+					for _, raggib in pairs( gibtable ) do
+
+						if IsValid(raggib) && IsValid(raggib.m_pCRagdollEntity) && npc.m_fCreationTime == raggib.m_fCreationTime || 0 then
+
+							if raggib == npc then return end
+
+							ragGibSetup( raggibOwner, raggib.m_pCRagdollEntity )
+
+							raggibOwner:ANPlusGetDataTab()['Functions']['OnNPCRagdollCreated'](raggibOwner, raggib.m_pCRagdollEntity, raggib)
+
+						end
+
+					end
+					
+				--end
+			
 			end
-		
+
 		end
 		
 	end

@@ -316,11 +316,11 @@ hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
 	timer.Simple( 0, function()
 
 		if !IsValid(ent) then return end	
-
+		
 		if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
 			local npc = ent:GetOwner()		
 			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'] != nil then
-				npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'](npc, ent)		
+				npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'](npc, ent)						
 			end				
 		end
 		

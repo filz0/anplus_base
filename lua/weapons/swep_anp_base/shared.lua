@@ -1,35 +1,7 @@
---[[
-sound.Add( {
-	name = "ANP.WEAPON.R700.Fire",
-	channel = CHAN_WEAPON,
-	volume = 1.0,
-	level = 80,
-	pitch = 100,
-	sound = { "weapons/r700/fire1.wav" }
-} )
-
-sound.Add( {
-	name = "ANP.WEAPON.R700.DistantFire",
-	channel = CHAN_WEAPON,
-	volume = 0.4,
-	level = 140,
-	pitch = { 75, 85 },
-	sound = { "weapons/ar1/ar1_dist1.wav" }
-} )
-
-sound.Add( {
-	name = "ANP.WEAPON.R700.Reload",
-	channel = CHAN_ITEM,
-	volume = 1.0,
-	level = 65,
-	pitch = 100,
-	sound = { "weapons/r700/reload1.wav" }
-} )
---]]
 SWEP.Base = "weapon_base"
 
 if ( SERVER ) then
-	AddCSLuaFile( "shared.lua" )	
+	AddCSLuaFile( "shared.lua" )		
 	util.AddNetworkString( "anplus_swep_base_tracer" )	
 end
 
@@ -281,6 +253,8 @@ SWEP.NPCRestMin	= 1
 SWEP.NPCRestMax	= 2
 SWEP.NPCBurstMin = 4
 SWEP.NPCBurstMax = 8
+SWEP.m_fSeenEnemyCoverLast = 0
+SWEP.m_fSeenEnemyCoverDelay = 3
 
 local fLightSmartMode = GetConVar( "anplus_swep_flight_smartmode" )
 local vector_zero = Vector( 0, 0, 0 )
@@ -561,6 +535,7 @@ function SWEP:CanPrimaryAttack()
 		
 	local owner = self:GetOwner()
 	local enemy = owner:GetEnemy()
+	local sShootCover = owner:IsCurrentSchedule( 39 )
 
 	if owner:IsMoving() && !owner:ANPlusCapabilitiesHas( 64 ) || ( self:ANPlusCapabilitiesHas( 8192 ) && !owner:ANPlusCapabilitiesHas( 8192 ) ) || ( self:ANPlusCapabilitiesHas( 32768 ) && !owner:ANPlusCapabilitiesHas( 32768 ) ) then return false end
 	
@@ -568,18 +543,18 @@ function SWEP:CanPrimaryAttack()
 		return false
 	end	
 	
-	if self.BlackListSchedules[ owner:GetCurrentSchedule() ] || self.BlackListACTs[ owner:GetActivity() ] || owner:IsPlayingGesture( 70 ) || owner:IsPlayingGesture( 71 ) || owner:HasCondition( 42 ) || !owner:HasCondition( 21 ) || !owner:ANPlusAlive() || ( !enemy:ANPlusAlive() ) then
+	if self.BlackListSchedules[ owner:GetCurrentSchedule() ] || self.BlackListACTs[ owner:GetActivity() ] || owner:IsPlayingGesture( 70 ) || owner:IsPlayingGesture( 71 ) || owner:HasCondition( 42 ) || ( !owner:HasCondition( 21 ) && !sShootCover ) || !owner:ANPlusAlive() || ( !enemy:ANPlusAlive() ) then
 		return false
 	end
-
+	
 	local posTarget = enemy:GetPos()
-	if !self:ANPlusValidAnglesNormal( posTarget, angCheck ) || owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin'] ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange1" ) ) || ( !owner:Visible( enemy ) && !owner:IsCurrentSchedule( 39 ) ) then			
+	if !self:ANPlusValidAnglesNormal( posTarget, angCheck ) || owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin'] ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange1" ) ) || ( !owner:Visible( enemy ) && !sShootCover ) then			
 		if owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin'] ) && !owner:IsCurrentSchedule( SCHED_MOVE_AWAY ) then
 			owner:SetSchedule( SCHED_MOVE_AWAY )
 		end
 		return false
 	end
-
+	
 	return true  		
 end
 
@@ -591,6 +566,7 @@ function SWEP:CanSecondaryAttack()
 		
 	local owner = self:GetOwner()
 	local enemy = owner:GetEnemy()
+	local sShootCover = owner:IsCurrentSchedule( 39 )
 
 	if owner:IsMoving() && !owner:ANPlusCapabilitiesHas( 64 ) || ( self:ANPlusCapabilitiesHas( 16384 ) && !owner:ANPlusCapabilitiesHas( 16384 ) ) || ( self:ANPlusCapabilitiesHas( 65536 ) && !owner:ANPlusCapabilitiesHas( 65536 ) ) then return false end
 
@@ -603,7 +579,7 @@ function SWEP:CanSecondaryAttack()
 	end
 
 	local posTarget = enemy:GetPos()
-	if !self:ANPlusValidAnglesNormal( posTarget, angCheck ) || owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin2'] ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange2" ) ) || ( !owner:Visible( enemy ) && !owner:IsCurrentSchedule( 39 ) ) then		
+	if !self:ANPlusValidAnglesNormal( posTarget, angCheck ) || owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin2'] ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange2" ) ) || ( !owner:Visible( enemy ) && !sShootCover ) then		
 		if owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin2'] ) && !owner:IsCurrentSchedule( SCHED_MOVE_AWAY ) then
 			owner:SetSchedule( SCHED_MOVE_AWAY )
 		end
@@ -834,7 +810,150 @@ function SWEP:ANPlusWeaponFireEntity2(entity, addVel, hShotChan, entPreCallback,
 	
 end
 
-function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback, att) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
+function SWEP:ANPlusBulletPen(att, tr, dmginfo, bullet, penCallback)
+
+	local bPenTab = self.BulletPenTab[ self.Primary.AmmoType ]
+
+	if bPenTab && bullet.Damage >= 1 then
+
+		local owner = self:GetOwner()
+		local trMat = tr.MatType
+		local bPenData = bPenTab[ trMat ] || bPenTab[ MAT_DEFAULT ]
+		bPenData = !istable( bPenData ) && bPenTab[ bPenData ] || bPenData
+		local bPenDist, bPenRed = bPenData[ 1 ], bPenData[ 2 ]
+		local dmgScale = math.Remap( bullet.Damage, 0, self.Primary.Damage, 0, 1 )
+		bPenDist = bPenDist * dmgScale
+		
+		if bPenDist > 0.01 then
+
+			local sPos = tr.HitPos - tr.HitNormal * bPenDist
+			local ePos = tr.HitPos - tr.HitNormal * bPenDist
+			local collTest = util.TraceLine( {
+				start = sPos,
+				endpos = ePos,
+				mask = MASK_SHOT_HULL,
+				filter = { self, self.Weapon, owner }
+			} )
+
+			if !collTest.Hit then -- We made it through?
+
+				local penTr = util.TraceLine( {
+					start = collTest.HitPos,
+					endpos = collTest.HitPos + tr.HitNormal * bPenDist,
+					mask = MASK_SHOT_HULL,
+					filter = { self, self.Weapon, owner }
+				} )
+
+				local distSqr, hitEntThic = ANPlusGetRangeVector( tr.HitPos, penTr.HitPos )
+				local src = penTr.HitPos - ( tr.HitNormal * hitEntThic )
+
+				local exitH = {}
+				exitH.Attacker 		= game.GetWorld()
+				exitH.Num 			= 1
+				exitH.Src 			= src
+				exitH.Dir 			= tr.HitNormal
+				exitH.Tracer 		= 0
+				exitH.TracerName 	= ""
+				exitH.Spread 		= Vector( 0, 0, 0 )
+				exitH.Damage 		= 0
+				exitH.Force 		= 0
+				exitH.AmmoType 		= ""
+				exitH.Callback		= function(att, tr, dmginfo)				
+					if isfunction( penCallback ) then penCallback( att, tr, dmginfo ) end
+				end
+				game.GetWorld():FireBullets( exitH ) -- Emulate exit hole?
+
+				local penBullet = bullet
+				penBullet.Attacker 	= self:GetOwner()
+				penBullet.Damage 	= ( penBullet.Damage - ( self.Primary.Damage * bPenRed ) )
+				penBullet.Src 		= src
+				penBullet.Dir 		= tr.HitNormal * -1
+				penBullet.Spread 	= Vector( 0, 0, 0 )
+				penBullet.Num 		= 1
+				game.GetWorld():FireBullets( penBullet )
+		
+				return true				
+			end
+
+		end
+
+	end
+
+end
+
+function SWEP:ANPlusBulletPen2(att, tr, dmginfo, bullet, penCallback)
+
+	local bPenTab = self.BulletPenTab[ self.Secondary.AmmoType ]
+
+	if bPenTab && bullet.Damage >= 1 then
+
+		local owner = self:GetOwner()
+		local trMat = tr.MatType
+		local bPenData = bPenTab[ trMat ] || bPenTab[ MAT_DEFAULT ]
+		bPenData = !istable( bPenData ) && bPenTab[ bPenData ] || bPenData
+		local bPenDist, bPenRed = bPenData[ 1 ], bPenData[ 2 ]
+		local dmgScale = math.Remap( bullet.Damage, 0, self.Secondary.Damage, 0, 1 )
+		bPenDist = bPenDist * dmgScale
+		
+		if bPenDist > 0.01 then
+
+			local sPos = tr.HitPos - tr.HitNormal * bPenDist
+			local ePos = tr.HitPos - tr.HitNormal * bPenDist
+			local collTest = util.TraceLine( {
+				start = sPos,
+				endpos = ePos,
+				mask = MASK_SHOT_HULL,
+				filter = { self, self.Weapon, owner }
+			} )
+
+			if !collTest.Hit then -- We made it through?
+
+				local penTr = util.TraceLine( {
+					start = collTest.HitPos,
+					endpos = collTest.HitPos + tr.HitNormal * bPenDist,
+					mask = MASK_SHOT_HULL,
+					filter = { self, self.Weapon, owner }
+				} )
+
+				local distSqr, hitEntThic = ANPlusGetRangeVector( tr.HitPos, penTr.HitPos )
+				local src = penTr.HitPos - ( tr.HitNormal * hitEntThic )
+
+				local exitH = {}
+				exitH.Attacker 		= game.GetWorld()
+				exitH.Num 			= 1
+				exitH.Src 			= src
+				exitH.Dir 			= tr.HitNormal
+				exitH.Tracer 		= 0
+				exitH.TracerName 	= ""
+				exitH.Spread 		= Vector( 0, 0, 0 )
+				exitH.Damage 		= 0
+				exitH.Force 		= 0
+				exitH.AmmoType 		= ""
+				exitH.Callback		= function(att, tr, dmginfo)				
+					if isfunction( penCallback ) then penCallback( att, tr, dmginfo ) end
+				end
+				game.GetWorld():FireBullets( exitH ) -- Emulate exit hole?
+
+				local penBullet = bullet
+				penBullet.Attacker 	= self:GetOwner()
+				penBullet.Damage 	= ( penBullet.Damage - ( self.Secondary.Damage * bPenRed ) )
+				penBullet.Src 		= src
+				penBullet.Dir 		= tr.HitNormal * -1
+				penBullet.Spread 	= Vector( 0, 0, 0 )
+				penBullet.Num 		= 1
+				game.GetWorld():FireBullets( penBullet )
+		
+				return true				
+			end
+
+		end
+
+	end
+
+end
+
+function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletCallback, callback, att, penCallback) -- bulletCallback = function(att, tr, dmginfo) | callback = function( origin, vector )
+
 	local att = att || self:GetAttachment( self.MuzzleAttachment )
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
@@ -874,8 +993,10 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback, att) -
 					net.WriteFloat( toN || -1 )
 				net.Broadcast()
 			end
-
-			if isfunction( bulletcallback ) then bulletcallback(att, tr, dmginfo) end
+			
+			local lastPen = self:ANPlusBulletPen( att, tr, dmginfo, bullet, penCallback )
+			
+			if isfunction( bulletCallback ) then bulletCallback( att, tr, dmginfo, lastPen ) end
 			
 		end
 
@@ -889,7 +1010,7 @@ function SWEP:ANPlusWeaponFireBullet(hShotChan, bulletcallback, callback, att) -
 	
 end
 
-function SWEP:ANPlusWeaponFireBullet2(hShotChan, bulletcallback, callback, att) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
+function SWEP:ANPlusWeaponFireBullet2(hShotChan, bulletCallback, callback, att) -- bulletCallback = function(att, tr, dmginfo) | callback = function( origin, vector )
 	local att = att || self:GetAttachment( self.MuzzleAttachment )
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
@@ -930,7 +1051,7 @@ function SWEP:ANPlusWeaponFireBullet2(hShotChan, bulletcallback, callback, att) 
 				net.Broadcast()
 			end
 
-			if isfunction( bulletcallback ) then bulletcallback(att, tr, dmginfo) end
+			if isfunction( bulletCallback ) then bulletCallback(att, tr, dmginfo) end
 			
 		end
 
@@ -1021,6 +1142,40 @@ function SWEP:Reload(owner)
 	self.m_bClipReloaded = true
 end
 
+function SWEP:CanShootCover()	
+	if !self.m_bWeaponReady then return false end
+
+	if !IsValid(self:GetOwner():GetEnemy()) then return false end
+		
+	local owner = self:GetOwner()
+	local enemy = owner:GetEnemy()
+	local eOccluder = owner:GetInternalVariable( "m_hEnemyOccluder" )
+	
+	if eOccluder == NULL then self.m_fSeenEnemyCoverLast = CurTime() + self.m_fSeenEnemyCoverDelay return false end
+	
+	if owner:IsCurrentSchedule( 39 ) && eOccluder != NULL && self.m_fSeenEnemyCoverLast < CurTime() then return false end
+	print(CurTime(),"DOND")
+	if owner:IsMoving() || ( self:ANPlusCapabilitiesHas( 8192 ) && !owner:ANPlusCapabilitiesHas( 8192 ) ) || ( self:ANPlusCapabilitiesHas( 32768 ) && !owner:ANPlusCapabilitiesHas( 32768 ) ) then return false end
+	
+	if !self:ANPlusCanPrimaryFire() || self:CanSecondaryAttack() || CurTime() < self:GetNextPrimaryFire() || ( ( self:Clip1() <= 0 || ( self:Clip1() - self.Primary.AmmoPerShot ) < 0 ) && !self.Primary.InfiniteAmmo ) || self.m_fCurBurstCount <= 0 then	
+		return false
+	end	
+	
+	if self.BlackListSchedules[ owner:GetCurrentSchedule() ] || self.BlackListACTs[ owner:GetActivity() ] || owner:IsPlayingGesture( 70 ) || owner:IsPlayingGesture( 71 ) || owner:HasCondition( 42 ) || !owner:ANPlusAlive() || ( !enemy:ANPlusAlive() ) then
+		return false
+	end
+	
+	local posTarget = enemy:GetPos()
+	if !self:ANPlusValidAnglesNormal( posTarget, angCheck ) || owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin'] ) || !owner:ANPlusInRange( enemy, self:GetInternalVariable( "m_fMaxRange1" ) ) then			
+		if owner:ANPlusInRange( enemy, self:GetOwnerProfTab()['RangeMin'] ) && !owner:IsCurrentSchedule( SCHED_MOVE_AWAY ) then
+			owner:SetSchedule( SCHED_MOVE_AWAY )
+		end
+		return false
+	end
+	
+	return true  		
+end
+
 function SWEP:ANPlusThink()
 end
 
@@ -1036,6 +1191,10 @@ function SWEP:ThinkServer()
 	if IsValid(owner) then
 
 		local enemy = owner:GetEnemy()
+		
+		--if self:CanShootCover() then			
+		--	owner:SetSchedule( 39 )
+		--end
 
 		local oACT = owner:GetActivity()	
 		if oACT == ACT_RELOAD || oACT == ACT_RELOAD_LOW || owner:IsPlayingGesture( ACT_GESTURE_RELOAD ) then
@@ -1422,10 +1581,25 @@ if (CLIENT) then
 					
 					self.m_pFLProjText:SetPos( newPos )
 					self.m_pFLProjText:SetAngles( newAng )		
-										
-					render.SetMaterial( tab['SpriteMat'] )
-					render.ANPlusDrawSpriteParallax( newPos, tab['SpriteMins'][ 1 ], tab['SpriteMins'][ 2 ], tab['SpriteMaxs'][ 1 ], tab['SpriteMaxs'][ 2 ], 2000, col )
-					
+--[[
+					local endPos = newPos + newAng:Forward() * tab['FlashLightFOV']
+
+					local tr = util.TraceLine( {
+						start = newPos,
+						endpos = endPos,
+						filter = { self, owner },
+					} )
+
+					render.OverrideBlend( true, BLEND_SRC_COLOR, BLEND_SRC_ALPHA, BLENDFUNC_ADD, BLEND_ONE, BLEND_ZERO, BLENDFUNC_ADD )
+						render.SetMaterial( tab['FlashLightBeam'] )	
+						render.DrawBeam( newPos, tr.HitPos, tab['FlashLightFOV'] * -tr.Fraction, 0, 1, col )
+					render.OverrideBlend( false )
+]]
+					render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites				
+						render.SetMaterial( tab['SpriteMat'] )
+						render.ANPlusDrawSpriteParallax( newPos, tab['SpriteMins'][ 1 ], tab['SpriteMins'][ 2 ], tab['SpriteMaxs'][ 1 ], tab['SpriteMaxs'][ 2 ], 2000, col )
+					render.OverrideAlphaWriteEnable( false ) -- A proper way of rendering Sprites
+
 				end
 				self.m_pFLProjText:Update()
 			end
@@ -1475,18 +1649,24 @@ if (CLIENT) then
 				} )
 				
 				if tab['StartDotMat'] then
-					render.SetMaterial( tab['StartDotMat'] )
-					render.DrawSprite( newPos, tab['StartDotSize'][ 1 ], tab['StartDotSize'][ 2 ], col )
+					render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+						render.SetMaterial( tab['StartDotMat'] )
+						render.DrawSprite( newPos, tab['StartDotSize'][ 1 ], tab['StartDotSize'][ 2 ], col )
+					render.OverrideAlphaWriteEnable( false ) -- A proper way of rendering Sprites
 				end
 				
 				if tab['LaserMat'] then
-					render.SetMaterial( tab['LaserMat'] )
-					render.DrawBeam( newPos, tr.HitPos, tab['LaserSize'][ 2 ], 0, 1, col )
+					render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+						render.SetMaterial( tab['LaserMat'] )
+						render.DrawBeam( newPos, tr.HitPos, tab['LaserSize'][ 2 ], 0, 1, col )
+					render.OverrideAlphaWriteEnable( false ) -- A proper way of rendering Sprites
 				end
 				
 				if tab['EndDotMat'] && tr.Hit == true then
-					render.SetMaterial( tab['EndDotMat'] )
-					render.DrawSprite( tr.HitPos, tab['EndDotSize'][ 1 ], tab['EndDotSize'][ 2 ], col ) 
+					render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+						render.SetMaterial( tab['EndDotMat'] )
+						render.DrawSprite( tr.HitPos, tab['EndDotSize'][ 1 ], tab['EndDotSize'][ 2 ], col ) 
+					render.OverrideAlphaWriteEnable( false ) -- A proper way of rendering Sprites
 				end
 			end
 		end

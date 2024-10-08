@@ -242,7 +242,9 @@ render.ANPlusDrawSpriteParallax = function(pos, widthMin, heightMin, widthMax, h
 	local h = math.Remap( d * transFov, 1, dist, heightMin, heightMax )
 	h = math.Round( h, 1 )
 	h = math.Clamp( h, heightMin, heightMax )
-	render.DrawSprite( pos, w, h, color )
+	render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+		render.DrawSprite( pos, w, h, color )
+	render.OverrideAlphaWriteEnable( false ) -- A proper way of rendering Sprites
 end
 
 render.ANPlusDrawBeamTrail = function(ent, attachmentID, offsetVec, color, width, startSize, endSize, length, spacing, stretch )
@@ -279,14 +281,16 @@ render.ANPlusDrawBeamTrail = function(ent, attachmentID, offsetVec, color, width
 			length = math.ceil( math.abs( length - spacing ) )
 		end
 
-		render.StartBeam( count )
-			for i, point in pairs( ent['m_tPoints_att'..attachmentID] ) do
-				local width = ( i / ( length / startSize ) ) 
-				local coord = ( 1 / count ) * ( i - 1 )
+		render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+			render.StartBeam( count )
+				for i, point in pairs( ent['m_tPoints_att'..attachmentID] ) do
+					local width = ( i / ( length / startSize ) ) 
+					local coord = ( 1 / count ) * ( i - 1 )
 
-				render.AddBeam( i == count && pos || point, width + endSize, stretch && coord || width, color )
-			end
-		render.EndBeam()
+					render.AddBeam( i == count && pos || point, width + endSize, stretch && coord || width, color )
+				end
+			render.EndBeam()
+		render.OverrideAlphaWriteEnable( false ) -- A proper way of rendering Sprites
 
 		if count >= length then
 			table.remove( ent['m_tPoints_att'..attachmentID], 1 )

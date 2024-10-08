@@ -85,9 +85,6 @@ if (CLIENT) then
 	end)
 
 
-
-
-
     local PANEL = {}
 	local SM_GenericIcon = "vgui/anplus_log.png"
 	local SM_GenericNPCIcon = "vgui/anp_npc_ico.png"
@@ -99,6 +96,11 @@ if (CLIENT) then
         ['SpawnableEntities'] = {},
         ['Vehicles'] = {},
     }
+	local SM_MainNodes = {
+		['[ NPCs ]'] 		= true,
+		['[ Entities ]'] 	= true,
+		['[ Vehicles ]'] 	= true,
+	}
 
 	Derma_Hook( PANEL, "Paint", "Paint", "Tree" )
 	PANEL.m_bBackground = true -- Hack for above
@@ -111,15 +113,16 @@ if (CLIENT) then
         if ( !obj.type ) then return end
 
 		local label
+		local category = !SM_MainNodes[ obj.nodeN ] && obj.subCategory || obj.category
 
-		if !SM_HeaderTable[ obj.type ][ obj.category ] then
+		if !SM_HeaderTable[ obj.type ][ category ] then
 
 			label = vgui.Create( "ContentHeader", panel )
-			label:SetText( obj.category )	
-			SM_HeaderTable[ obj.type ][ obj.category ] = true
+			label:SetText( category )	
+			SM_HeaderTable[ obj.type ][ category ] = true
 			
 		end
-	
+
 		local icon = vgui.Create( "ContentIcon", panel )
 		icon:SetContentType( "anplus_npcs" )
 		icon:SetSpawnName( obj.spawnname )
@@ -128,15 +131,16 @@ if (CLIENT) then
 		icon:SetAdminOnly( obj.admin )
 		icon:SetColor( Color( 205, 92, 92, 255 ) )
 		icon.DoClick = function()
-			if obj.type == "NPC" then
-				local override = GetConVar("gmod_npcweapon"):GetString()
-				RunConsoleCommand( "gmod_spawnnpc", obj.spawnname, obj.weapon && ( override == "" && table.Random(obj.weapon) || override ) || "none" )
+			if obj.type == "NPC" then	
+				local override = GetConVar( "gmod_npcweapon" ):GetString()
+				local weapon = obj.weapon && ( override == "" && table.Random(obj.weapon) || override ) || "none"			
+				RunConsoleCommand( "gmod_spawnnpc", obj.spawnname, weapon )
 			elseif obj.type == "SpawnableEntities" then
 				RunConsoleCommand( "gm_spawnsent", obj.spawnname )
 			elseif obj.type == "Vehicles" then
 				RunConsoleCommand( "gm_spawnvehicle", obj.spawnname )
 			end
-			surface.PlaySound( "ANP.UI.Click" )
+			surface.PlaySound( "ANP.UI.Spawn" )
 		end
 	
 	
@@ -149,6 +153,8 @@ if (CLIENT) then
 			end
 		
 			menu:AddOption( "#spawnmenu.menu.spawn_with_toolgun", function()
+				local override = GetConVar( "gmod_npcweapon" ):GetString()
+				local weapon = obj.weapon && ( override == "" && table.Random(obj.weapon) || override ) || "none"
 				RunConsoleCommand( "gmod_tool", "creator" ) RunConsoleCommand( "creator_type", "2" )
 				RunConsoleCommand( "creator_name", obj.spawnname ) RunConsoleCommand( "creator_arg", weapon )
 			end ):SetIcon( "icon16/brick_add.png" )
@@ -160,8 +166,7 @@ if (CLIENT) then
 			if label then panel:Add( label ) end
 			panel:Add( icon )
 		end
-	
-	
+		
 		return icon
 	end)
 
@@ -171,25 +176,17 @@ if (CLIENT) then
 		['[ Vehicles ]'] = true,
 	}
 
+	local SM_BGMusic = nil
+	local custmBGMusicLast = nil
+
 	local function GiveIconsToNode( panel, tree, node, npcdata )
+
 		node.DoPopulate = function( self ) -- When we click on the node - populate it using this function
 			-- If we've already populated it - forget it. NO?
 			if ( self.PropPanel ) then self.PropPanel:Remove() end
 			if ( SM_BGImage ) then SM_BGImage:Remove() end
 
 			local nodeN = node.Label:GetText()
-			function tree:ChildExpanded( bool )
-
-				if bool == true || bool == false then
-					surface.PlaySound( bool && "ANP.UI.List.Open" || "ANP.UI.List.Close" )
-				end
-
-				self:InvalidateLayout()
-			end
-
-			function tree:OnNodeSelected( node )
-				surface.PlaySound( "ANP.UI.Click" )
-			end
 			
 			-- Clean the header table
 			SM_HeaderTable = { ['NPC'] = {}, ['SpawnableEntities'] = {}, ['Vehicles'] = {} }
@@ -209,6 +206,7 @@ if (CLIENT) then
 			local custmBGImg = "none"
 			local custmBGSize = { 0, 0 }
 			local custmBGColor = Color( 255, 255, 255, 100 )
+			local custmBGMusic = nil
 			
 			for name, ent in SortedPairsByMemberValue( npcdata, "Category" ) do
 				local mat = SM_GenericIcon
@@ -217,8 +215,8 @@ if (CLIENT) then
 					mat = "entities/" .. name .. ".png"
 				end
 
-                local niceCategory = ent['Category'] && string.Split( ent['Category'], " | " )
-				niceCategory = istable(niceCategory) && niceCategory[ 1 ] || ent['Category']
+                local category = ent['Category'] && string.Split( ent['Category'], " | " )
+				category, subCategory = istable(category) && category[ 1 ] || ent['Category'], istable(category) && category[ 2 ]
 
 				if !forceDefault[nodeN] then
 					
@@ -227,6 +225,7 @@ if (CLIENT) then
 						custmBGImg = custCat['BGImage']
 						custmBGSize = custCat['BGAddSize']
 						custmBGColor = custCat['BGColor']
+						custmBGMusic = custCat['BGMusic']
 					end
 				end
 
@@ -237,7 +236,9 @@ if (CLIENT) then
 					weapon		= ent['DefaultWeapons'],
 					admin		= ent['AdminOnly'],
                     type        = ent['EntityType'],
-					category	= niceCategory
+					nodeN		= nodeN,
+					category	= category,
+					subCategory = subCategory
 				} )
 			end
 
@@ -271,16 +272,65 @@ if (CLIENT) then
 				surface.DrawTexturedRect( x, y, dw, dh )
 				return true
 			end
+			------------------------------------------------------------BG Music
+			local activeThink = CurTime()
 
-			function SM_BGImage:Paint(w, h) -- Update the size of the BG		
+			function self.PropPanel:Paint()
+				activeThink = CurTime() + 0.1
+			end
+
+			local function StopMusic()
+
+				if SM_BGMusic then
+
+					SM_BGMusic:Stop()
+					SM_BGMusic = nil
+					custmBGMusicLast = nil
+					--timer.Remove( "ANPSpawnMenuThink" )
+
+				end
+
+			end
+
+			timer.Create( "ANPSpawnMenuThink", 0, 0, function()
+				
+				if ( self.PropPanel ) then
+
+					if custmBGMusic && custmBGMusic != custmBGMusicLast then
+
+						SM_BGMusic = CreateSound( LocalPlayer(), custmBGMusic )
+						SM_BGMusic:PlayEx( 0, 100 )
+						SM_BGMusic:ChangeVolume( 1, 1 )
+						
+						custmBGMusicLast = custmBGMusic
+
+					elseif !custmBGMusic || activeThink < CurTime() then
+
+						StopMusic()
+
+					end
+
+				else
+
+					timer.Remove( "ANPSpawnMenuThink" )
+
+				end
+
+			end )
+
+			--self.PropPanel.OnRemove = function()				
+			--	StopMusic()
+			--end
+			------------------------------------------------------------BG Music
+			function SM_BGImage:Paint(w, h)		
 				
 				local w1, h1 = tree:GetSize()
 				self:PaintAt( x + w1, y, ( w2 + custmBGSize[ 1 ] ) - w1, h2 + custmBGSize[ 2 ] )
-				
-			end
 
+			end
+			
 		end 
-	
+		
 		node.DoClick = function( self )
 			self:DoPopulate()
 			panel:SwitchPanel( self.PropPanel )
@@ -497,6 +547,19 @@ if (CLIENT) then
 		end
 		if !table.IsEmpty( allNodeCacheENTs ) then
 			GiveIconsToNode( panel, tree, allNodeVEHs, allNodeCacheVEHs )
+		end
+
+		function tree:ChildExpanded( bool )
+
+			if bool == true || bool == false then
+				surface.PlaySound( bool && "ANP.UI.List.Open" || "ANP.UI.List.Close" )
+			end
+
+			self:InvalidateLayout()
+		end
+
+		function tree:OnNodeSelected( node )
+			surface.PlaySound( "ANP.UI.Click" )
 		end
 	
 	end)

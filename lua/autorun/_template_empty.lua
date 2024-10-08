@@ -72,6 +72,9 @@ ANPlus.AddNPC( {
 				['HullType']		= 0,					-- Hull type. https://wiki.facepunch.com/gmod/Enums/HULL          
    
 			},
+			['GibReplacement'] = { -- RagGib replacement table (best for zombies). 
+				['ORIGINAL MODEL'] = { "REPLACEMENT MODEL" or false, "REPLACEMENT MATERIAL" or { [1] = "REPLACEMENT_SUBMATERIAL" } or false },
+			},
 		},
 		---   
 	},

@@ -840,6 +840,23 @@ function metaENT:ANPlusClientParticleSystem(stop, effect, partAttachment, entAtt
 	end
 end
 
+function ANPlusClientParticleSystem(effect, pos, ang)
+	if (SERVER) then
+
+		net.Start( "anplus_client_particle_start_no_ent" )
+		net.WriteString( effect )
+		net.WriteVector( pos, Vector( 0, 0, 0 ) )
+		net.WriteAngle( ang || Angle( 0, 0, 0 ) )
+		net.Broadcast()
+
+	elseif (CLIENT) then
+
+		local cps = CreateParticleSystemNoEntity( effect, pos, ang )
+		return cps
+		
+	end
+end
+
 function metaENT:ANPlusHaloEffect(color, size, lenght)	
 	if (SERVER)	then
 		net.Start( "anplus_holo_eff" ) 
@@ -1753,7 +1770,7 @@ function metaENT:ANPlusHitEffect(effect, tr, scale)
 	end
 end
 
-function metaENT:ANPlusFireBullet(bullet, target, hShotChan, muzzlePos, delay, burstCount, burstReset, fireSND, distFireSND, callback) -- bulletcallback = function(att, tr, dmginfo) | callback = function( origin, vector )
+function metaENT:ANPlusFireBullet(bullet, target, hShotChan, muzzlePos, delay, burstCount, burstReset, fireSND, distFireSND, callback) -- bulletCallback = function(att, tr, dmginfo) | callback = function( origin, vector )
 
 	if !bullet then return end
 	
@@ -1881,6 +1898,16 @@ function metaENT:ANPlusGetRagdollEntity()
 		return self.m_pSRagdollEntity
 	elseif (CLIENT) then
 		return self.m_pCRagdollEntity
+	end
+end
+
+function metaENT:ANPlusGetModelData()
+	if !self:ANPlusGetDataTab() || !self:ANPlusGetDataTab()['Models'] then return nil end		
+	local stop
+	for k, v in pairs( self:ANPlusGetDataTab()['Models'] ) do
+		if stop then continue end
+		stop = true
+		return v
 	end
 end
 
