@@ -29,6 +29,7 @@ ENT.UsePhysCollide			= true
 ENT.Bounces					= 0
 ENT.SoftBounceSND			= false
 ENT.HardBounceSND			= false
+ENT.TouchDelay 				= 0
 
 ENT.ProjHealth				= false
 
@@ -83,12 +84,12 @@ if (SERVER) then
 		if IsValid(physObj) then	
 			self:ANPlusOnPhysicsObj(physObj)
 		end
-		
-		self:ANPlusOnInitialize()
 
 		local mins, maxs = self:GetCollisionBounds()
 		self.m_vecCollBMins = mins
 		self.m_vecCollBMaxs = maxs
+		
+		self:ANPlusOnInitialize()
 
 		--phys:SetBuoyancyRatio( number buoyancy )
 		self.ai_sound = ents.Create( "ai_sound" )
@@ -124,6 +125,8 @@ if (SERVER) then
 			if !IsValid(self) then return end
 			self.Decelerate = true
 		end )
+
+		self.TouchDelay = CurTime() + self.TouchDelay
 		
 	end
 
@@ -146,14 +149,25 @@ if (SERVER) then
 		end
 	end
 
-	function ENT:TouchCheck(ent, filter, mask) -- Make the projecticle use tracer detection instead of trigger so it will do stuff when it will actually touch an entity and not just it's collision bounds or any of that noise.
+	function ENT:ANPlusTouch(ent)
+	end
+
+	function ENT:Touch(ent)
+		if self.TouchDelay > CurTime() then return end
+
+		self:ANPlusTouch(ent)
+	end
+
+	function ENT:TouchCheck(ent, filter, mask, sizeMul) -- Make the projecticle use tracer detection instead of trigger so it will do stuff when it will actually touch an entity and not just it's collision bounds or any of that noise.
 		
+		local sizeMul = sizeMul || 1.1
+
 		local tr = util.TraceHull( {
 			start = self:GetPos(),
 			endpos = self:GetPos(),
 			filter = filter,
-			mins = self.m_vecCollBMins * 1.1,
-			maxs = self.m_vecCollBMaxs * 1.1,
+			mins = self.m_vecCollBMins * sizeMul,
+			maxs = self.m_vecCollBMaxs * sizeMul,
 			mask = mask
 		} )
 		
@@ -200,7 +214,7 @@ if (SERVER) then
 	end
 	
 	function ENT:PhysicsCollide(data, physobj)
-		if self.UsePhysCollide then
+		if self.UsePhysCollide && self.TouchDelay <= CurTime() then
 			if !self.Dead then			
 									
 				if !self.m_bDecalPainted && self.CollideDecal then util.Decal( self.CollideDecal, data.HitPos + data.HitNormal, data.HitPos - data.HitNormal ); self.m_bDecalPainted = true end

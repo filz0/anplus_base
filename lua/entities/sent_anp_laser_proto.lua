@@ -84,18 +84,21 @@ end
 
 function ENT:Think()
 	if self:GetLaserEnabled() then
+
 		local dir = self:GetForward():GetNormalized()
 		local tr = util.TraceLine( {
-		start = self:GetPos(),
-		endpos = self:GetPos() + dir * self:GetLaserDistance(),
-		ignoreworld = self.m_fIgnoreWorld,
-		filter = self.m_tEntFilter || { self, self:GetOwner() }
+			start = self:GetPos(),
+			endpos = self:GetPos() + dir * self:GetLaserDistance(),
+			ignoreworld = self.m_fIgnoreWorld,
+			filter = self.m_tEntFilter || { self, self:GetOwner() }
 		} )
 		
 		self:SetNWVector( "BeamHitPos", tr.HitPos )
+
 		if self:GetNWVector( "BeamHitPos" ) && isfunction( self.m_funHitCallBack ) then
 			self.m_funHitCallBack( self, tr ) 
 		end
+
 	end
 
 	self:NextThink( CurTime() + self.m_fNextThink )
@@ -103,7 +106,9 @@ function ENT:Think()
 end
 
 function ENT:DrawLaserBeam()
+
 	if self:GetNWVector( "BeamHitPos" ) && self:GetLaserEnabled() then
+
 		local hitPos = self:GetNWVector( "BeamHitPos" )
 		local dist = self:GetLaserDistance()
 		
@@ -126,18 +131,23 @@ function ENT:DrawLaserBeam()
 		cam.Start3D()
 			
 			if self.m_sCLaserMat then
-				render.SetMaterial( self.m_sCLaserMat )
-				--render.DrawBeam( self:GetPos(), hitPos, laserWidth, laserMatStart, laserMatEnd, laserCol )
 				
-				render.DrawBeam( self:GetPos(), hitPos, laserWidth, laserFPS + laserMatStart, laserFPS + laserMatEnd, laserCol )
+				render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+					render.SetMaterial( self.m_sCLaserMat )		
+					render.DrawBeam( self:GetPos(), hitPos, laserWidth, laserFPS + laserMatStart, laserFPS + laserMatEnd, laserCol )
+				render.OverrideAlphaWriteEnable( false )
 			end
 			if self.m_sCStartDotMat then 
-				render.SetMaterial( self.m_sCStartDotMat )
-				render.DrawSprite( self:GetPos(), startDotWidth, startDotHeight, startDotCol )
+				render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+					render.SetMaterial( self.m_sCStartDotMat )
+					render.DrawSprite( self:GetPos(), startDotWidth, startDotHeight, startDotCol )
+				render.OverrideAlphaWriteEnable( false )
 			end
 			if self.m_sCEndDotMat then
-				render.SetMaterial( self.m_sCEndDotMat )
-				render.DrawSprite( hitPos, endDotWidth, endDotHeight, endDotCol )
+				render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+					render.SetMaterial( self.m_sCEndDotMat )
+					render.DrawSprite( hitPos, endDotWidth, endDotHeight, endDotCol )
+				render.OverrideAlphaWriteEnable( false )
 			end
 			
 		cam.End3D()

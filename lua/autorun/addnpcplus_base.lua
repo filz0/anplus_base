@@ -289,7 +289,7 @@ ANPlus = {
 	AddCategoryCustomize = function(category, icon, bgImg, w, h, color, bgMusic)
 		if SERVER then return end
 		ANPlusCategoryCustom[ category ] = { ['Icon'] = icon, ['BGImage'] = bgImg, ['BGAddSize'] = { w || 0, h || 0 }, ['BGColor'] = color || Color( 255, 255, 255, 150 ), ['BGMusic'] = bgMusic }
-	end
+	end,
 	
 } 
 

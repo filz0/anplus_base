@@ -25,6 +25,7 @@ SWEP.ActivityTranslateAIOverride	= nil
 SWEP.Weight							= 30
 SWEP.DropOnDeath					= true
 SWEP.PickableByNPCs					= true
+SWEP.UsableByPlayers				= false
 SWEP.EventDisable					= {}
 
 SWEP.FlashlightTab 					= false
@@ -665,7 +666,7 @@ end
 --end
 
 function SWEP:ANPlusWeaponFireEntity(entity, addVel, hShotChan, entPreCallback, entPostCallback, callback, att)
-	
+
 	local att = att || self:GetAttachment( self.MuzzleAttachment )
 	local owner = self:GetOwner()
     local enemy = owner:GetEnemy()
@@ -1154,7 +1155,7 @@ function SWEP:CanShootCover()
 	if eOccluder == NULL then self.m_fSeenEnemyCoverLast = CurTime() + self.m_fSeenEnemyCoverDelay return false end
 	
 	if owner:IsCurrentSchedule( 39 ) && eOccluder != NULL && self.m_fSeenEnemyCoverLast < CurTime() then return false end
-	print(CurTime(),"DOND")
+	
 	if owner:IsMoving() || ( self:ANPlusCapabilitiesHas( 8192 ) && !owner:ANPlusCapabilitiesHas( 8192 ) ) || ( self:ANPlusCapabilitiesHas( 32768 ) && !owner:ANPlusCapabilitiesHas( 32768 ) ) then return false end
 	
 	if !self:ANPlusCanPrimaryFire() || self:CanSecondaryAttack() || CurTime() < self:GetNextPrimaryFire() || ( ( self:Clip1() <= 0 || ( self:Clip1() - self.Primary.AmmoPerShot ) < 0 ) && !self.Primary.InfiniteAmmo ) || self.m_fCurBurstCount <= 0 then	
@@ -1220,9 +1221,8 @@ function SWEP:ThinkServer()
 		if self:CanSecondaryAttack() then
 			self:SecondaryAttack()
 		end
-		
+
 	end
-	
 	self:ANPlusWorldModelUpdate()
 	
 end
@@ -1270,8 +1270,9 @@ function SWEP:NPCShoot_Primary( shootPos, shootDir )
 end
 
 function SWEP:GenerateBurst() -- Cuz I can't get the current burst count && rest time, I have to calculate it myself... >:(	
-	self.m_fCurRestCalc = math.Round( math.Rand( self.NPCRestMin, self.NPCRestMax ), 2 )
-	self.m_fCurBurstCalc = self.NPCBurstMax > 0 && math.random( self.NPCBurstMin, self.NPCBurstMax ) || 99 -- Let's check if our max burst count is higher than 0. If not, screw the burst mechanic && just go brrrrrr.
+	self.m_fCurRestCalc = math.Round( math.Rand( self.NPCRestMin * 100, self.NPCRestMax * 100 ), 2 )
+	self.m_fCurRestCalc = self.m_fCurRestCalc / 100
+	self.m_fCurBurstCalc = self.NPCBurstMax > 0 && math.random( self.NPCBurstMin, self.NPCBurstMax ) || 999999 -- Let's check if our max burst count is higher than 0. If not, screw the burst mechanic && just go brrrrrr.
 	self.m_fCurBurstCount = self.m_fCurBurstCalc
 end
 
@@ -1375,8 +1376,6 @@ end
 
 function SWEP:FireAnimationEvent( pos, ang, event, options )
 	
-	-- Disables animation based muzzle event
-	-- print(event)
 	if self.EventDisable && self.EventDisable[ event ] then return true end
 
 end
@@ -1411,8 +1410,12 @@ function SWEP:Equip(ent)
 	if ent:IsPlayer() then self:Remove() return false end	
 	if ent:GetClass() == "npc_citizen" then ent:Fire("DisableWeaponPickup") end
 	if self.NPCCapabilities then ent:CapabilitiesAdd( self.NPCCapabilities ) end
+	self.m_pLastOwner = ent
+
+	self.m_bDroppedHL1 = false
 
 	timer.Remove( "ANPlusRemoveOnDrop" .. self:EntIndex() )
+	timer.Remove( "ANPlusHL1DropThink" .. self:EntIndex() )
 
 	hook.Add( "Think", self, self.ThinkServer )
 
@@ -1438,22 +1441,62 @@ end
 function SWEP:ANPlusOnDrop()
 end
 
+function SWEP:DropToFloorHL1()
+
+	local tr = util.TraceEntity( {
+		start = self:GetPos(),
+		endpos = self:GetPos() - Vector( 0, 0, 10 ),
+		filter = { self, self.m_pLastOwner, self.m_pLastOwner:ANPlusGetRagdoll() },
+	}, self )
+
+	if self:GetMoveCollide() != MOVECOLLIDE_FLY_BOUNCE then
+		self:SetMoveType( MOVETYPE_FLYGRAVITY )
+		self:SetMoveCollide( MOVECOLLIDE_FLY_BOUNCE )
+	 	self:SetSolid( SOLID_BSP )
+		self:SetCollisionBounds( Vector( -8, -8, 0 ), Vector( 8, 8, 8 ) )
+	end
+
+	if self:OnGround() and tr.Fraction >= 1 then
+		self:SetLocalVelocity( Vector( 0, 0, 1 ) )
+		self:SetAngles( Angle( 0, 0, 0 ) )
+	end
+
+end
+
 function SWEP:OnDrop()
 	
 	self:ANPlusOnDrop()
-	
 	self:StopParticles()
+
 	if self.Primary.PreFireSound then self:StopSound( self.Primary.PreFireSound ) end
 	if self.Primary.PostFireSound then self:StopSound( self.Primary.PostFireSound ) end
 	if self.FireLoopSound then self.FireLoopSound:Stop() end	
+	
 	if self.DropOnDeath == false then
+
 		self:Remove()
-	elseif self.DropOnDeath && isnumber(self.DropOnDeath) then
-		SafeRemoveEntityDelayed( self, self.DropOnDeath )
+
+	elseif self.DropOnDeath then
+		
+		if isnumber(self.DropOnDeath) then SafeRemoveEntityDelayed( self, self.DropOnDeath )end
+		if !self:GetPhysicsObject():IsValid() then 
+
+			local timerN = "ANPlusHL1DropThink" .. self:EntIndex()
+
+			timer.Create( timerN, 0, 0, function()
+
+				if !IsValid(self) then timer.Remove( timerN ) return end
+				self:DropToFloorHL1()
+
+			end )
+		end	
+
 	end
+
 	self.m_bWeaponReady = false
+
 	timer.Create( "ANPlusRemoveOnDrop" .. self:EntIndex(), 10, 1, function()
-		if !IsValid(self) then return end
+		
 		if IsValid(self) && !IsValid(self:GetOwner()) then self:Remove() end
 	end)
 	
@@ -1465,7 +1508,7 @@ end
 function SWEP:OnRemove()
 	
 	self:ANPlusOnRemove()
-	
+	timer.Remove( "ANPlusHL1DropThink" .. self:EntIndex() )
 	self:StopParticles()
 	if self.Primary.PreFireSound then self:StopSound( self.Primary.PreFireSound ) end
 	if self.Primary.PostFireSound then self:StopSound( self.Primary.PostFireSound ) end
@@ -1474,6 +1517,8 @@ function SWEP:OnRemove()
 end
 
 if (CLIENT) then
+
+	local flBeam = Material( "effects/anp/flashlight" )
 
 	net.Receive( "anplus_swep_base_tracer", function()	
 		local ent = net.ReadEntity()
@@ -1581,7 +1626,7 @@ if (CLIENT) then
 					
 					self.m_pFLProjText:SetPos( newPos )
 					self.m_pFLProjText:SetAngles( newAng )		
---[[
+
 					local endPos = newPos + newAng:Forward() * tab['FlashLightFOV']
 
 					local tr = util.TraceLine( {
@@ -1590,11 +1635,11 @@ if (CLIENT) then
 						filter = { self, owner },
 					} )
 
-					render.OverrideBlend( true, BLEND_SRC_COLOR, BLEND_SRC_ALPHA, BLENDFUNC_ADD, BLEND_ONE, BLEND_ZERO, BLENDFUNC_ADD )
-						render.SetMaterial( tab['FlashLightBeam'] )	
+					--render.OverrideBlend( true, BLEND_SRC_COLOR, BLEND_SRC_ALPHA, BLENDFUNC_ADD, BLEND_ONE, BLEND_ZERO, BLENDFUNC_ADD )
+						render.SetMaterial( flBeam )	
 						render.DrawBeam( newPos, tr.HitPos, tab['FlashLightFOV'] * -tr.Fraction, 0, 1, col )
-					render.OverrideBlend( false )
-]]
+					--render.OverrideBlend( false )
+
 					render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites				
 						render.SetMaterial( tab['SpriteMat'] )
 						render.ANPlusDrawSpriteParallax( newPos, tab['SpriteMins'][ 1 ], tab['SpriteMins'][ 2 ], tab['SpriteMaxs'][ 1 ], tab['SpriteMaxs'][ 2 ], 2000, col )

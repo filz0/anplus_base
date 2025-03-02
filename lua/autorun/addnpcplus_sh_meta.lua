@@ -405,7 +405,7 @@ local nodesWater
 
 local found_ain = false
 
-local function ParseFile()
+function ANPlusParseFile()
 
 	if found_ain then
 	
@@ -506,11 +506,7 @@ local function ParseFile()
 	
 end
 
-hook.Add( "Initialize", "ANPlus_InitializeShared", function()
-	ParseFile()	
-end)
-
-ParseFile()	
+ANPlusParseFile()	
 
 function ANPlusAIGetNodes(iType)
 	return !iType && nodesAll || iType == 2 && nodesGround || iType == 3 && nodesAir || iType == 4 && nodesClimb || iType == 5 && nodesWater

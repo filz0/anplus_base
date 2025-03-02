@@ -231,23 +231,47 @@ end
 
 local defFov = GetConVar( "fov_desired" )
 
-render.ANPlusDrawSpriteParallax = function(pos, widthMin, heightMin, widthMax, heightMax, dist, color)
+
+render.ANPlusDrawSpriteParallax = function(pos, widthMin, heightMin, widthMax, heightMax, dist, color, glowProxyData)
+
 	local ply = LocalPlayer()	
 	local viewEnt = ply:GetViewEntity()	
 	local dSqr, d = ANPlusGetRangeVector( viewEnt:GetPos(), pos )	
 	local transFov = math.Remap( ply:GetFOV(), 0, defFov:GetFloat(), 0, 1 )
-	local w = math.Remap( d * transFov, 1, dist, widthMin, widthMax )
-	w = math.Round( w, 1 )
-	w = math.Clamp( w, widthMin, widthMax )
-	local h = math.Remap( d * transFov, 1, dist, heightMin, heightMax )
-	h = math.Round( h, 1 )
-	h = math.Clamp( h, heightMin, heightMax )
-	render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
-		render.DrawSprite( pos, w, h, color )
-	render.OverrideAlphaWriteEnable( false ) -- A proper way of rendering Sprites
+	local visible = 1
+
+	if glowProxyData then
+
+		local ent = glowProxyData.Entity
+		local id = glowProxyData.ID
+		local rad = glowProxyData.Radius
+
+		ent['m_pANPPixVis' .. id] = ent['m_pANPPixVis' .. id] || util.GetPixelVisibleHandle()
+		visible = util.PixelVisible( pos, rad, ent['m_pANPPixVis' .. id] )
+
+	end
+
+	if visible > 0 then
+
+		local w = math.Remap( d * transFov, 1, dist, widthMin, widthMax )
+		w = math.Round( w, 1 )
+		w = math.Clamp( w, widthMin, widthMax )
+
+		local h = math.Remap( d * transFov, 1, dist, heightMin, heightMax )
+		h = math.Round( h, 1 )
+		h = math.Clamp( h, heightMin, heightMax )
+
+		color = Color( color.r, color.g, color.b, color.a * visible )
+
+		render.OverrideAlphaWriteEnable( true, false ) -- A proper way of rendering Sprites
+			render.DrawSprite( pos, w, h, color )
+		render.OverrideAlphaWriteEnable( false ) -- A proper way of rendering Sprites
+
+	end
+	
 end
 
-render.ANPlusDrawBeamTrail = function(ent, attachmentID, offsetVec, color, width, startSize, endSize, length, spacing, stretch )
+render.ANPlusDrawBeamTrail = function(ent, attachmentID, offsetVec, color, width, startSize, endSize, length, spacing, stretch)
 
 	offsetVec = offsetVec || Vector( 0, 0, 0 )
 	spacing = spacing || 0

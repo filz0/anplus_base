@@ -23,10 +23,27 @@ local function ragGibSetup(ent, gib)
 
 			local model = gibData[ 1 ]
 			local materials = gibData[ 2 ]
+			local replace = gibData[ 3 ]
 
-			if model then 
-				gib:SetModel( model ) 
-				gib:Spawn() 
+			if model then
+				if model != "Remove" then 
+					if replace then
+						local nGib = ClientsideRagdoll( model, RENDERGROUP_OPAQUE )
+						nGib:SetPos( LocalPlayer():GetPos() )
+						nGib:SetAngles( gib:GetAngles() )
+						nGib:SetNoDraw( false )
+						nGib:DrawShadow( true )
+						nGib:Spawn()
+						nGib:SetPos( LocalPlayer():GetPos() )
+						gib:Remove()
+					else
+						gib:SetModel( model ) 
+						gib:SetupBones()
+						gib:Spawn() 
+					end
+				else
+					gib:Remove()
+				end
 			end
 
 			if istable(materials) then
@@ -119,12 +136,13 @@ hook.Add( "CreateClientsideRagdoll", "ANPlusLoad_CreateClientsideRagdoll", funct
 	
 	end
 
-end)
+end )
 
 local dev = GetConVar( "developer" )
 local barDist = GetConVar( "anplus_hpbar_dist" )
 
 local function CheckDaThing(ent)	-- 1 = always, 2 = when in combat, 3 = when alerted, 4 = when in combat and alerted, 5 = when in combat and only if the player is the enemy.
+
 	if !IsValid(ent) || !ent:ANPlusAlive() || !ent:IsANPlus() then return false end 	
 	
 	local tab = ent:ANPlusGetDataTab()['HealthBar']
@@ -152,55 +170,141 @@ hook.Add( "HUDPaint", "ANPlusLoad_HUDPaint", function()
 	if ( dev:GetFloat() ) > 2 then DrawMaterialOverlay( "effects/anp/grid2.png", 0 ) end
 	
 	local ply = LocalPlayer()
+
 	if ANPlusHealthBarStyles && hbBarStyle:GetString() != "Disable All" then
+
 		local lookForBosses = ents.FindInSphere( ply:GetPos(), barDist:GetFloat() )	
 		local ent, distSqr, dist = ANPlusFindClosestEntity( ply:GetPos(), lookForBosses, function(ent) if CheckDaThing(ent) then return true end end )
 		local tr = ply:GetEyeTrace()
+
 		ent = tr && CheckDaThing(tr.Entity) && tr.Entity || ent
 		
 		if IsValid(ent) then
+
 			local barTab = ent:ANPlusGetDataTab()['HealthBar']
 			local barStyle = ANPlusHealthBarStyles[barTab['StyleOverride'] || hbBarStyle:GetString()]
 
 			if isfunction( barStyle ) then			
 				barStyle(ent)
 			end
+
 		end
 		
 		if IsValid(ply:ANPlusControlled()) then
+
 			local ent = ply:ANPlusControlled()
 			local wep = ent:GetActiveWeapon()
+
 			if IsValid(wep) then
 				
 				draw.RoundedBox( 8, 900 * ANPlusGetFixedScreenW(), 942 * ANPlusGetFixedScreenH(), 90 * ANPlusGetFixedScreenW(), 100 * ANPlusGetFixedScreenH(), Color( 0, 0, 0, 155 ) ) 
 				draw.SimpleText( wep:Clip1(), "HudNumbers", 940 * ANPlusGetFixedScreenW(), 942 * ANPlusGetFixedScreenH(), Color( 255, 255, 255, 255 ), 1, 1 )	
 				
 			end
+
 		end
+
 	end
-end)
+
+end )
 
 hook.Add( "PopulateNPCs", "ANPlusLoad_PopulateNPCs", function(pnlContent, tree, node)
+
 	local npcData = list.GetForEdit( "NPC" )
+
 	for i = 1, #ANPlusRemoveFromSpawnList do
+
 		local npcToRemove = ANPlusRemoveFromSpawnList[ i ]
+
 		if npcData[ npcToRemove ] then
+
 			print( "ANP REMOVED NPC", npcData[ npcToRemove ]['Name'] )
 			npcData[ npcToRemove ] = nil
+
 		end
 	end
-end)
+	
+	for k, v in pairs( ANPlusLoadGlobal ) do -- Don't show ANP stuff in the normal spawnmenu	
+
+		if npcData[ k ] then 
+
+			local npcDataOld = npcData[ k ]
+
+			npcData[ k ] = nil
+
+			timer.Simple( 1, function() npcData[ k ] = npcDataOld end )
+
+		end
+
+	end
+
+end )
 
 hook.Add( "PopulateEntities", "ANPlusLoad_PopulateEntities", function(pnlContent, tree, node)
+
 	local entData = list.GetForEdit( "SpawnableEntities" )
+
 	for i = 1, #ANPlusRemoveFromSpawnList do
+
 		local entToRemove = ANPlusRemoveFromSpawnList[ i ]
+
 		if entData[ entToRemove ] then
+
 			print( "ANP REMOVED ENTITY", entData[ entToRemove ]['PrintName'] )
 			entData[ entToRemove ] = nil
+
 		end
+
 	end
-end)
+
+	for k, v in pairs( ANPlusLoadGlobal ) do -- Don't show ANP stuff in the normal spawnmenu	
+
+		if entData[ k ] then 
+
+			local entDataOld = entData[ k ]
+
+			entData[ k ] = nil
+
+			timer.Simple( 1, function() entData[ k ] = entDataOld end )
+
+		end
+
+	end
+
+end )
+
+hook.Add( "PopulateVehicles", "ANPlusLoad_PopulateVehicles", function(pnlContent, tree, node)
+
+	local vehData = list.GetForEdit( "Vehicles" )
+	
+	for i = 1, #ANPlusRemoveFromSpawnList do
+
+		local vehToRemove = ANPlusRemoveFromSpawnList[ i ]
+
+		if vehData[ vehToRemove ] then
+
+			print( "ANP REMOVED ENTITY", vehData[ vehToRemove ]['PrintName'] )
+			vehData[ vehToRemove ] = nil
+
+		end
+
+	end
+
+	for k, v in pairs( ANPlusLoadGlobal ) do -- Don't show ANP stuff in the normal spawnmenu	
+
+		if vehData[ k ] then 
+
+			local vehDataOld = vehData[ k ]
+
+			vehData[ k ] = nil
+
+			timer.Simple( 1, function() vehData[ k ] = vehDataOld end )
+
+		end
+
+	end
+
+end )
 
 hook.Add( "OnSpawnMenuOpen", "ANPlusLoad_OnSpawnMenuOpen", function()
 	local ply = LocalPlayer()
@@ -208,7 +312,7 @@ hook.Add( "OnSpawnMenuOpen", "ANPlusLoad_OnSpawnMenuOpen", function()
 	net.WriteBool( true )
 	net.SendToServer()
 	ply.m_bSpawnMenuOpen = true
-end)
+end )
 
 hook.Add( "OnSpawnMenuClose", "ANPlusLoad_OnSpawnMenuClose", function()
 	local ply = LocalPlayer()
@@ -216,7 +320,7 @@ hook.Add( "OnSpawnMenuClose", "ANPlusLoad_OnSpawnMenuClose", function()
 	net.WriteBool( false )
 	net.SendToServer()
 	ply.m_bSpawnMenuOpen = false
-end)
+end )
 
 --[[
 local metaPLAYER = FindMetaTable("Player")

@@ -294,6 +294,7 @@ hook.Add( "InitPostEntity", "ANPlusLoad_GamemodeInitPostEntity", function()
 		concommand.Add( "gm_spawnvehicle", function( ply, cmd, args ) Spawn_Vehicle( ply, args[1] ) end )
 
 	end
+	
 end)
 
 --[[////////////////////////
@@ -312,16 +313,29 @@ ANPDefaultOutputs = {
 }
 
 hook.Add( "OnEntityCreated", "ANPlusLoad_OnEntityCreated", function(ent)
+	
+	if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then	
+
+		local npc = ent:GetOwner()	
+		
+		if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCPreCreateEntity'] != nil then
+			npc:ANPlusGetDataTab()['Functions']['OnNPCPreCreateEntity'](npc, ent)						
+		end	
+
+	end
 
 	timer.Simple( 0, function()
 
 		if !IsValid(ent) then return end	
 		
-		if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then		
-			local npc = ent:GetOwner()		
+		if IsValid(ent:GetOwner()) && ent:GetOwner():IsANPlus(true) then
+
+			local npc = ent:GetOwner()
+
 			if npc:ANPlusGetDataTab()['Functions'] && npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'] != nil then
 				npc:ANPlusGetDataTab()['Functions']['OnNPCCreateEntity'](npc, ent)						
-			end				
+			end	
+
 		end
 		
 		if (SERVER) then
@@ -568,6 +582,13 @@ hook.Add( "InitPostEntity", "ANPlus_InitPostEntity", function()
 	end
 	
 end )
+
+ANP_PixVis = nil
+
+hook.Add( "Initialize", "ANPlus_Initialize", function()
+	ANPlusParseFile()	
+	if (CLIENT) then ANP_PixVis = util.GetPixelVisibleHandle() end
+end)
 
 hook.Add( "CalcView", "ANPlus_CalcView", function(ply, pos, angle, fov)	
 	

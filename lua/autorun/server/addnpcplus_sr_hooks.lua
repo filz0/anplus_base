@@ -137,9 +137,13 @@ local function ragGibSetup(ent, gib)
 			local model = gibData[ 1 ]
 			local materials = gibData[ 2 ]
 
-			if model then 
-				gib:SetModel( model ) 
-				gib:Spawn() 
+			if model then
+				if model != "Remove" then 
+					gib:SetModel( model ) 
+					gib:Spawn() 
+				else
+					gib:Remove()
+				end
 			end
 
 			if istable(materials) then
@@ -710,7 +714,7 @@ hook.Add( "PlayerUse", "ANPlusLoad_PlayerUse", function(activator, caller, useTy
 end)
 
 hook.Add( "PlayerCanPickupWeapon", "ANPlusLoad_PlayerCanPickupWeapon", function(ply, wep)
-	if wep.Base == "swep_anp_base" then
+	if wep.Base == "swep_anp_base" && !wep.UsableByPlayers then
 		if wep.Primary.AmmoType && wep:Clip1() > 0 then ply:GiveAmmo( wep:Clip1(), wep.Primary.AmmoType, false ) end
 		wep:Remove()
 		return false 

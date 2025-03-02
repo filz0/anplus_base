@@ -86,7 +86,8 @@ if (CLIENT) then
 
 
     local PANEL = {}
-	local SM_GenericIcon = "vgui/anplus_log.png"
+	local SM_GenericBG = "vgui/anplus_log.png"
+	local SM_GenericIcon = "vgui/anp_def_ico.png"
 	local SM_GenericNPCIcon = "vgui/anp_npc_ico.png"
 	local SM_GenericENTIcon = "vgui/anp_ent_ico.png"
 	local SM_GenericVEHIcon = "vgui/anp_veh_ico.png"
@@ -102,8 +103,56 @@ if (CLIENT) then
 		['[ Vehicles ]'] 	= true,
 	}
 
+	local SM_IconHoverMat = Material( "gui/sm_hover.png", "nocull" )
+	local SM_IconHoverFunc = GWEN.CreateTextureBorder( 3, 3, 64 - 3 * 2, 64 - 3 * 2, 5, 5, 5, 5, SM_IconHoverMat )
+
+	local SM_IconMATOverlayNormal = Material( "gui/ContentIcon-normal.png" )
+	local SM_IconMATOverlayHovered = Material( "gui/ContentIcon-hovered.png" )
+	local SM_IconMATOverlayAdminOnly = Material( "icon16/shield.png" )
+	local SM_IconMATOverlayNPCWeapon = Material( "icon16/monkey.png" )
+	local SM_IconMATOverlayNPCWeaponSelected = Material( "icon16/monkey_tick.png" )
+
+
 	Derma_Hook( PANEL, "Paint", "Paint", "Tree" )
 	PANEL.m_bBackground = true -- Hack for above
+
+	local function IsValidIcon(path)
+		local png = string.gsub( path, ".mdl", "_128.png" )
+		return file.Exists( "materials/spawnicons/" .. png, "GAME" ) && "spawnicons/" .. png
+	end
+
+	local shadowColor = Color( 0, 0, 0, 200 )
+	local function DrawTextShadow( text, x, y )
+		draw.SimpleText( text, "DermaDefault", x + 1, y + 1, shadowColor )
+		draw.SimpleText( text, "DermaDefault", x, y, color_white )
+	end
+
+	local function GenerateIconFromModel(model, successCallback)
+
+		iconGen = vgui.Create( "SpawnIcon" )
+		iconGen:SetPos( -128, -128 )
+		iconGen:SetSize( 128, 128 )
+		iconGen:SetMouseInputEnabled( false )
+		iconGen:SetKeyboardInputEnabled( false )
+		iconGen:SetModel( model )	
+
+		iconGen.Think = function(self)
+
+			if IsValidIcon( model ) then
+
+				if isfunction(successCallback) then
+					if !successCallback(self) then self:Remove() return end
+				end
+
+				self:Remove()
+
+			end
+
+		end
+
+		--iconGen.Icon:SetVisible( false )
+
+	end
 	
 	spawnmenu.AddContentType( "anplus_npcs", function( panel, obj )
 		if ( !obj.material ) then return end
@@ -112,7 +161,9 @@ if (CLIENT) then
 		if ( !obj.category ) then return end
         if ( !obj.type ) then return end
 
-		local label
+		local label	
+		local iconGen
+		local iconGenIco	
 		local category = !SM_MainNodes[ obj.nodeN ] && obj.subCategory || obj.category
 
 		if !SM_HeaderTable[ obj.type ][ category ] then
@@ -123,28 +174,160 @@ if (CLIENT) then
 			
 		end
 
-		local icon = vgui.Create( "ContentIcon", panel )
+		local icon = vgui.Create( "ContentIcon" )
 		icon:SetContentType( "anplus_npcs" )
 		icon:SetSpawnName( obj.spawnname )
 		icon:SetName( obj.nicename )
 		icon:SetMaterial( obj.material )
 		icon:SetAdminOnly( obj.admin )
 		icon:SetColor( Color( 205, 92, 92, 255 ) )
+		icon.m_fOverlayFade = 0
+		icon.m_pngAutoIcon = icon.m_pngAutoIcon || false
+
+		if obj.model && obj.material == SM_GenericIcon then
+
+			if obj.model && !IsValidIcon( obj.model ) then
+
+				GenerateIconFromModel( obj.model, function(self) if IsValid(icon) && IsValidIcon( obj.model ) then icon.m_pngAutoIcon = Material( IsValidIcon( obj.model ) ) end end )
+
+			elseif obj.model && IsValidIcon( obj.model ) then
+
+				if IsValidIcon( obj.model ) then icon.m_pngAutoIcon = Material( IsValidIcon( obj.model ) ) end
+
+			end
+
+		end
+
 		icon.DoClick = function()
-			if obj.type == "NPC" then	
+
+			if obj.type == "NPC" then
+
 				local override = GetConVar( "gmod_npcweapon" ):GetString()
 				local weapon = obj.weapon && ( override == "" && table.Random(obj.weapon) || override ) || "none"			
 				RunConsoleCommand( "gmod_spawnnpc", obj.spawnname, weapon )
+
 			elseif obj.type == "SpawnableEntities" then
+
 				RunConsoleCommand( "gm_spawnsent", obj.spawnname )
+
 			elseif obj.type == "Vehicles" then
+
 				RunConsoleCommand( "gm_spawnvehicle", obj.spawnname )
+
 			end
+
 			surface.PlaySound( "ANP.UI.Spawn" )
+
+		end
+
+		icon.Think = function( self )
+			
+			self.m_fOverlayFade = math.Clamp( self.m_fOverlayFade - RealFrameTime() * 640 * 2, 0, 255 )
+		
+			if ( dragndrop.IsDragging() || !self:IsHovered() ) then return end
+		
+			self.m_fOverlayFade = math.Clamp( self.m_fOverlayFade + RealFrameTime() * 640 * 8, 0, 255 )
+		
+		end
+
+		icon.PaintOver = function( self, w, h )
+
+			if ( self.m_fOverlayFade > 0 ) then
+				SM_IconHoverFunc( 0, 0, w, h, Color( 0, 255, 255, self.m_fOverlayFade ) )
+			end
+		
+		end
+
+		icon.Paint = function( self, w, h )
+			
+			if ( self.Depressed && !self.Dragging ) then
+				if ( self.Border != 8 ) then
+					self.Border = 8
+					self:OnDepressionChanged( true )
+				end
+			else
+				if ( self.Border != 0 ) then
+					self.Border = 0
+					self:OnDepressionChanged( false )
+				end
+			end
+			
+			render.PushFilterMag( TEXFILTER.ANISOTROPIC )
+			render.PushFilterMin( TEXFILTER.ANISOTROPIC )
+			
+			self.Image:PaintAt( 3 + self.Border, 3 + self.Border, 128 - 8 - self.Border * 2, 128 - 8 - self.Border * 2 )
+
+			if self.m_pngAutoIcon then
+				surface.SetMaterial( self.m_pngAutoIcon )
+				surface.DrawTexturedRect( 3 + self.Border, 3 + self.Border, 128 - 8 - self.Border * 2, 128 - 8 - self.Border * 2 )			
+			end
+
+			render.PopFilterMin()
+			render.PopFilterMag()
+
+			surface.SetDrawColor( 255, 255, 255, 255 )
+
+			local drawText = false
+			if ( !dragndrop.IsDragging() && ( self:IsHovered() || self.Depressed || self:IsChildHovered() ) ) then
+
+				surface.SetMaterial( SM_IconMATOverlayHovered )
+
+			else
+
+				surface.SetMaterial( SM_IconMATOverlayNormal )
+				drawText = true
+
+			end
+
+			surface.DrawTexturedRect( self.Border, self.Border, w-self.Border*2, h-self.Border*2 )
+
+			if ( self:GetAdminOnly() ) then
+				surface.SetMaterial( SM_IconMATOverlayAdminOnly )
+				surface.DrawTexturedRect( self.Border + 8, self.Border + 8, 16, 16 )
+			end
+
+			-- This whole thing could be more dynamic
+			if ( self:GetIsNPCWeapon() ) then
+				surface.SetMaterial( SM_IconMATOverlayNPCWeapon )
+
+				if ( self:GetSpawnName() == GetConVarString( "gmod_npcweapon" ) ) then
+					surface.SetMaterial( SM_IconMATOverlayNPCWeaponSelected )
+				end
+
+				surface.DrawTexturedRect( w - self.Border - 24, self.Border + 8, 16, 16 )
+			end
+			self:ScanForNPCWeapons()
+
+			if ( drawText ) then
+				local buffere = self.Border + 10
+		
+				-- Set up smaller clipping so cut text looks nicer
+				local px, py = self:LocalToScreen( buffere, 0 )
+				local pw, ph = self:LocalToScreen( w - buffere, h )
+				render.SetScissorRect( px, py, pw, ph, true )
+		
+				-- Calculate X pos
+				surface.SetFont( "DermaDefault" )
+				local tW, tH = surface.GetTextSize( self.m_NiceName )
+		
+				local x = w / 2 - tW / 2
+				if ( tW > ( w - buffere * 2 ) ) then
+					local mx, my = self:ScreenToLocal( input.GetCursorPos() )
+					local diff = tW - w + buffere * 2
+		
+					x = buffere + math.Remap( math.Clamp( mx, 0, w ), 0, w, 0, -diff )
+				end
+		
+				-- Draw
+				DrawTextShadow( self.m_NiceName, x, h - tH - 9 )
+		
+				render.SetScissorRect( 0, 0, 0, 0, false )
+			end
+
 		end
 	
-	
 		icon.OpenMenu = function( self )
+
 			local menu = DermaMenu()
 			
 			menu:AddOption( "#spawnmenu.menu.copy", function() SetClipboardText( self:GetSpawnName() ) end ):SetIcon( "icon16/page_copy.png" )
@@ -160,15 +343,19 @@ if (CLIENT) then
 			end ):SetIcon( "icon16/brick_add.png" )
 		
 			menu:Open()
+
 		end	
 	
 		if ( IsValid( panel ) ) then
+
 			if label then panel:Add( label ) end
-			panel:Add( icon )
+			panel:Add( icon ) 
+
 		end
 		
 		return icon
-	end)
+
+	end )
 
 	local forceDefault = {
 		['[ NPCs ]'] = true,
@@ -192,7 +379,7 @@ if (CLIENT) then
 			SM_HeaderTable = { ['NPC'] = {}, ['SpawnableEntities'] = {}, ['Vehicles'] = {} }
 
 			-- Create the category background
-			SM_BGImage = panel:ANPlus_CreateImage( 0, 0, 1024, 1024, SM_GenericIcon, false, true, false )
+			SM_BGImage = panel:ANPlus_CreateImage( 0, 0, 1024, 1024, SM_GenericBG, false, true, false )
 			SM_BGImage:SetZPos( -999 )
 			SM_BGImage:SetKeepAspect( false )
 
@@ -207,6 +394,9 @@ if (CLIENT) then
 			local custmBGSize = { 0, 0 }
 			local custmBGColor = Color( 255, 255, 255, 100 )
 			local custmBGMusic = nil
+
+			local custmIco
+			local custmIcoHColor = Color( 255, 255, 255, 255 )
 			
 			for name, ent in SortedPairsByMemberValue( npcdata, "Category" ) do
 				local mat = SM_GenericIcon
@@ -218,7 +408,7 @@ if (CLIENT) then
                 local category = ent['Category'] && string.Split( ent['Category'], " | " )
 				category, subCategory = istable(category) && category[ 1 ] || ent['Category'], istable(category) && category[ 2 ]
 
-				if !forceDefault[nodeN] then
+				if !forceDefault[ nodeN ] then
 					
 					local custCat = ANPlusCategoryCustom[ nodeN ] || ANPlusCategoryCustom[ ent['Category'] ]
 					if custCat then
@@ -227,12 +417,14 @@ if (CLIENT) then
 						custmBGColor = custCat['BGColor']
 						custmBGMusic = custCat['BGMusic']
 					end
+
 				end
 
 				local icon = spawnmenu.CreateContentIcon( "anplus_npcs", self.PropPanel, {
 					nicename	= ent['Name'],
 					spawnname	= name,
 					material	= mat,
+					model		= ent['Models'] && ent['Models'][ 1 ] && ent['Models'][ 1 ][ 1 ] || "models/props_junk/watermelon01.mdl",
 					weapon		= ent['DefaultWeapons'],
 					admin		= ent['AdminOnly'],
                     type        = ent['EntityType'],
@@ -242,7 +434,7 @@ if (CLIENT) then
 				} )
 			end
 
-			SM_BGImage:SetImage( custmBGImg, SM_GenericIcon )
+			SM_BGImage:SetImage( custmBGImg, SM_GenericBG )
 			SM_BGImage:SetImageColor( custmBGColor )
 			
 			local x, y = SM_BGImage:GetPos()						
@@ -296,7 +488,7 @@ if (CLIENT) then
 				
 				if ( self.PropPanel ) then
 
-					if custmBGMusic && custmBGMusic != custmBGMusicLast then
+					if custmBGMusic && !forceDefault[nodeN] && custmBGMusic != custmBGMusicLast then
 
 						SM_BGMusic = CreateSound( LocalPlayer(), custmBGMusic )
 						SM_BGMusic:PlayEx( 0, 100 )
@@ -417,20 +609,21 @@ if (CLIENT) then
 				lastIconPath = catIcon
 
 			end
-	
+
 			local dataIcon = allCatIconsSame && lastIconPath || SM_GenericNPCIcon
 			local dataNodes = {}
 				
 			local node = allNodeNPCs:AddNode( categoryName, dataIcon )
-
+			
 			for dataID, data in SortedPairs( entData ) do	
-
+				
 				if ANPlusLoadGlobal[ dataID ] then
 					
 					GiveIconsToNode( panel, tree, node, entData )
 					table.Merge( allNodeCacheNPCs, entData )
+
 				else
-	
+					--print(dataID, dataIcon, lastIconPath)
 					local catNode = node:AddNode( dataID, dataIcon )
 					GiveIconsToNode( panel, tree, catNode, data )
 					table.Merge( dataNodes, data )

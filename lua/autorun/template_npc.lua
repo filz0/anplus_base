@@ -28,6 +28,12 @@ which makes it delete itself cuz duplicator can't apply required KeyValue fast e
 
 ]]--
 
+ANPlus.AddNPCWeapon( "swep_anp_base", "[HL1] MP5", "swep_anp_hl1_mp5" )  
+ANPlus.AddNPCWeapon( "swep_anp_base", "[HL1] SPAS-12", "swep_anp_hl1_sg" )  
+ANPlus.AddNPCWeapon( "swep_anp_base", "[HL1] Glock", "swep_anp_hl1_glock" )  
+ANPlus.AddNPCWeapon( "swep_anp_base", "[HL1] Colt Python", "swep_anp_hl1_357" )  
+ANPlus.AddNPCWeapon( "swep_anp_base", "[HL1] Crossbow", "swep_anp_hl1_crossbow" )  
+
 ANPlus.AddNPC( {
 	['Spawnable']				= false,
 ----------------------------------------------------------------- Category at which you'll be able to find your NPC.
