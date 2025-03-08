@@ -5,16 +5,16 @@ AddCSLuaFile()
 
 local ENT = FindMetaTable("Entity")
 --[[
-net.Receive("anplus_add_fakename_language", function()
+net.Receive( "anplus_add_fakename_language", function()
 	local name = net.ReadString()
 	if name then
 		if language.GetPhrase( name ) == name then 
 			language.Add( name, name ) 
 		end
 	end	
-end)
+end )
 ]]--
-net.Receive("anplus_fix_bones", function()
+net.Receive( "anplus_fix_bones", function()
 
 	local ent = net.ReadEntity()
 
@@ -25,9 +25,9 @@ net.Receive("anplus_fix_bones", function()
 		
 	end
 	
-end)
+end )
 
-net.Receive("anplus_holo_eff", function()
+net.Receive( "anplus_holo_eff", function()
 
 	local ent = net.ReadEntity()
 	local color = net.ReadColor()
@@ -45,18 +45,18 @@ net.Receive("anplus_holo_eff", function()
 		
 	--end
 
-end)
+end )
 
-net.Receive("anplus_net_entity", function()
+net.Receive( "anplus_net_entity", function()
 	local ent = net.ReadEntity()
 	local id = net.ReadString()
 
 	if ent then
 		ent:ANPlusNPCApply( id )	
 	end
-end)
+end )
 
-net.Receive("anplus_data_tab", function()
+net.Receive( "anplus_data_tab", function()
 
 	local ent = net.ReadEntity()
 	local tab = net.ReadTable()
@@ -64,10 +64,10 @@ net.Receive("anplus_data_tab", function()
 	if ent && ent['ANPlusData'] && tab then
 		table.Merge( ent['ANPlusData'], tab )
 	end
-end)
+end )
 
 
-net.Receive("anplus_client_particle_start", function()
+net.Receive( "anplus_client_particle_start", function()
 
 	local ent = net.ReadEntity()
 	local effect = net.ReadString()
@@ -79,9 +79,9 @@ net.Receive("anplus_client_particle_start", function()
 	if IsValid(ent) then
 		ent:ANPlusClientParticleSystem( stop, effect, partAttachment, entAttachment, offset )
 	end
-end)
+end )
 
-net.Receive("anplus_client_particle_start_no_ent", function()
+net.Receive( "anplus_client_particle_start_no_ent", function()
 
 	local effect = net.ReadString()
 	local pos = net.ReadVector()
@@ -89,9 +89,9 @@ net.Receive("anplus_client_particle_start_no_ent", function()
 
 	ANPlusClientParticleSystem( effect, pos, ang )
 
-end)
+end )
 
-net.Receive("anplus_paint_decal", function()
+net.Receive( "anplus_paint_decal", function()
 	local ent = net.ReadEntity()
 	local decal = net.ReadString()
 	local sP = net.ReadVector()
@@ -101,30 +101,30 @@ net.Receive("anplus_paint_decal", function()
 	local h = net.ReadFloat()
 	local mat = string.find( decal, "decals/" ) && Material( decal ) || Material( util.DecalMaterial( decal ) )
 	util.DecalEx( mat, ent, sP, eP, col, w, h )
-end)
+end )
 
-net.Receive("anplus_play_ui_snd", function()		
+net.Receive( "anplus_play_ui_snd", function()		
 	local snd = net.ReadString() || ""
 	local vol = net.ReadFloat() || 100
 	ANPlusEmitUISound( nil, snd, vol )
-end)
+end )
 
-net.Receive("anplus_notify", function()		
+net.Receive( "anplus_notify", function()		
 	local snd = net.ReadString() || ""
 	local text = net.ReadString() || ""
 	local type = net.ReadFloat()
 	local length = net.ReadFloat()	
 	ANPlusSendNotify( nil, snd, text, type, length )		
-end)
+end )
 
-net.Receive("anplus_chatmsg_ply", function()	
+net.Receive( "anplus_chatmsg_ply", function()	
 	local snd = net.ReadString() || ""
 	local color = net.ReadColor() || ""
 	local text = net.ReadString()
 	ANPlusMSGPlayer( nil, text, color, snd )
-end)
+end )
 
-net.Receive("anplus_screenmsg_ply", function()
+net.Receive( "anplus_screenmsg_ply", function()
 	local dur = net.ReadFloat()
 	local x = net.ReadFloat()
 	local y = net.ReadFloat()
@@ -134,20 +134,20 @@ net.Receive("anplus_screenmsg_ply", function()
 	local text = net.ReadString()	
 	local id = net.ReadString()	
 	ANPlusScreenMsg( nil, id, x, y, size, dur, text, font, color)
-end)
+end )
 
-net.Receive("anplus_savedata_net", function()	
+net.Receive( "anplus_savedata_net", function()	
 	local ent = net.ReadEntity()
 	local data = net.ReadTable()
 	if IsValid(ent) && data then table.Merge( ent, data ) end
-end)
+end )
 
-net.Receive("anplus_add_caption", function()	
+net.Receive( "anplus_add_caption", function()	
 	local text = net.ReadString()
 	local dur = net.ReadFloat()	
 	local fromPly = net.ReadBool()	
 	ANPlusAddCaption( nil, text, dur, fromPly )
-end)
+end )
 
 function ENT:ANPlusNPCHUDPaint()
 	if self:ANPlusGetDataTab()['Functions'] && self:ANPlusGetDataTab()['Functions']['OnNPCHUDPaint'] != nil then

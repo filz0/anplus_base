@@ -1,17 +1,3 @@
-------------------------------------------------------------------------------=#
---SHARED
-AddCSLuaFile("autorun/addnpcplus_resources.lua")
-AddCSLuaFile("autorun/addnpcplus_menus.lua")
-AddCSLuaFile("autorun/addnpcplus_replacer.lua")
-AddCSLuaFile("autorun/addnpcplus_sh_func.lua")
-AddCSLuaFile("autorun/addnpcplus_sh_hooks.lua")
-AddCSLuaFile("autorun/addnpcplus_sh_meta.lua")
---SERVER
-AddCSLuaFile("autorun/server/addnpcplus_sr_func.lua")
-AddCSLuaFile("autorun/server/addnpcplus_sr_hooks.lua")
-AddCSLuaFile("autorun/server/addnpcplus_sr_meta.lua")
-------------------------------------------------------------------------------=#
-
 ANPlusLoadGlobal = {}
 ANPlusLoadGlobalCount = 0
 
@@ -287,11 +273,25 @@ ANPlus = {
 	end,
 
 	AddCategoryCustomize = function(category, icon, bgImg, w, h, color, bgMusic)
-		if SERVER then return end
+		if (SERVER) then return end
 		ANPlusCategoryCustom[ category ] = { ['Icon'] = icon, ['BGImage'] = bgImg, ['BGAddSize'] = { w || 0, h || 0 }, ['BGColor'] = color || Color( 255, 255, 255, 150 ), ['BGMusic'] = bgMusic }
 	end,
 	
 } 
+
+------------------------------------------------------------------------------=#
+--SHARED
+AddCSLuaFile("autorun/addnpcplus_resources.lua")
+AddCSLuaFile("autorun/addnpcplus_menus.lua")
+AddCSLuaFile("autorun/addnpcplus_replacer.lua")
+AddCSLuaFile("autorun/addnpcplus_sh_func.lua")
+AddCSLuaFile("autorun/addnpcplus_sh_hooks.lua")
+AddCSLuaFile("autorun/addnpcplus_sh_meta.lua")
+--SERVER
+AddCSLuaFile("autorun/server/addnpcplus_sr_func.lua")
+AddCSLuaFile("autorun/server/addnpcplus_sr_hooks.lua")
+AddCSLuaFile("autorun/server/addnpcplus_sr_meta.lua")
+------------------------------------------------------------------------------=#
 
 timer.ANPlusDelayed = function( id, delay, time, repeats, callback ) -- This is stupid and has to go... Far away... Pls don't use.	
 	if id && delay == -1 then timer.Remove( id .. "ANPlusDelayed" ); timer.Remove( id ) return end	
@@ -309,6 +309,7 @@ ANPlus.AddConVar( "anplus_hp_mul", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Multiply
 ANPlus.AddConVar( "anplus_replacer_enabled", 1, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Enable ANPlus Replacer.", 0, 1 )
 ANPlus.AddConVar( "anplus_look_distance_override", 2048, (FCVAR_GAMEDLL + FCVAR_ARCHIVE), "Set NPC look/sight distance. This command only affect ANPCs that don't have thier look distance changed by thier code.", 0, 32000 )
 ANPlus.AddConVar( "anplus_follower_collisions", 0, (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Enable collisions on following You ANPCs.", 0, 1 )
+ANPlus.AddConVar( "anplus_replacer_file", "anplus_replacer_data.txt", (FCVAR_GAMEDLL + FCVAR_ARCHIVE + FCVAR_NOTIFY), "Replace the default Replacer profile file. Leave empty to reset." )
 ANPlus.AddClientConVar( "anplus_hpbar_dist", 2048, false, "Enable light effect used by the muzzle effects from this base.", 0 )
 ANPlus.AddClientConVar( "anplus_hpbar_def_style", "HL2 Retail", false, "Select a style of NPC's health bar if one has it enabled." )
 ANPlus.AddClientConVar( "anplus_bm_volume", "1", false, "Volume of the boss music." )
@@ -319,7 +320,7 @@ ANPlus.AddClientConVar( "anplus_swep_flight_fade_distance", 1024, false, "SWEP's
 ANPlus.AddClientConVar( "anplus_swep_flight_smartmode", 1, false, "NPCs will only use flashlights in dark places.", 0, 1 )
 ANPlus.AddClientConVar( "anplus_swep_laser_fade_distance_start", 1024, false, "Distance at which SWEP's laser will start fading.", 512, 10240 )
 ANPlus.AddClientConVar( "anplus_swep_laser_fade_distance", 512, false, "SWEP's laser fade distance.", 512, 10240 )
- 
+
 local invChars = {" ","{","}","[","]","(",")","!","+","=","?",".",",","/","-","`","~"}
 function ANPlusIDCreate(name)
 	for i = 1, #invChars do

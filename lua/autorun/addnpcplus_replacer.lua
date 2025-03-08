@@ -165,38 +165,44 @@ if (SERVER) then
 	util.AddNetworkString("anplus_replacer_gettab_c") 
 	local von = include( "von/von_1_3_4.lua" )	
 	local dir = "anplus_replacer"
-	local dir_presets = dir.."/anplus_replacer_data.txt"
+	local dir_ = dir .. "/"
+	ANPlusReplacerData = GetConVar( "anplus_replacer_file" ):GetString()
 	
 ------------------------------------------------------------------------------=#
 	if !file.Exists( dir, "DATA" ) then file.CreateDir( dir ) end
-	if !file.Exists( dir_presets, "DATA" ) then file.Write( dir_presets ) end 
+	if !file.Exists( dir_ .. ANPlusReplacerData, "DATA" ) then file.Write( dir_ .. ANPlusReplacerData ) end 
 ------------------------------------------------------------------------------=#	
 	local function LoadData()		
-		if file.Exists( dir_presets, "DATA" ) then 
-			ANPlusENTReplacerData = von.deserialize( file.Read( dir_presets, "DATA" ) ) || {}
+		if file.Exists( dir_ .. ANPlusReplacerData, "DATA" ) then 
+			ANPlusENTReplacerData = von.deserialize( file.Read( dir_ .. ANPlusReplacerData, "DATA" ) ) || {}
 		end
 	end
+
+	cvars.AddChangeCallback( "anplus_replacer_file", function(convar_name, value_old, value_new)	
+		value_new = !file.Exists( dir_ .. value_new, "DATA" ) && GetConVar( "anplus_replacer_file" ):GetDefault() || value_new
+		ANPlusReplacerData = value_new
+
+		LoadData()
+	end )
 ------------------------------------------------------------------------------=#	
 	local function SaveReplacerData(tab)		
 		if !istable( ANPlusENTReplacerData ) || !istable( tab ) then return end	
-		file.Write( dir_presets, von.serialize( tab ) )
+		file.Write( dir_ .. ANPlusReplacerData, von.serialize( tab ) )
 		ANPlusENTReplacerData = tab
 	end
 ------------------------------------------------------------------------------=#	
-	net.Receive("anplus_replacer_gettab_s", function(_, ply)	
-
-		
+	net.Receive( "anplus_replacer_gettab_s", function(_, ply)			
 		net.Start( "anplus_replacer_gettab_c" )
 		net.WriteTable( ANPlusENTReplacerData )
 		--net.WriteTable( newNPCList )
 		--net.WriteString( game.GetMap() ) -- We do it here because of " In Multiplayer this does not return the current map in the CLIENT realm before GM:Initialize. "
 		net.Send( ply )
-	end)
+	end )
 ------------------------------------------------------------------------------=#	
-	net.Receive("anplus_replacer_savetab", function(_, ply)
+	net.Receive( "anplus_replacer_savetab", function(_, ply)
 		local tab = net.ReadTable()
 		SaveReplacerData(tab)
-	end)
+	end )
 ------------------------------------------------------------------------------=#	
 	hook.Add( "InitPostEntity", "ANPlusLoad_Init", LoadData )
 	if player.GetCount() > 0 then LoadData() end -- Debug (for lua refresh)
